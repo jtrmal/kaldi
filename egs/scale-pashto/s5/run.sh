@@ -11,6 +11,7 @@ boost_sil=1.5
 . ./cmd.sh
 [ -f local.conf ] && . ./local.conf
 
+. ./lang.conf
 
 . ./utils/parse_options.sh
 
