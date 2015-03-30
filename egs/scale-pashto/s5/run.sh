@@ -11,8 +11,6 @@ boost_sil=1.5
 . ./cmd.sh
 [ -f local.conf ] && . ./local.conf
 
-. ./lang.conf
-
 . ./utils/parse_options.sh
 
 
@@ -23,59 +21,87 @@ set -o pipefail  #Exit if any of the commands in the pipeline will
 set -u           #Fail on an undefined variable
 
 #Preparing dev2h and train directories
-if [ ! -f data/raw_train_data/.done ]; then
-    echo ---------------------------------------------------------------------
-    echo "Subsetting the TRAIN set"
-    echo ---------------------------------------------------------------------
-
-    local/make_corpus_subset.sh "$train_data_dir" "$train_data_list" ./data/raw_train_data
-    train_data_dir=`readlink -f ./data/raw_train_data`
-    touch data/raw_train_data/.done
-fi
-nj_max=`cat $train_data_list | wc -l`
-if [[ "$nj_max" -lt "$train_nj" ]] ; then
-    echo "The maximum reasonable number of jobs is $nj_max (you have $train_nj)! (The training and decoding process has file-granularity)"
-    exit 1;
-    train_nj=$nj_max
-fi
-train_data_dir=`readlink -f ./data/raw_train_data`
-
-
-if [ ! -d data/raw_dev10h_data ]; then
+romanized=false
+if [ ! -f data/raw_dev10h_data/.done ]; then
   echo ---------------------------------------------------------------------
   echo "Subsetting the DEV10H set"
   echo ---------------------------------------------------------------------  
-  local/make_corpus_subset.sh "$dev10h_data_dir" "$dev10h_data_list" ./data/raw_dev10h_data || exit 1
+  local/make_corpus_subset.sh --romanized $romanized "$dev10h_data_dir" "$dev10h_data_list" ./data/raw_dev10h_data || exit 1
+  touch data/raw_dev10h_data/.done  
 fi
 
-mkdir -p data/local
-if [[ ! -f data/local/lexicon.txt || data/local/lexicon.txt -ot "$lexicon_file" ]]; then
+if [ ! -f data/raw_babel_train_data/.done ]; then
+    echo ---------------------------------------------------------------------
+    echo "Creating  the BABEL-TRAIN set"
+    echo ---------------------------------------------------------------------
+    local/make_corpus_subset.sh --romanized $romanized "$train_data_dir" "$train_data_list" ./data/raw_babel_train_data
+    touch data/raw_babel_train_data/.done
+fi
+babel_train=`readlink -f ./data/raw_babel_train_data`
+
+if [ ! -f data/raw_appen_train_data/.done ]; then
+    echo ---------------------------------------------------------------------
+    echo "Creating the APPEN-TRAIN set"
+    echo ---------------------------------------------------------------------
+    
+    local/make_appen_corpus_subset.sh --romanized $romanized  "$train_data_appen_dir" "$train_data_appen_list" ./data/raw_appen_train_data
+    touch data/raw_appen_train_data/.done
+fi
+appen_train=`readlink -f ./data/raw_appen_train_data`
+
+mkdir -p data/local/dict
+if [[ ! -f data/local/dict/lexicon.txt ]]; then
   echo ---------------------------------------------------------------------
   echo "Preparing lexicon in data/local on" `date`
   echo ---------------------------------------------------------------------
-  local/make_lexicon_subset.sh $train_data_dir/transcription $lexicon_file data/local/filtered_lexicon.txt
-  local/prepare_lexicon.pl  --phonemap "$phoneme_mapping" \
-    $lexiconFlags data/local/filtered_lexicon.txt data/local
+  local/make_lexicon_subset.sh $babel_train/transcription <(local/convert_charsets.pl $lexicon_file) data/local/dict/filtered_babel_lexicon.txt
+  cut -f 1,2,3 $lexicon_appen_file | local/convert_charsets.pl | local/lexicon_to_babel_format.pl > data/local/dict/filtered_appen_lexicon.txt
+ 
+  cat data/local/dict/filtered_babel_lexicon.txt data/local/dict/filtered_appen_lexicon.txt | \
+    local/lexicon_to_babel_format.pl > data/local/filtered_lexicon.txt
+
+  local/prepare_lexicon.pl  --romanized --phonemap "$phoneme_mapping" \
+    $lexiconFlags data/local/filtered_lexicon.txt data/local/dict/
 fi
 
 mkdir -p data/lang
-if [[ ! -f data/lang/L.fst || data/lang/L.fst -ot data/local/lexicon.txt ]]; then
+if [[ ! -f data/lang/L.fst || data/lang/L.fst -ot data/local/dict/lexicon.txt ]]; then
   echo ---------------------------------------------------------------------
   echo "Creating L.fst etc in data/lang on" `date`
   echo ---------------------------------------------------------------------
   utils/prepare_lang.sh \
     --share-silence-phones true \
-    data/local $oovSymbol data/local/tmp.lang data/lang
+    data/local/dict $oovSymbol data/local/lang data/lang
 fi
 
-if [[ ! -f data/train/wav.scp || data/train/wav.scp -ot "$train_data_dir" ]]; then
+if [[ ! -f data/train_babel/wav.scp || data/train_babel/wav.scp -ot "$babel_train" ]]; then
   echo ---------------------------------------------------------------------
   echo "Preparing acoustic training lists in data/train on" `date`
   echo ---------------------------------------------------------------------
-  mkdir -p data/train
+  mkdir -p data/train_babel
   local/prepare_acoustic_training_data.pl \
-    --vocab data/local/lexicon.txt --fragmentMarkers \-\*\~ \
-    $train_data_dir data/train > data/train/skipped_utts.log
+    --vocab data/local/dict/lexicon.txt --fragmentMarkers \-\*\~ \
+    $babel_train data/train_babel > data/train_babel/skipped_utts.log
+  utils/fix_data_dir.sh data/train_babel
+fi
+
+if [[ ! -f data/train_appen/wav.scp || data/train_appen/wav.scp -ot "$appen_train" ]]; then
+  echo ---------------------------------------------------------------------
+  echo "Preparing acoustic training lists in data/train on" `date`
+  echo ---------------------------------------------------------------------
+  mkdir -p data/train_appen
+  local/prepare_acoustic_training_data.pl \
+    --vocab data/local/dict/lexicon.txt --fragmentMarkers \-\*\~ \
+    $appen_train data/train_appen > data/train_appen/skipped_utts.log
+  utils/fix_data_dir.sh data/train_appen
+fi
+
+combine_data.sh data/train data/train_appen data/train_babel 
+nj_max=`cat data/train/spk2utt | wc -l`
+if [[ "$nj_max" -lt "$train_nj" ]] ; then
+    echo "The maximum reasonable number of jobs is $nj_max (you have $train_nj)! (The training and decoding process has file-granularity)"
+    exit 1;
+    train_nj=$nj_max
 fi
 
 

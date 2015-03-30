@@ -47,7 +47,6 @@ function make_plp {
 dataset_type=dev10h
 dataset_dir=data/$dataset_type
 #The $dataset_type value will be the dataset name without any extrension
-eval my_stm_file=\$${dataset_type}_stm_file
 eval my_nj=\$${dataset_type}_nj  #for shadow, this will be re-set when appropriate
 eval my_data_dir=( "\${${dataset_type}_data_dir[@]}" )
 eval my_data_list=( "\${${dataset_type}_data_list[@]}" )
@@ -84,15 +83,6 @@ if [ ! -f $dataset_dir/.done ] ; then
   mkdir -p ${dataset_dir}
   local/prepare_acoustic_training_data.pl --fragmentMarkers \-\*\~  \
     $my_data_dir ${dataset_dir} > ${dataset_dir}/skipped_utts.log || exit 1
-  
-  echo ---------------------------------------------------------------------
-  echo "Preparing ${dataset_type} stm files in ${dataset_dir} on" `date`
-  echo ---------------------------------------------------------------------
-  if [ ! -z $my_stm_file ] ; then
-    local/augment_original_stm.pl $my_stm_file ${dataset_dir}
-  else
-    local/prepare_stm.pl --fragmentMarkers \-\*\~ ${dataset_dir}
-  fi
   
   if [ ! -f ${dataset_dir}/.plp.done ]; then
     echo ---------------------------------------------------------------------

@@ -96,6 +96,8 @@ use Getopt::Long;
 #
 ########################################################################
 
+my %UNK_NS=();
+
 print STDERR "$0 " . join(" ", @ARGV) . "\n";
 GetOptions("fragmentMarkers=s" => \$fragMarkers,
            "oov=s" => \$OOV_symbol, 
@@ -159,11 +161,11 @@ if (-d $TranscriptionDir) {
             $prevTimeMark = -1.0;
             $text = "";
             if ( $icu_transform ) {
-              $inputspec="uconv -f utf8 -t utf8 -x \"$icu_transform\" $filename |";
+              $inputspec="local/convert_charsets.pl $filename | uconv -f utf8 -t utf8 -x \"$icu_transform\" |";
             } else {
-              $inputspec=$filename;
+              $inputspec="local/convert_charsets.pl $filename|";
             }
-            open (TRANSCRIPT, $inputspec) || die "Unable to open $filename";
+            open (TRANSCRIPT, "$inputspec") || die "Unable to open $inputspec";
             while ($line=<TRANSCRIPT>) {
                 chomp $line;
                 if ($line =~ m:^\s*\[([0-9]+\.*[0-9]*)\]\s*$:) {
@@ -229,7 +231,7 @@ if (-d $TranscriptionDir) {
 			# First, some Babel-specific transcription filtering
 			if (($w eq "<sta>")||($w eq "<male-to-female>")||($w eq "<female-to-male>")||($w eq "~")) {
 			    next;
-			} elsif (($w eq "<lipsmack>")||($w eq "<breath>")||($w eq "<cough>")||($w eq "<laugh>")) {
+			} elsif (($w eq "<lipsmack>")||($w eq "<breath>")||($w eq "<cough>")||($w eq "<laugh>") ) {
 			    $text .= " $vocalNoise";
 			    $numWords++;
 			} elsif (($w eq "<click>")||($w eq "<ring>")||($w eq "<dtmf>")||($w eq "<int>")){
@@ -243,6 +245,9 @@ if (-d $TranscriptionDir) {
 			} elsif ($w eq "<no-speech>") {
 			    $text .= " $silence";
 			    $numSilence++;
+			} elsif (($w =~ /<.*>/) && ($w ne "<silence>")&& ($w ne "<noise>")&& ($w ne "<hes>")) { 
+         print STDERR "Warning, unknown nonspeech $w\n" if not defined $UNK_NS{$w};
+         $UNK_NS{$w} +=1;
 			} else {
 			    # This is a just regular spoken word
 			    if ($vocabFile && (! $inVocab{$w}) && $fragMarkers) {
@@ -356,7 +361,9 @@ if (-d $AudioDir) {
             $fileID =~ s:\.wav\s*::; # remove file extension
             if (exists $numUtterancesInFile{$fileID}) {
                 # Some portion of this file has training transcriptions
-                $duration = `$soxi -D $filename`;
+                $samples = `$soxi -s $filename`; chomp $samples;
+                $rate = `$soxi -r $filename`; chomp $rate;
+                $duration= 1.0 * $samples / $rate;
                 if ($duration <=0) {
                     # Unable to extract a valid duration from the sphere header
                     print STDERR ("Unable to extract duration: skipping file $filename");

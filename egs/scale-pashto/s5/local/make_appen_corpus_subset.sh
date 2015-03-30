@@ -4,10 +4,10 @@
 # Apache 2.0.
 
 #Begin configuration
-romanized=false
-add_data=false
 ignore_missing_txt=false  #If the reference transcript txt is missing, \
                           #shall we ignore it or treat it as a fatal error?
+add_data=false
+romanized=false
 #End configuration
 echo "$0 $@"  # Print the command line for logging
 
@@ -66,23 +66,24 @@ for i in `seq 0 $(( $num_src / 2 - 1))` ; do
   echo "Making subsets from $input_data_dir according to $idl"
 
   for file_basename in `cat $input_data_list`; do
-      if [[ -e $abs_src_dir/audio/$file_basename.sph ]] ; then
-          ln -sf $abs_src_dir/audio/$file_basename.sph $abs_tgt_dir/audio || exit 1
+      if [[ -e $abs_src_dir/Audio/$file_basename.sph ]] ; then
+          ln -sf $abs_src_dir/Audio/$file_basename.sph $abs_tgt_dir/audio || exit 1
       else
-        if [[ -e $abs_src_dir/audio/$file_basename.wav ]] ; then
-          ln -sf $abs_src_dir/audio/$file_basename.wav $abs_tgt_dir/audio || exit 1
+        if [[ -e $abs_src_dir/Audio/$file_basename.wav ]] ; then
+          ln -sf $abs_src_dir/Audio/$file_basename.wav $abs_tgt_dir/audio || exit 1
         else
           echo "File $abs_src_dir/audio/$file_basename.sph|wav does not exist!"  >&2
           exit 1
         fi
       fi
 
-      trans_str="transcription"
+      trans_str="Transcription"
       if $romanized ; then
-        trans_str="transcript_roman"
+        trans_str+="_Romanised"
       fi
-      if [[ -e $abs_src_dir/$trans_str/$file_basename.txt ]] ; then
-          ln -sf $abs_src_dir/$trans_str/$file_basename.txt $abs_tgt_dir/transcription || exit 1
+
+      if [[ -e $abs_src_dir/Transcription/$trans_str/$file_basename.txt ]] ; then
+          ln -sf $abs_src_dir/Transcription/$trans_str/$file_basename.txt $abs_tgt_dir/transcription || exit 1
       else
           if ! $ignore_missing_txt ; then
             echo "File $abs_src_dir/transcription/$file_basename.txt does not exist!"

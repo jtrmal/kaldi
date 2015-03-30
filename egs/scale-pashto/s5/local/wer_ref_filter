@@ -1,0 +1,21 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use utf8;
+
+
+binmode STDIN, ":utf8";
+binmode STDOUT, ":utf8";
+binmode STDERR, ":utf8";
+
+while (<>) {
+  s/\./ /gi;
+  s/\?/ /gi;
+  s/,/ /gi;
+  s/<[-_A-Za-z\/][-_A-Za-z\/]*>/ /g;
+
+
+  print uc($_);
+}
+
+
