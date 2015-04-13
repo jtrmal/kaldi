@@ -13,7 +13,7 @@ GetOptions ("tag=s" => \$TAG);
 my %LEX = ();
 my %ROM = ();
 
-$TAG="_$TAG" if $TAG;
+$TAG=" _$TAG . " if $TAG;
 
 while (<>) {
   chomp;
@@ -22,9 +22,33 @@ while (<>) {
   my $rom = shift @entries;
   foreach my $pron (@entries) {
     my @phones=split(' ', $pron);
-    $pron= join(" ",map { "${_}${TAG}" } @phones);
+    my @new_phones=();
+    my $stress_marker="";
+    if ($TAG) {
+      foreach my $phone (@phones) {
+        if ($phone eq '.') {
+          # Do nothing
+          $stress_marker = "";
+          ;
+        } elsif ($phone eq '"') {
+          $stress_marker="\"";
+          #push @new_phones,  "$phone " ;
+        } else {
+          if ($stress_marker) {
+            push @new_phones,  "$stress_marker $phone${TAG}" ;
+          } else {
+            push @new_phones,  "$phone${TAG}" ;
+          }
+        }
+      }
+    } else {
+      @new_phones = @phones;
+    }
+    $pron= join(" ", @new_phones);
+    $pron =~ s/\s*\.\s*$//g;
     $LEX{$word}->{$pron}+=1;
     $ROM{$word}->{$rom}+=1;
+    undef @new_phones;
   }
 }
 

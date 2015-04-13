@@ -44,6 +44,7 @@ use Data::Dumper;
        $nVoclNoise = "<noise>";   # Nonvocal noise:     pronunciation <sss>
        $silence    = "<silence>"; # Silence > 1 second: pronunciation $sil
        $icu_transform = "";
+       @valid_tags = ();
        $phonemap="";
 #
 #   -  nonsilence_phones.txt: tagged phones from the new lexicon 
@@ -66,7 +67,8 @@ GetOptions("add=s" => \$nsWordsFile,
            "romanized!" => \$romanized, 
            "sil=s" => \$sil, 
            "icu-transform=s" => \$icu_transform,
-           "phonemap=s" => \$phonemap 
+           "phonemap=s" => \$phonemap,
+           "valid-tag=s"  > \@valid_tags
            );
 
 if ($#ARGV == 1) {
@@ -88,8 +90,13 @@ if ($#ARGV == 1) {
     print STDERR ("\t                  where p1 and p2 are existing phonemes and p1'..p4' are\n");
     print STDERR ("\t                  either new or existing phonemes\n");
     print STDERR ("\t--icu-transform   ICU transform to be used during the ICU transliteration\n");
+    print STDERR ("\t--valid-tag       This tag should not be striped or ignored.");
+    print STDERR ("\t                  Can specify more tags on using comma \n");
+    print STDERR ("\t                  Multiple of these switches accepted \n");
+    print STDERR ("\t                  E.g. $0 --valid-tag _1,_2 --valid-tag _3 is valid\n");
     exit(1);
 }
+@valid_tags = split(/,/,join(',',@valid_tags));
 
 unless (-d $outDir) {
     print STDERR ("$0: Creating output directory $outDir\n");

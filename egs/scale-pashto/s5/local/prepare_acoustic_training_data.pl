@@ -419,7 +419,7 @@ open (SCP, "| sort -u >  $scpFileName") || die "$0 ERROR: Unable to write wav.sc
 my $binary=`which sph2pipe` or die "Could not find the sph2pipe command"; chomp $binary;
 $SPH2PIPE ="$binary -f wav -p -c 1";
 my $SOXBINARY =`which sox` or die "Could not find the sph2pipe command"; chomp $SOXBINARY;
-$SOXFLAGS ="-r 8000 -c 1 -b 16 -t wav - downsample";
+$SOXFLAGS ="-r 8000 -c 1 -b 16 -t wav - ";
 
 $spk2uttFileName = "$outDir/spk2utt";
 open (SPK2UTT, "> $spk2uttFileName") || die "$0 ERROR: Unable to write spk2utt file $spk2uttFileName\n";

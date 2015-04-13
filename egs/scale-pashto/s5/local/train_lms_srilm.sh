@@ -14,9 +14,24 @@ echo "-------------------------------------"
 echo "Building an SRILM language model     "
 echo "-------------------------------------"
 
+if [ $# -ne 2 ] ; then
+  echo "Incorrect number of parameters. "
+  echo "Script has to be called like this:"
+  echo "  $0 [switches] <datadir> <tgtdir>"
+  echo "For example: "
+  echo "  $0 data data/srilm"
+  echo "The allowed switches are: "
+  echo "    words_file=<word_file|>        word list file -- data/lang/words.txt by default"
+  echo "    train_text=<train_text|>       data/train/text is used in case when not specified" 
+  echo "    dev_text=<dev_text|>           last 10 % of the train text is used by default"
+  echo "    oov_symbol=<unk_sumbol|<UNK>>  symbol to use for oov modeling -- <UNK> by default"
+  exit 1
+fi
+
 datadir=$1
 tgtdir=$2
 outlm=lm.gz
+
 
 ##End of configuration
 loc=`which ngram-count`;

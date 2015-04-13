@@ -44,57 +44,63 @@ function make_plp {
   utils/fix_data_dir.sh $target
 }
 
-dataset_type=dev10h
-dataset_dir=data/$dataset_type
-#The $dataset_type value will be the dataset name without any extrension
-eval my_nj=\$${dataset_type}_nj  #for shadow, this will be re-set when appropriate
-eval my_data_dir=( "\${${dataset_type}_data_dir[@]}" )
-eval my_data_list=( "\${${dataset_type}_data_list[@]}" )
-if [ -z $my_data_dir ] || [ -z $my_data_list ] ; then
-  echo "Error: The dir you specified ($dataset_type) does not have existing config";
-  exit 1
-fi
-l1=${#my_data_dir[*]}
+for dataset_type in dev10h dev_appen ; do
+  echo "Dataset: $dataset_type"
 
-for i in `seq 0 $(($l1 - 1))`; do
-  resource_string+=" ${my_data_dir[$i]} "
-  resource_string+=" ${my_data_list[$i]} "
-done
+  dataset_dir=data/$dataset_type
+  #The $dataset_type value will be the dataset name without any extrension
+  eval my_nj=\$${dataset_type}_nj  #for shadow, this will be re-set when appropriate
+  eval my_data_dir=( "\${${dataset_type}_data_dir[@]}" )
+  eval my_data_list=( "\${${dataset_type}_data_list[@]}" )
+  if [ -z $my_data_dir ] || [ -z $my_data_list ] ; then
+    echo "Error: The dir you specified ($dataset_type) does not have existing config";
+    exit 1
+  fi
+  l1=${#my_data_dir[*]}
 
-if [ ! -f data/raw_${dataset_type}_data/.done ] ; then
-  local/make_corpus_subset.sh $resource_string ./data/raw_${dataset_type}_data
-  touch data/raw_${dataset_type}_data/.done
-fi
+  for i in `seq 0 $(($l1 - 1))`; do
+    resource_string+=" ${my_data_dir[$i]} "
+    resource_string+=" ${my_data_list[$i]} "
+  done
 
-my_data_dir=`readlink -f ./data/raw_${dataset_type}_data`
-[ -f $my_data_dir/filelist.list ] && my_data_list=$my_data_dir/filelist.list
-nj_max=`cat $my_data_list | wc -l` || nj_max=`ls $my_data_dir/audio | wc -l`
-
-if [ "$nj_max" -lt "$my_nj" ] ; then
-  echo "Number of jobs ($my_nj) is too big!"
-  echo "The maximum reasonable number of jobs is $nj_max"
-  my_nj=$nj_max
-fi
-
-if [ ! -f $dataset_dir/.done ] ; then
-  echo ---------------------------------------------------------------------
-  echo "Preparing ${dataset_type} data lists in ${dataset_dir} on" `date`
-  echo ---------------------------------------------------------------------
-  mkdir -p ${dataset_dir}
-  local/prepare_acoustic_training_data.pl --fragmentMarkers \-\*\~  \
-    $my_data_dir ${dataset_dir} > ${dataset_dir}/skipped_utts.log || exit 1
-  
-  if [ ! -f ${dataset_dir}/.plp.done ]; then
-    echo ---------------------------------------------------------------------
-    echo "Preparing ${dataset_type} parametrization files in ${dataset_dir} on" `date`
-    echo ---------------------------------------------------------------------
-    make_plp ${dataset_dir} exp/make_plp/${dataset_type} plp
-    touch ${dataset_dir}/.plp.done
+  if [ ! -f data/raw_${dataset_type}_data/.done ] ; then
+    if [[ $dataset_type =~ .*appen.* ]] ; then
+      local/make_appen_corpus_subset.sh $resource_string ./data/raw_${dataset_type}_data
+    else
+      local/make_corpus_subset.sh $resource_string ./data/raw_${dataset_type}_data
+    fi
+    touch data/raw_${dataset_type}_data/.done
   fi
 
-  touch $dataset_dir/.done 
-fi
+  my_data_dir=`readlink -f ./data/raw_${dataset_type}_data`
+  [ -f $my_data_dir/filelist.list ] && my_data_list=$my_data_dir/filelist.list
+  nj_max=`cat $my_data_list | wc -l` || nj_max=`ls $my_data_dir/audio | wc -l`
 
+  if [ "$nj_max" -lt "$my_nj" ] ; then
+    echo "Number of jobs ($my_nj) is too big!"
+    echo "The maximum reasonable number of jobs is $nj_max"
+    my_nj=$nj_max
+  fi
+
+  if [ ! -f $dataset_dir/.done ] ; then
+    echo ---------------------------------------------------------------------
+    echo "Preparing ${dataset_type} data lists in ${dataset_dir} on" `date`
+    echo ---------------------------------------------------------------------
+    mkdir -p ${dataset_dir}
+    local/prepare_acoustic_training_data.pl --fragmentMarkers \-\*\~  \
+      $my_data_dir ${dataset_dir} > ${dataset_dir}/skipped_utts.log || exit 1
+
+    if [ ! -f ${dataset_dir}/.plp.done ]; then
+      echo ---------------------------------------------------------------------
+      echo "Preparing ${dataset_type} parametrization files in ${dataset_dir} on" `date`
+      echo ---------------------------------------------------------------------
+      make_plp ${dataset_dir} exp/make_plp/${dataset_type} plp
+      touch ${dataset_dir}/.plp.done
+    fi
+
+    touch $dataset_dir/.done 
+  fi
+done
 
 if $data_only ; then
   echo "Exiting, as data-only was requested..."
@@ -106,7 +112,9 @@ fi
 ## FMLLR decoding 
 ##
 ####################################################################
+for dataset_type in dev10h dev_appen ; do
 decode=exp/tri5/decode_${dataset_type}
+dataset_dir=data/$dataset_type
 if [ ! -f ${decode}/.done ]; then
   echo ---------------------------------------------------------------------
   echo "Spawning decoding with SAT models  on" `date`
@@ -122,7 +130,7 @@ if [ ! -f ${decode}/.done ]; then
     exp/tri5/graph ${dataset_dir} ${decode} |tee ${decode}/decode.log
   touch ${decode}/.done
 fi
-
+done
 
 
 ####################################################################
@@ -130,6 +138,7 @@ fi
 ## We Include the SGMM_MMI inside this, as we might only have the DNN systems
 ## trained and not PLP system. The DNN systems build only on the top of tri5 stage
 ####################################################################
+for dataset_type in dev10h dev_appen ; do
 if [ -f exp/sgmm5/.done ]; then
   decode=exp/sgmm5/decode_fmllr_${dataset_type}
   if [ ! -f $decode/.done ]; then
@@ -168,6 +177,6 @@ if [ -f exp/sgmm5/.done ]; then
   done
 
 fi
-
+done
 echo "Everything looking good...." 
 exit 0
