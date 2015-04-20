@@ -9,13 +9,12 @@
 
 . ./cmd.sh
 set -e 
-stage=1
+stage=6
 train_stage=-10
-use_gpu=true
+use_gpu=false
 splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
 common_egs_dir=
 dir=exp/nnet2_online/nnet_ms_sp
-has_fisher=true
 
 . ./path.sh
 . ./utils/parse_options.sh
@@ -28,6 +27,7 @@ If you want to use GPUs (and have them), go to src/, and configure and make on a
 where "nvcc" is installed.  Otherwise, call this script with --use-gpu false
 EOF
   fi
+  combine_parallel_opts="--num-threads 8"
   parallel_opts="-l gpu=1" 
   num_threads=1
   minibatch_size=512
@@ -35,9 +35,10 @@ EOF
 else
   # Use 4 nnet jobs just like run_4d_gpu.sh so the results should be
   # almost the same, but this may be a little bit slow.
-  num_threads=16
-  minibatch_size=128
-  parallel_opts="-pe smp $num_threads" 
+  num_threads=8
+  minibatch_size=256
+  parallel_opts="--num-threads $num_threads" 
+  combine_parallel_opts="--num-threads 8"
 fi
 
 
@@ -47,17 +48,17 @@ local/online/run_nnet2_common.sh --stage $stage || exit 1;
 if [ $stage -le 6 ]; then
   #Although the nnet will be trained by high resolution data, we still have to perturbe the normal data to get the alignment
   # _sp stands for speed-perturbed
-  utils/perturb_data_dir_speed.sh 0.9 data/train data/temp1
-  utils/perturb_data_dir_speed.sh 1.0 data/train data/temp2
-  utils/perturb_data_dir_speed.sh 1.1 data/train data/temp3
-  utils/combine_data.sh --extra-files utt2uniq data/train_sp data/temp1 data/temp2 data/temp3
-  rm -r data/temp1 data/temp2 data/temp3
+  #utils/perturb_data_dir_speed.sh 0.9 data/train data/local/train_sp_0.9
+  #utils/perturb_data_dir_speed.sh 1.0 data/train data/local/train_sp_1.0
+  #utils/perturb_data_dir_speed.sh 1.1 data/train data/local/train_sp_1.1
+  #utils/combine_data.sh --extra-files utt2uniq data/train_sp data/local/train_sp_0.9 data/local/train_sp_1.0 data/local/train_sp_1.1
+  #rm -r data/local/train_sp_0.9 data/local/train_sp_1.0 data/local/train_sp_1.1
 
-  mfccdir=mfcc_perturbed
+  mfccdir=param_perturbed
   for x in train_sp; do
-    steps/make_mfcc.sh --cmd "$train_cmd" --nj 50 \
-      data/$x exp/make_mfcc/$x $mfccdir || exit 1;
-    steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir || exit 1;
+    steps/make_plp_pitch.sh --cmd "$train_cmd" --nj 50 \
+      data/$x exp/make_plp_pitch//$x $mfccdir || exit 1;
+    steps/compute_cmvn_stats.sh data/$x exp/make_plp//$x $mfccdir || exit 1;
   done
   utils/fix_data_dir.sh data/train_sp
 fi
@@ -70,11 +71,11 @@ fi
 
 if [ $stage -le 8 ]; then
   #Now perturb the high resolution daa
-  utils/perturb_data_dir_speed.sh 0.9 data/train_hires data/temp1
-  utils/perturb_data_dir_speed.sh 1.0 data/train_hires data/temp2
-  utils/perturb_data_dir_speed.sh 1.1 data/train_hires data/temp3
-  utils/combine_data.sh --extra-files utt2uniq data/train_hires_sp data/temp1 data/temp2 data/temp3
-  rm -r data/temp1 data/temp2 data/temp3
+  utils/perturb_data_dir_speed.sh 0.9 data/train_hires data/local/train_hires_sp_0.9
+  utils/perturb_data_dir_speed.sh 1.0 data/train_hires data/local/train_hires_sp_1.0
+  utils/perturb_data_dir_speed.sh 1.1 data/train_hires data/local/train_hires_sp_1.1
+  utils/combine_data.sh --extra-files utt2uniq data/train_hires_sp data/local/train_hires_sp_0.9 data/local/train_hires_sp_1.0 data/local/train_hires_sp_1.1
+  rm -r data/local/train_hires_sp_0.9 data/local/train_hires_sp_1.0 data/local/train_hires_sp_1.1
 
   mfccdir=mfcc_perturbed
   for x in train_hires_sp; do
@@ -107,14 +108,15 @@ if [ $stage -le 10 ]; then
     --num-threads "$num_threads" \
     --minibatch-size "$minibatch_size" \
     --parallel-opts "$parallel_opts" \
+    --combine-parallel-opts "$combine_parallel_opts" \
     --io-opts "--max-jobs-run 12" \
     --add-layers-period 1 \
-    --mix-up 6000 \
     --initial-effective-lrate 0.0015 --final-effective-lrate 0.00015 \
     --cmd "$decode_cmd" \
     --egs-dir "$common_egs_dir" \
     --pnorm-input-dim 3500 \
     --pnorm-output-dim 350 \
+    --mix-up 12000 \
     data/train_hires_sp data/lang exp/tri3_ali_sp $dir  || exit 1;
 fi
 

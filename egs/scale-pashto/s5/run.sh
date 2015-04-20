@@ -119,13 +119,6 @@ if [[ ! -f data/srilm/lm.gz || data/srilm/lm.gz -ot data/train/text ]]; then
     --train-text data/train/text data/ data/srilm 
 fi
 
-if [[ ! -f data/lang/G.fst || data/lang/G.fst -ot data/srilm/lm.gz ]]; then
-  echo ---------------------------------------------------------------------
-  echo "Creating G.fst on " `date`
-  echo ---------------------------------------------------------------------
-  local/arpa2G.sh data/srilm/lm.gz data/lang data/lang
-fi
-
 if [ ! -f data/train/.plp.done ]; then
   steps/make_plp_pitch.sh --cmd "$train_cmd" --nj $train_nj \
       data/train exp/make_plp_pitch/train plp
@@ -182,6 +175,7 @@ if [ ! -f exp/tri1/.done ]; then
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" $numLeavesTri1 $numGaussTri1 \
     data/train_sub2 data/lang exp/mono_ali_sub2 exp/tri1
+  
   touch exp/tri1/.done
 fi
 
@@ -196,6 +190,14 @@ if [ ! -f exp/tri2/.done ]; then
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" $numLeavesTri2 $numGaussTri2 \
     data/train_sub3 data/lang exp/tri1_ali_sub3 exp/tri2
+
+  steps/get_prons.sh --cmd "$train_cmd" data/train_sub3 data/lang exp/tri2
+  utils/dict_dir_add_pronprobs.sh --max-normalize true data/local/dict  \
+    exp/tri2/pron_counts_nowb.txt exp/tri2/sil_counts_nowb.txt \
+    exp/tri2/pron_bigram_counts_nowb.txt data/local/dictp/tri2
+
+  utils/prepare_lang.sh data/local/dictp/tri2 "<unk>" \
+    data/local/langp/tri2 data/langp/tri2
   touch exp/tri2/.done
 fi
 
@@ -205,10 +207,19 @@ echo ---------------------------------------------------------------------
 if [ ! -f exp/tri3/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/lang exp/tri2 exp/tri2_ali
+    data/train data/langp/tri2 exp/tri2 exp/tri2_ali
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
-    $numLeavesTri3 $numGaussTri3 data/train data/lang exp/tri2_ali exp/tri3
+    $numLeavesTri3 $numGaussTri3 data/train data/langp/tri2 exp/tri2_ali exp/tri3
+  
+  steps/get_prons.sh --cmd "$train_cmd" data/train data/lang exp/tri3
+  utils/dict_dir_add_pronprobs.sh --max-normalize true data/local/dict  \
+    exp/tri3/pron_counts_nowb.txt exp/tri3/sil_counts_nowb.txt \
+    exp/tri3/pron_bigram_counts_nowb.txt data/local/dictp/tri3
+
+  utils/prepare_lang.sh data/local/dictp/tri3 "<unk>" \
+    data/local/langp/tri3 data/langp/tri3
+
   touch exp/tri3/.done
 fi
 
@@ -218,10 +229,19 @@ echo ---------------------------------------------------------------------
 if [ ! -f exp/tri4/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/lang exp/tri3 exp/tri3_ali
+    data/train data/langp/tri3 exp/tri3 exp/tri3_ali
   steps/train_lda_mllt.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
-    $numLeavesMLLT $numGaussMLLT data/train data/lang exp/tri3_ali exp/tri4
+    $numLeavesMLLT $numGaussMLLT data/train data/langp/tri3 exp/tri3_ali exp/tri4
+
+  steps/get_prons.sh --cmd "$train_cmd" data/train data/lang exp/tri4
+  utils/dict_dir_add_pronprobs.sh --max-normalize true data/local/dict  \
+    exp/tri4/pron_counts_nowb.txt exp/tri4/sil_counts_nowb.txt \
+    exp/tri4/pron_bigram_counts_nowb.txt data/local/dictp/tri4
+
+  utils/prepare_lang.sh data/local/dictp/tri4 "<unk>" \
+    data/local/langp/tri4 data/langp/tri4
+
   touch exp/tri4/.done
 fi
 
@@ -232,10 +252,19 @@ echo ---------------------------------------------------------------------
 if [ ! -f exp/tri5/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/lang exp/tri4 exp/tri4_ali
+    data/train data/langp/tri4 exp/tri4 exp/tri4_ali
   steps/train_sat.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
-    $numLeavesSAT $numGaussSAT data/train data/lang exp/tri4_ali exp/tri5
+    $numLeavesSAT $numGaussSAT data/train data/langp/tri4 exp/tri4_ali exp/tri5
+  
+  steps/get_prons.sh --cmd "$train_cmd" data/train data/lang exp/tri5
+  utils/dict_dir_add_pronprobs.sh --max-normalize true data/local/dict  \
+    exp/tri5/pron_counts_nowb.txt exp/tri5/sil_counts_nowb.txt \
+    exp/tri5/pron_bigram_counts_nowb.txt data/local/dictp/tri5
+
+  utils/prepare_lang.sh data/local/dictp/tri5 "<unk>" \
+    data/local/langp/tri5 data/langp/tri5
+
   touch exp/tri5/.done
 fi
 
@@ -250,7 +279,7 @@ if [ ! -f exp/tri5_ali/.done ]; then
   echo ---------------------------------------------------------------------
   steps/align_fmllr.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/lang exp/tri5 exp/tri5_ali
+    data/train data/langp/tri5 exp/tri5 exp/tri5_ali
   touch exp/tri5_ali/.done
 fi
 

@@ -44,6 +44,12 @@ function make_plp {
   utils/fix_data_dir.sh $target
 }
 
+if [ ! -f data/lang_test/.done ]; then
+  cp -R data/langp/tri5 data/lang_test
+  local/arpa2G.sh data/srilm/lm.gz data/lang_test data/lang_test
+  touch data/lang_test/.done
+fi
+
 for dataset_type in dev10h dev_appen ; do
   echo "Dataset: $dataset_type"
 
@@ -57,7 +63,8 @@ for dataset_type in dev10h dev_appen ; do
     exit 1
   fi
   l1=${#my_data_dir[*]}
-
+  
+  resource_string=""
   for i in `seq 0 $(($l1 - 1))`; do
     resource_string+=" ${my_data_dir[$i]} "
     resource_string+=" ${my_data_list[$i]} "
@@ -120,7 +127,7 @@ if [ ! -f ${decode}/.done ]; then
   echo "Spawning decoding with SAT models  on" `date`
   echo ---------------------------------------------------------------------
   utils/mkgraph.sh \
-    data/lang exp/tri5 exp/tri5/graph |tee exp/tri5/mkgraph.log
+    data/lang_test exp/tri5 exp/tri5/graph |tee exp/tri5/mkgraph.log
 
   mkdir -p $decode
   #By default, we do not care about the lattices for this step -- we just want the transforms
@@ -146,7 +153,7 @@ if [ -f exp/sgmm5/.done ]; then
     echo "Spawning $decode on" `date`
     echo ---------------------------------------------------------------------
     utils/mkgraph.sh \
-      data/lang exp/sgmm5 exp/sgmm5/graph |tee exp/sgmm5/mkgraph.log
+      data/lang_test exp/sgmm5 exp/sgmm5/graph |tee exp/sgmm5/mkgraph.log
 
     mkdir -p $decode
     steps/decode_sgmm2.sh --use-fmllr true --nj $my_nj \
@@ -170,7 +177,7 @@ if [ -f exp/sgmm5/.done ]; then
       mkdir -p $decode
       steps/decode_sgmm2_rescore.sh   \
         --cmd "$decode_cmd" --iter $iter --transform-dir exp/tri5/decode_${dataset_type} \
-        data/lang ${dataset_dir} exp/sgmm5/decode_fmllr_${dataset_type} $decode | tee ${decode}/decode.log
+        data/lang_test ${dataset_dir} exp/sgmm5/decode_fmllr_${dataset_type} $decode | tee ${decode}/decode.log
 
       touch $decode/.done
     fi

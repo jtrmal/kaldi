@@ -5,9 +5,8 @@
 # You'll notice that we splice over successively larger windows as we go deeper
 # into the network.
 
-. cmd.sh
-
-
+. ./cmd.sh
+set -e 
 stage=-10
 train_stage=-10
 use_gpu=false
@@ -29,10 +28,6 @@ EOF
   fi
   combine_parallel_opts="--num-threads 8"
   parallel_opts="-l gpu=1 --config conf/no_k20.conf --allow-k20 false"
-#that config is like the default config in the text of queue.pl, but adding the following lines.
-#default allow_k20=true
-#option allow_k20=true
-#option allow_k20=false -l 'hostname=!g01&!g02&!b06'
   num_threads=1
   minibatch_size=512
   # the _a is in case I want to change the parameters.
@@ -42,6 +37,7 @@ else
   num_threads=8
   minibatch_size=256
   parallel_opts="--num-threads $num_threads" 
+  combine_parallel_opts="--num-threads 8"
 fi
 
 # do the common parts of the script.
@@ -58,7 +54,7 @@ if [ $stage -le 7 ]; then
   # this is because we want it to be small enough that we could plausibly run it
   # in real-time.
   steps/nnet2/train_multisplice_accel2.sh --stage $train_stage \
-    --num-epochs 8 --num-jobs-initial 3 --num-jobs-final 18 \
+    --num-epochs 9 --num-jobs-initial 6 --num-jobs-final 24 \
     --num-hidden-layers 6 --splice-indexes "layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2" \
     --feat-type raw \
     --online-ivector-dir exp/nnet2_online/ivectors_train_hires \
@@ -72,7 +68,6 @@ if [ $stage -le 7 ]; then
     --cmd "$decode_cmd" \
     --pnorm-input-dim 3500 \
     --pnorm-output-dim 350 \
-    --mix-up 12000 \
     data/train_hires data/lang exp/tri3 $dir  || exit 1;
 fi
 
