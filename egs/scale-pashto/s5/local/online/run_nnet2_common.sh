@@ -24,14 +24,17 @@ if [ $stage -le 1 ]; then
     utils/create_split_dir.pl /export/b0{1,2,3,4}/$USER/kaldi-data/egs/tedlium-$(date +'%m_%d_%H_%M')/s5/$mfccdir/storage $mfccdir/storage
   fi
 
-  for datadir in train dev10h; do
-    utils/copy_data_dir.sh data/$datadir data/${datadir}_hires
-    steps/make_mfcc.sh --nj 70 --mfcc-config conf/mfcc_hires.conf \
-      --cmd "$train_cmd" data/${datadir}_hires exp/make_hires/$datadir $mfccdir || exit 1;
-    steps/compute_cmvn_stats.sh data/${datadir}_hires exp/make_hires/$datadir $mfccdir || exit 1;
+  for datadir in train dev10h dev_appen; do
+    if [ ! -f data/${datadir}_hires/.done ] ; then
+      utils/copy_data_dir.sh data/$datadir data/${datadir}_hires
+      steps/make_mfcc.sh --nj 70 --mfcc-config conf/mfcc_hires.conf \
+        --cmd "$train_cmd" data/${datadir}_hires exp/make_hires/$datadir $mfccdir || exit 1;
+      steps/compute_cmvn_stats.sh data/${datadir}_hires exp/make_hires/$datadir $mfccdir || exit 1;
+      touch data/${datadir}_hires/.done
+    fi
   done
-
 fi
+
 
 if [ $stage -le 2 ]; then
   # Train a system just for its LDA+MLLT transform.  We use --num-iters 13

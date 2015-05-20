@@ -34,7 +34,10 @@ if [ ! -f data/raw_babel_train_data/.done ]; then
     echo ---------------------------------------------------------------------
     echo "Creating  the BABEL-TRAIN set"
     echo ---------------------------------------------------------------------
-    local/make_corpus_subset.sh --romanized $romanized "$train_data_dir" "$train_data_list" ./data/raw_babel_train_data
+    mkdir -p data/raw_babel_train_data
+    if [ ! -z ${train_data_dir+x}  ]; then
+      local/make_corpus_subset.sh --romanized $romanized "$train_data_dir" "$train_data_list" ./data/raw_babel_train_data
+    fi
     touch data/raw_babel_train_data/.done
 fi
 babel_train=`readlink -f ./data/raw_babel_train_data`
@@ -43,8 +46,10 @@ if [ ! -f data/raw_appen_train_data/.done ]; then
     echo ---------------------------------------------------------------------
     echo "Creating the APPEN-TRAIN set"
     echo ---------------------------------------------------------------------
-    
-    local/make_appen_corpus_subset.sh --romanized $romanized  "$train_data_appen_dir" "$train_data_appen_list" ./data/raw_appen_train_data
+    mkdir -p data/raw_appen_train_data
+    if [ ! -z ${train_data_appen_dir+x}  ]; then
+      local/make_appen_corpus_subset.sh --romanized $romanized  "$train_data_appen_dir" "$train_data_appen_list" ./data/raw_appen_train_data
+    fi
     touch data/raw_appen_train_data/.done
 fi
 appen_train=`readlink -f ./data/raw_appen_train_data`
@@ -54,10 +59,19 @@ if [[ ! -f data/local/dict/lexicon.txt ]]; then
   echo ---------------------------------------------------------------------
   echo "Preparing lexicon in data/local on" `date`
   echo ---------------------------------------------------------------------
-  local/make_lexicon_subset.sh $babel_train/transcription <(local/convert_charsets.pl $lexicon_file) data/local/dict/filtered_babel_lexicon.txt
-  cut -f 1,2,3 $lexicon_appen_file | local/convert_charsets.pl | local/lexicon_to_babel_format.pl --tag 1 > data/local/dict/filtered_appen_lexicon.txt
- 
-  cat data/local/dict/filtered_babel_lexicon.txt data/local/dict/filtered_appen_lexicon.txt | \
+
+  if [ ! -z ${train_data_appen_dir+x}  ] && [ ! -z ${train_data_dir+x} ]  ; then
+    echo "Merging the lexicons..."
+    local/make_lexicon_subset.sh $babel_train/transcription <(local/convert_charsets.pl $lexicon_file) data/local/dict/filtered_babel_lexicon.txt
+    cut -f 1,2,3 $lexicon_appen_file | local/convert_charsets.pl | local/lexicon_to_babel_format.pl --tag 1 > data/local/dict/filtered_appen_lexicon.txt
+  elif  [ ! -z ${train_data_appen_dir+x}  ] ; then
+    echo "Using only the Appen Lexicon..."
+    cut -f 1,2,3 $lexicon_appen_file | local/convert_charsets.pl | local/lexicon_to_babel_format.pl --tag 1 > data/local/dict/filtered_appen_lexicon.txt
+  else
+    echo "Using only the Babel Lexicon..."
+    local/make_lexicon_subset.sh $babel_train/transcription <(local/convert_charsets.pl $lexicon_file) data/local/dict/filtered_babel_lexicon.txt
+  fi
+  cat data/local/dict/filtered_*_lexicon.txt | \
     local/lexicon_to_babel_format.pl > data/local/dict/filtered_lexicon.txt
 
   local/prepare_lexicon.pl  --romanized --phonemap "$phoneme_mapping" \
@@ -79,10 +93,12 @@ if [[ ! -f data/train_babel/wav.scp || data/train_babel/wav.scp -ot "$babel_trai
   echo "Preparing acoustic training lists in data/train on" `date`
   echo ---------------------------------------------------------------------
   mkdir -p data/train_babel
-  local/prepare_acoustic_training_data.pl \
-    --vocab data/local/dict/lexicon.txt --fragmentMarkers \-\*\~ \
-    $babel_train data/train_babel > data/train_babel/skipped_utts.log
-  utils/fix_data_dir.sh data/train_babel
+  if  [ ! -z ${train_data_dir+x}  ] ; then
+    local/prepare_acoustic_training_data.pl \
+      --vocab data/local/dict/lexicon.txt --fragmentMarkers \-\*\~ \
+      $babel_train data/train_babel > data/train_babel/skipped_utts.log
+    utils/fix_data_dir.sh data/train_babel
+  fi
 fi
 
 if [[ ! -f data/train_appen/wav.scp || data/train_appen/wav.scp -ot "$appen_train" ]]; then
@@ -90,14 +106,23 @@ if [[ ! -f data/train_appen/wav.scp || data/train_appen/wav.scp -ot "$appen_trai
   echo "Preparing acoustic training lists in data/train on" `date`
   echo ---------------------------------------------------------------------
   mkdir -p data/train_appen
-  local/prepare_acoustic_training_data.pl \
-    --vocab data/local/dict/lexicon.txt --fragmentMarkers \-\*\~ \
-    $appen_train data/train_appen > data/train_appen/skipped_utts.log
-  utils/fix_data_dir.sh data/train_appen
+  if  [ ! -z ${train_data_appen_dir+x}  ] ; then
+    local/prepare_acoustic_training_data.pl \
+      --vocab data/local/dict/lexicon.txt --fragmentMarkers \-\*\~ \
+      $appen_train data/train_appen > data/train_appen/skipped_utts.log
+    utils/fix_data_dir.sh data/train_appen
+  fi
 fi
 
 if [ ! -f data/train/.done ] ; then
-  combine_data.sh data/train data/train_appen data/train_babel 
+  if [ ! -z ${train_data_appen_dir+x}  ] && [ ! -z ${train_data_dir+x} ]  ; then
+    combine_data.sh data/train data/train_appen data/train_babel 
+  elif  [ ! -z ${train_data_appen_dir+x}  ] ; then
+    utils/copy_data_dir.sh data/train_appen data/train
+  else
+    utils/copy_data_dir.sh data/train_babel data/train
+  fi
+
   touch data/train/.done
 fi
 
@@ -208,6 +233,7 @@ if [ ! -f exp/tri3/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
     data/train data/langp/tri2 exp/tri2 exp/tri2_ali
+
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
     $numLeavesTri3 $numGaussTri3 data/train data/langp/tri2 exp/tri2_ali exp/tri3
@@ -230,6 +256,7 @@ if [ ! -f exp/tri4/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
     data/train data/langp/tri3 exp/tri3 exp/tri3_ali
+
   steps/train_lda_mllt.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
     $numLeavesMLLT $numGaussMLLT data/train data/langp/tri3 exp/tri3_ali exp/tri4
@@ -253,6 +280,7 @@ if [ ! -f exp/tri5/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
     data/train data/langp/tri4 exp/tri4 exp/tri4_ali
+
   steps/train_sat.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
     $numLeavesSAT $numGaussSAT data/train data/langp/tri4 exp/tri4_ali exp/tri5

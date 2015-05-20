@@ -21,7 +21,7 @@
 stage=0
 train_stage=-10
 use_gpu=true
-srcdir=exp/nnet2_online/nnet_ms_a
+srcdir=exp/nnet2_online/nnet_ms_d
 criterion=smbr
 drop_frames=false  # only matters for MMI anyway.
 effective_lrate=0.000005
@@ -133,11 +133,11 @@ if [ $stage -le 5 ]; then
   ln -sf $(readlink -f ${srcdir}_online/conf) $dir/conf # so it acts like an online-decoding directory
 
   for epoch in $(seq $decode_start_epoch $num_epochs); do
-    for decode_set in dev test; do
+    for decode_set in dev10h dev_appen; do
       (
         num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
         steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
-          --iter epoch$epoch exp/tri3/graph data/${decode_set}_hires $dir/decode_epoch${epoch}_${decode_set} || exit 1
+          --iter epoch$epoch exp/nnet2_online/nnet_ms_d/graph data/${decode_set}_hires $dir/decode_epoch${epoch}_${decode_set} || exit 1
       ) &
     done
   done
