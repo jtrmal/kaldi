@@ -6,15 +6,17 @@
 # into the network.
 
 . ./cmd.sh
-set -e 
+. ./path.sh
 stage=7
 train_stage=-10
 use_gpu=true
+set -e 
+. ./utils/parse_options.sh
+
 # Original splice indices 
-#splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2" 
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
 # These are taken from the SWBD recipe
 splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer2/-3:3 layer3/-7:2"
-
 dir=exp/nnet2_online/nnet_ms_a
 nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 3500 --pnorm-output-dim 350)
 dir=exp/nnet2_online/nnet_ms_b
@@ -25,14 +27,10 @@ nnet_params=( --num-epochs 9 --num-hidden-layers 6 --pnorm-input-dim 3500 --pnor
 dir=exp/nnet2_online/nnet_ms_d
 splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer2/-3:3 layer3/-7:2"
 nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 3500 --pnorm-output-dim 350)
-dir=exp/nnet2_online/nnet_ms_e
-splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2" 
-nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 3500 --pnorm-output-dim 350)
+#dir=exp/nnet2_online/nnet_ms_e
+#splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2" 
+#nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 3500 --pnorm-output-dim 350)
 
-set -e
-. ./cmd.sh
-. ./path.sh
-. ./utils/parse_options.sh
 
 if $use_gpu; then
   if ! cuda-compiled; then
@@ -57,7 +55,7 @@ else
 fi
 
 # Run the common stages of training, including training the iVector extractor
-local/online/run_nnet2_common.sh --stage $stage || exit 1;
+# local/online/run_nnet2_common.sh --stage $stage || exit 1;
 
 if [ $stage -le 7 ]; then
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $dir/egs/storage ]; then
@@ -101,12 +99,15 @@ if [ $stage -le 9 ]; then
   [ ! -f data/langp_test/L.fst ] && cp -r data/langp/tri5/ data/langp_test
   [ ! -f data/langp_test/G.fst ] && local/arpa2G.sh data/srilm/lm.gz data/langp_test data/langp_test
   utils/mkgraph.sh data/langp_test $dir $dir/graph
-  for decode_set in dev10h dev_appen ; do
-      [ -f  $dir/decode_${decode_set} ] && continue;
-      num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-      steps/nnet2/decode.sh --nj $num_jobs --cmd "$decode_cmd" --config conf/decode.config \
-        --online-ivector-dir exp/nnet2_online/ivectors_${decode_set}_hires \
-        $dir/graph data/${decode_set}_hires $dir/decode_${decode_set} &
+  for decode_set in dev10h dev_appen; do
+      [ -f  $dir/decode_${decode_set}/.done  ] && continue;
+      (
+        num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        steps/nnet2/decode.sh --nj $num_jobs --cmd "$decode_cmd" --config conf/decode.config \
+          --online-ivector-dir exp/nnet2_online/ivectors_${decode_set}_hires \
+          $dir/graph data/${decode_set}_hires $dir/decode_${decode_set}
+        touch $dir/decode_${decode_set}/.done  
+      ) &
   done
 fi
 
@@ -116,15 +117,19 @@ if [ $stage -le 10 ]; then
   steps/online/nnet2/prepare_online_decoding.sh --mfcc-config conf/mfcc_hires.conf \
     data/lang exp/nnet2_online/extractor "$dir" ${dir}_online || exit 1;
 fi
+wait;
 
 if [ $stage -le 11 ]; then
   # do the actual online decoding with iVectors, carrying info forward from 
   # previous utterances of the same speaker.
   for decode_set in dev10h dev_appen; do
-    [ -f  ${dir}_online/decode_${decode_set} ] && continue;
-    num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-    steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
-      $dir/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set} &
+    [ -f  ${dir}_online/decode_${decode_set}/.done ] && continue;
+    (
+      num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+      steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
+        $dir/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set}
+      touch ${dir}_online/decode_${decode_set}/.done 
+    ) &
   done
 fi
 wait
@@ -132,10 +137,13 @@ if [ $stage -le 12 ]; then
   # this version of the decoding treats each utterance separately
   # without carrying forward speaker information.
   for decode_set in dev10h dev_appen; do
-      [ -f  ${dir}_online/decode_${decode_set}_utt ] && continue;
-      num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-      steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
-        --per-utt true $dir/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set}_utt &
+      [ -f  ${dir}_online/decode_${decode_set}_utt/.done ] && continue;
+      (
+        num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
+          --per-utt true $dir/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set}_utt 
+        touch ${dir}_online/decode_${decode_set}_utt/.done 
+      )&
   done
 fi
 
@@ -144,11 +152,14 @@ if [ $stage -le 13 ]; then
   # without carrying forward speaker information, but looks to the end
   # of the utterance while computing the iVector (--online false)
   for decode_set in  dev10h dev_appen; do
-      [ -f  ${dir}_online/decode_${decode_set}_utt_offline ] && continue;
-      num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-      steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
-        --per-utt true --online false $dir/graph data/${decode_set}_hires \
-          ${dir}_online/decode_${decode_set}_utt_offline &
+      [ -f  ${dir}_online/decode_${decode_set}_utt_offline/.done ] && continue;
+      (
+        num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
+          --per-utt true --online false $dir/graph data/${decode_set}_hires \
+            ${dir}_online/decode_${decode_set}_utt_offline 
+        touch ${dir}_online/decode_${decode_set}_utt_offline/.done 
+      ) &
   done
 fi
 wait;

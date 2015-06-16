@@ -238,6 +238,11 @@ done
 rm $dir/final.mdl 2>/dev/null
 ln -s $x.mdl $dir/final.mdl
 
+if $adjust_priors ; then
+  echo "Waiting until the posterior adjustment tasks finish"
+  wait
+fi
+
 echo Done
 
 epoch_final_iters=

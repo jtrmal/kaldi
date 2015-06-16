@@ -7,18 +7,39 @@
 
 # This example script demonstrates how speed perturbation of the data helps the nnet training in the SWB setup.
 
-. ./cmd.sh
-set -e 
 stage=6
 train_stage=-10
-use_gpu=false
+use_gpu=true
+# Original splice indices 
 splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
-common_egs_dir=
-dir=exp/nnet2_online/nnet_ms_sp
+# These are taken from the SWBD recipe
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer2/-3:3 layer3/-7:2"
+dir=exp/nnet2_online/nnet_ms_a
+nnet_params=( --num-epochs 3 --num-hidden-layers 6 --pnorm-input-dim 3500 --pnorm-output-dim 350 --mix-up 12000)
+dir=exp/nnet2_online/nnet_ms_d_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer2/-3:3 layer3/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 3500 --pnorm-output-dim 350)
+dir=exp/nnet2_online/nnet_ms_e_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 3500 --pnorm-output-dim 350)
+dir=exp/nnet2_online/nnet_ms_f_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 4500 --pnorm-output-dim 450)
+dir=exp/nnet2_online/nnet_ms_g_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 3000 --pnorm-output-dim 300)
+dir=exp/nnet2_online/nnet_ms_h_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2500 --pnorm-output-dim 250)
+#dir=exp/nnet2_online/nnet_ms_i_sp
+#splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+#nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2000 --pnorm-output-dim 200)
 
-. ./path.sh
+. ./cmd.sh
+. ./path.sh 
 . ./utils/parse_options.sh
 
+set -e -o pipefail
 if $use_gpu; then
   if ! cuda-compiled; then
     cat <<EOF && exit 1 
@@ -27,8 +48,8 @@ If you want to use GPUs (and have them), go to src/, and configure and make on a
 where "nvcc" is installed.  Otherwise, call this script with --use-gpu false
 EOF
   fi
-  combine_parallel_opts="--num-threads 8"
-  parallel_opts="-l gpu=1" 
+  parallel_opts=" --config conf/queue_jhu.conf --gpu 1"
+  combine_parallel_opts=" --config conf/queue_jhu.conf --gpu 0 --num-threads 8 "
   num_threads=1
   minibatch_size=512
   # the _a is in case I want to change the parameters.
@@ -36,31 +57,30 @@ else
   # Use 4 nnet jobs just like run_4d_gpu.sh so the results should be
   # almost the same, but this may be a little bit slow.
   num_threads=8
-  minibatch_size=256
+  minibatch_size=128
   parallel_opts="--num-threads $num_threads" 
   combine_parallel_opts="--num-threads 8"
 fi
 
-
 # Run the common stages of training, including training the iVector extractor
-local/online/run_nnet2_common.sh --stage $stage || exit 1;
+#local/online/run_nnet2_common.sh --stage $stage || exit 1;
 
 if [ $stage -le 6 ]; then
   #Although the nnet will be trained by high resolution data, we still have to perturbe the normal data to get the alignment
   # _sp stands for speed-perturbed
-  #utils/perturb_data_dir_speed.sh 0.9 data/train data/local/train_sp_0.9
-  #utils/perturb_data_dir_speed.sh 1.0 data/train data/local/train_sp_1.0
-  #utils/perturb_data_dir_speed.sh 1.1 data/train data/local/train_sp_1.1
-  #utils/combine_data.sh --extra-files utt2uniq data/train_sp data/local/train_sp_0.9 data/local/train_sp_1.0 data/local/train_sp_1.1
-  #rm -r data/local/train_sp_0.9 data/local/train_sp_1.0 data/local/train_sp_1.1
+  utils/perturb_data_dir_speed.sh 0.9 data/train data/local/train_sp_0.9
+  utils/perturb_data_dir_speed.sh 1.0 data/train data/local/train_sp_1.0
+  utils/perturb_data_dir_speed.sh 1.1 data/train data/local/train_sp_1.1
+  utils/combine_data.sh --extra-files utt2uniq data/train_sp data/local/train_sp_0.9 data/local/train_sp_1.0 data/local/train_sp_1.1
+  rm -r data/local/train_sp_0.9 data/local/train_sp_1.0 data/local/train_sp_1.1
 
   mfccdir=param_perturbed
   for x in train_sp; do
     steps/make_plp_pitch.sh --cmd "$train_cmd" --nj 50 \
       data/$x exp/make_plp_pitch//$x $mfccdir || exit 1;
     steps/compute_cmvn_stats.sh data/$x exp/make_plp//$x $mfccdir || exit 1;
+    utils/fix_data_dir.sh data/train_sp
   done
-  utils/fix_data_dir.sh data/train_sp
 fi
 
 if [ $stage -le 7 ]; then
@@ -100,9 +120,8 @@ fi
 
 if [ $stage -le 10 ]; then
   steps/nnet2/train_multisplice_accel2.sh --stage $train_stage \
-    --num-epochs 3 --num-jobs-initial 2 --num-jobs-final 12 \
-    --num-hidden-layers 6 --splice-indexes "$splice_indexes" \
-    --feat-type raw \
+    --num-jobs-initial 3 --num-jobs-final 12 \
+    --splice-indexes "$splice_indexes" --feat-type raw \
     --online-ivector-dir exp/nnet2_online/ivectors_train_hires_sp2 \
     --cmvn-opts "--norm-means=false --norm-vars=false" \
     --num-threads "$num_threads" \
@@ -110,19 +129,17 @@ if [ $stage -le 10 ]; then
     --parallel-opts "$parallel_opts" \
     --combine-parallel-opts "$combine_parallel_opts" \
     --io-opts "--max-jobs-run 12" \
-    --add-layers-period 1 \
     --initial-effective-lrate 0.0015 --final-effective-lrate 0.00015 \
+    --add-layers-period 1 \
     --cmd "$decode_cmd" \
-    --egs-dir "$common_egs_dir" \
-    --pnorm-input-dim 3500 \
-    --pnorm-output-dim 350 \
-    --mix-up 12000 \
+    "${nnet_params[@]}" \
     data/train_hires_sp data/lang exp/tri3_ali_sp $dir  || exit 1;
 fi
 
 if [ $stage -le 11 ]; then
   # dump iVectors for the testing data.
-  for decode_set in dev test; do
+  for decode_set in dev10h dev_appen; do
+      [ -f exp/nnet2_online/ivectors_${decode_set}_hires/.done ] && continue;
       num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
       steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj $num_jobs \
         data/${decode_set}_hires exp/nnet2_online/extractor exp/nnet2_online/ivectors_${decode_set}_hires || exit 1;
@@ -132,14 +149,20 @@ fi
 if [ $stage -le 12 ]; then
   # this does offline decoding that should give about the same results as the
   # real online decoding (the one with --per-utt true)
-  for decode_set in dev test; do
-      num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-      steps/nnet2/decode.sh --nj $num_jobs --cmd "$decode_cmd" --config conf/decode.config \
-        --online-ivector-dir exp/nnet2_online/ivectors_${decode_set}_hires \
-        exp/tri3/graph data/${decode_set}_hires $dir/decode_${decode_set} || exit 1;
+  [ ! -f data/langp_test/L.fst ] && cp -r data/langp/tri5/ data/langp_test
+  [ ! -f data/langp_test/G.fst ] && local/arpa2G.sh data/srilm/lm.gz data/langp_test data/langp_test
+  utils/mkgraph.sh data/langp_test $dir $dir/graph
+  for decode_set in dev10h dev_appen; do
+      [ -f  $dir/decode_${decode_set}/.done  ] && continue;
+      (
+        num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        steps/nnet2/decode.sh --nj $num_jobs --cmd "$decode_cmd" --config conf/decode.config \
+          --online-ivector-dir exp/nnet2_online/ivectors_${decode_set}_hires \
+          $dir/graph data/${decode_set}_hires $dir/decode_${decode_set}
+        touch $dir/decode_${decode_set}/.done  
+      ) &
   done
 fi
-
 
 if [ $stage -le 13 ]; then
   # If this setup used PLP features, we'd have to give the option --feature-type plp
@@ -152,20 +175,28 @@ wait;
 if [ $stage -le 14 ]; then
   # do the actual online decoding with iVectors, carrying info forward from 
   # previous utterances of the same speaker.
-  for decode_set in dev test; do
-    num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-    steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
-      exp/tri3/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set} || exit 1;
+  for decode_set in dev10h dev_appen; do
+    [ -f  ${dir}_online/decode_${decode_set}/.done ] && continue;
+    (
+      num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+      steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
+        $dir/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set}
+      touch ${dir}_online/decode_${decode_set}/.done 
+    ) &
   done
 fi
-
+wait
 if [ $stage -le 15 ]; then
   # this version of the decoding treats each utterance separately
   # without carrying forward speaker information.
-  for decode_set in dev test; do
-      num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-      steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
-        --per-utt true exp/tri3/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set}_utt || exit 1;
+  for decode_set in dev10h dev_appen; do
+      [ -f  ${dir}_online/decode_${decode_set}_utt/.done ] && continue;
+      (
+        num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
+          --per-utt true $dir/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set}_utt 
+        touch ${dir}_online/decode_${decode_set}_utt/.done 
+      )&
   done
 fi
 
@@ -173,11 +204,15 @@ if [ $stage -le 16 ]; then
   # this version of the decoding treats each utterance separately
   # without carrying forward speaker information, but looks to the end
   # of the utterance while computing the iVector (--online false)
-  for decode_set in dev test; do
-      num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-      steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
-        --per-utt true --online false exp/tri3/graph data/${decode_set}_hires \
-          ${dir}_online/decode_${decode_set}_utt_offline || exit 1;
+  for decode_set in  dev10h dev_appen; do
+      [ -f  ${dir}_online/decode_${decode_set}_utt_offline/.done ] && continue;
+      (
+        num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
+          --per-utt true --online false $dir/graph data/${decode_set}_hires \
+            ${dir}_online/decode_${decode_set}_utt_offline 
+        touch ${dir}_online/decode_${decode_set}_utt_offline/.done 
+      ) &
   done
 fi
 wait;

@@ -297,6 +297,19 @@ if [ ! -f exp/tri5/.done ]; then
 fi
 
 
+if $tri5_only ; then
+  echo "Exiting after stage TRI5, as requested. "
+  echo "Everything went fine. Done"
+  exit 0;
+fi
+
+if [ -x ./decode.sh ] ; then
+  ## Spawn decoding....
+  echo ---------------------------------------------------------------------
+  echo "Starting decoding on" `date`
+  echo ---------------------------------------------------------------------
+  ./decode.sh
+fi
 ################################################################################
 # Ready to start SGMM training
 ################################################################################
@@ -308,12 +321,26 @@ if [ ! -f exp/tri5_ali/.done ]; then
   steps/align_fmllr.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
     data/train data/langp/tri5 exp/tri5 exp/tri5_ali
+
+  local/ali_to_rttm.sh  --cmd "$decode_cmd" \
+    data/train data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/
+
+  steps/align_fmllr.sh \
+    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
+    data/dev10h data/langp/tri5 exp/tri5 exp/tri5_ali/dev10h
+  
+  local/ali_to_rttm.sh  --cmd "$decode_cmd" \
+    data/dev10h data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/dev10h
+
+  steps/align_fmllr.sh \
+    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
+    data/dev_appen data/langp/tri5 exp/tri5 exp/tri5_ali/dev_appen
+  
+  local/ali_to_rttm.sh  --cmd "$decode_cmd" \
+    data/dev_appen data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/dev_appen
+
   touch exp/tri5_ali/.done
 fi
 
-if $tri5_only ; then
-  echo "Exiting after stage TRI5, as requested. "
-  echo "Everything went fine. Done"
-  exit 0;
-fi
 
+exit 0
