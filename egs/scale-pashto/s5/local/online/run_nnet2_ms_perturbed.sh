@@ -34,18 +34,12 @@ nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2500 --pnor
 #dir=exp/nnet2_online/nnet_ms_i_sp
 #splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
 #nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2000 --pnorm-output-dim 200)
-dir=exp/nnet2_online/nnet_ms_j_sp
-splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
-nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 1500 --pnorm-output-dim 150)
-dir=exp/nnet2_online/nnet_ms_k_sp
-splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
-nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 1000 --pnorm-output-dim 100)
-dir=exp/nnet2_online/nnet_ms_h_09_sp
-splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
-nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2502 --pnorm-output-dim 278)
-dir=exp/nnet2_online/nnet_ms_h_07_sp
-splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
-nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2499 --pnorm-output-dim 357)
+#dir=exp/nnet2_online/nnet_ms_j_sp
+#splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+#nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 1500 --pnorm-output-dim 150)
+#dir=exp/nnet2_online/nnet_ms_k_sp
+#splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+#nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 1000 --pnorm-output-dim 100)
 
 . ./cmd.sh
 . ./path.sh 

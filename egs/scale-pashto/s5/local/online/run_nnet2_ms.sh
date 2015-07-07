@@ -40,8 +40,8 @@ If you want to use GPUs (and have them), go to src/, and configure and make on a
 where "nvcc" is installed.  Otherwise, call this script with --use-gpu false
 EOF
   fi
-  parallel_opts=" --config conf/queue_jhu.conf --gpu 1"
-  combine_parallel_opts=" --config conf/queue_jhu.conf --gpu 0 --num-threads 8 "
+  parallel_opts="--num-threads 1 --gpu 1" 
+  combine_parallel_opts="--num-threads 8 --gpu 0"
   num_threads=1
   minibatch_size=512
   # the _a is in case I want to change the parameters.

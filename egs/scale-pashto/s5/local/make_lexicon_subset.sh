@@ -12,7 +12,7 @@ output_lexicon_file=$3
 (
   #find $dev_data_dir/transcription/ -name "*.txt" | xargs egrep -vx '\[[0-9.]+\]'  |cut -f 2- -d ':' | sed 's/ /\n/g' 
   find $transcriptions -name "*.txt" | xargs egrep -vx '\[[0-9.]+\]'  |cut -f 2- -d ':' | sed 's/ /\n/g'
-) | sort -u | awk ' 
+)  | sort -u | local/convert_charsets.pl |  awk ' 
   BEGIN {
       while(( getline line< ARGV[2] ) > 0 ) {
           split(line, e, "\t")
