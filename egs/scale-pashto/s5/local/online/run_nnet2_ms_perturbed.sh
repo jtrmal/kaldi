@@ -34,6 +34,18 @@ nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2500 --pnor
 #dir=exp/nnet2_online/nnet_ms_i_sp
 #splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
 #nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2000 --pnorm-output-dim 200)
+dir=exp/nnet2_online/nnet_ms_j_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 1500 --pnorm-output-dim 150)
+dir=exp/nnet2_online/nnet_ms_k_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 1000 --pnorm-output-dim 100)
+dir=exp/nnet2_online/nnet_ms_h_09_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2502 --pnorm-output-dim 278)
+dir=exp/nnet2_online/nnet_ms_h_07_sp
+splice_indexes="layer0/-2:-1:0:1:2 layer1/-1:2 layer3/-3:3 layer4/-7:2"
+nnet_params=( --num-epochs 6 --num-hidden-layers 6 --pnorm-input-dim 2499 --pnorm-output-dim 357)
 
 . ./cmd.sh
 . ./path.sh 
@@ -48,22 +60,22 @@ If you want to use GPUs (and have them), go to src/, and configure and make on a
 where "nvcc" is installed.  Otherwise, call this script with --use-gpu false
 EOF
   fi
-  parallel_opts=" --config conf/queue_jhu.conf --gpu 1"
-  combine_parallel_opts=" --config conf/queue_jhu.conf --gpu 0 --num-threads 8 "
+  parallel_opts="  --gpu 1"
+  combine_parallel_opts=" --gpu 0 --num-threads 8 "
   num_threads=1
   minibatch_size=512
   # the _a is in case I want to change the parameters.
 else
   # Use 4 nnet jobs just like run_4d_gpu.sh so the results should be
   # almost the same, but this may be a little bit slow.
-  num_threads=8
+  num_threads=12
   minibatch_size=128
   parallel_opts="--num-threads $num_threads" 
   combine_parallel_opts="--num-threads 8"
 fi
 
 # Run the common stages of training, including training the iVector extractor
-#local/online/run_nnet2_common.sh --stage $stage || exit 1;
+local/online/run_nnet2_common.sh --stage $stage || exit 1;
 
 if [ $stage -le 6 ]; then
   #Although the nnet will be trained by high resolution data, we still have to perturbe the normal data to get the alignment
@@ -186,6 +198,7 @@ if [ $stage -le 14 ]; then
   done
 fi
 wait
+
 if [ $stage -le 15 ]; then
   # this version of the decoding treats each utterance separately
   # without carrying forward speaker information.

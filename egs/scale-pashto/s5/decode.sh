@@ -125,15 +125,16 @@ fi
 ## SAT decoding 
 ##
 ####################################################################
+utils/mkgraph.sh \
+  data/lang_test exp/tri3 exp/tri3/graph |tee exp/tri3/mkgraph.log
+
 for dataset_type in dev10h dev_appen ; do
 decode=exp/tri3/decode_${dataset_type}
 dataset_dir=data/$dataset_type
-if [ ! -f ${decode}/.done ]; then
+ if [ ! -f ${decode}/.done ]; then
   echo ---------------------------------------------------------------------
   echo "Spawning decoding with SAT models  on" `date`
   echo ---------------------------------------------------------------------
-  utils/mkgraph.sh \
-    data/lang_test exp/tri3 exp/tri3/graph |tee exp/tri3/mkgraph.log
 
   mkdir -p $decode
   #By default, we do not care about the lattices for this step -- we just want the transforms
@@ -144,21 +145,24 @@ if [ ! -f ${decode}/.done ]; then
   touch ${decode}/.done
 fi
 done
+wait
+
 ####################################################################
 ##
 ## SAT decoding 
 ##
 ####################################################################
+utils/mkgraph.sh \
+  data/lang_test exp/tri4 exp/tri4/graph |tee exp/tri4/mkgraph.log
+
 for dataset_type in dev10h dev_appen ; do
 decode=exp/tri4/decode_${dataset_type}
 dataset_dir=data/$dataset_type
-if [ ! -f ${decode}/.done ]; then
+ if [ ! -f ${decode}/.done ]; then
   echo ---------------------------------------------------------------------
   echo "Spawning decoding with SAT models  on" `date`
   echo ---------------------------------------------------------------------
-  utils/mkgraph.sh \
-    data/lang_test exp/tri4 exp/tri4/graph |tee exp/tri4/mkgraph.log
-
+  
   mkdir -p $decode
   #By default, we do not care about the lattices for this step -- we just want the transforms
   #Therefore, we will reduce the beam sizes, to reduce the decoding times
@@ -168,21 +172,27 @@ if [ ! -f ${decode}/.done ]; then
   touch ${decode}/.done
 fi
 done
+wait
+
 ####################################################################
 ##
 ## FMLLR decoding 
 ##
 ####################################################################
+utils/mkgraph.sh \
+  data/lang_test exp/tri5 exp/tri5/graph |tee exp/tri5/mkgraph.log
+
+utils/mkgraph.sh \
+  data/langp_test exp/tri5 exp/tri5/graphp |tee exp/tri5/mkgraphp.log
+
 for dataset_type in dev10h dev_appen ; do
 dataset_dir=data/$dataset_type
 decode=exp/tri5/decode_${dataset_type}
-if [ ! -f ${decode}/.done ]; then
+(if [ ! -f ${decode}/.done ]; then
   echo ---------------------------------------------------------------------
   echo "Spawning decoding with SAT models  on" `date`
   echo ---------------------------------------------------------------------
-  utils/mkgraph.sh \
-    data/lang_test exp/tri5 exp/tri5/graph |tee exp/tri5/mkgraph.log
-
+  
   mkdir -p $decode
   #By default, we do not care about the lattices for this step -- we just want the transforms
   #Therefore, we will reduce the beam sizes, to reduce the decoding times
@@ -191,13 +201,12 @@ if [ ! -f ${decode}/.done ]; then
     exp/tri5/graph ${dataset_dir} ${decode} |tee ${decode}/decode.log
   touch ${decode}/.done
 fi
+) &
 decode=exp/tri5/decode_${dataset_type}_prob
-if [ ! -f ${decode}/.done ]; then
+( if [ ! -f ${decode}/.done ]; then
   echo ---------------------------------------------------------------------
   echo "Spawning decoding with SAT models and probabilistic L.fst on" `date`
   echo ---------------------------------------------------------------------
-  utils/mkgraph.sh \
-    data/langp_test exp/tri5 exp/tri5/graphp |tee exp/tri5/mkgraphp.log
 
   mkdir -p $decode
   #By default, we do not care about the lattices for this step -- we just want the transforms
@@ -207,8 +216,9 @@ if [ ! -f ${decode}/.done ]; then
     exp/tri5/graphp ${dataset_dir} ${decode} |tee ${decode}/decode.log
   touch ${decode}/.done
 fi
+)&
 done
-
+wait
 
 ####################################################################
 ## SGMM2 decoding 

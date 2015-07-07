@@ -60,9 +60,9 @@ if [[ `hostname` == *.tacc.utexas.edu ]] ; then
   dnn_gpu_mpe_parallel_opts=(--num-jobs-nnet 8 --num-threads 1)
   dnn_parallel_opts="-l gpu=1"
 elif [[ `hostname -f` == *.cm.cluster ]] ; then
-  decode_extra_opts=(--num-threads 6 --parallel-opts "-l num_proc=6,mem_free=4G,h_rt=1:00:00")
+  decode_extra_opts=(--num-threads 6 )
 else
-  decode_extra_opts=(--num-threads 6 --parallel-opts "-pe smp 6 -l mem_free=4G,ram_free=0.7G")
+  decode_extra_opts=(--num-threads 6 --parallel-opts " --num-threads 6 ")
   sgmm_train_extra_opts=( --num-iters 25 )
   sgmm_group_extra_opts=(--group 3 --parallel-opts "-pe smp 3 -l mem_free=7G,ram_free=2.75G" --cmd "queue.pl -l arch=*64 -l mem_free=3.0G,ram_free=3.0G") 
   sgmm_denlats_extra_opts=(--num-threads 4 --parallel-opts "-pe smp 4" --cmd "queue.pl -l arch=*64 -l mem_free=2G,ram_free=0.8G")

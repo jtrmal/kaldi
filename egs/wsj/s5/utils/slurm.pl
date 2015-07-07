@@ -165,15 +165,15 @@ if (exists $cli_options{"config"}) {
 my $default_config_file = <<'EOF';
 # Default configuration
 command sbatch --export=PATH  --ntasks-per-node=1
-option time=* --time $0
-option mem=* --mem-per-cpu $0
+option time=* --time=$0
+option mem=* --mem-per-cpu=$0
 option mem=0          # Do not add anything to qsub_opts
-option num_threads=* --cpus-per-task $0 --ntasks-per-node=1 
-option num_threads=1 --cpus-per-task 1  --ntasks-per-node=1 # Do not add anything to qsub_opts
+option num_threads=* --cpus-per-task=$0 --ntasks-per-node=1 
+option num_threads=1 --cpus-per-task=1  --ntasks-per-node=1 # Do not add anything to qsub_opts
 option max_jobs_run=*     # Do nothing
 default gpu=0
 option gpu=0 -p shared
-option gpu=* -p gpu --gres=gpu:$0 --time 4:0:0  # this has to be figured out
+option gpu=* -p gpu --gres=gpu:$0 --time=4:0:0  # this has to be figured out
 EOF
 
 # Here the configuration options specified by the user on the command line
@@ -403,6 +403,7 @@ if (!close(Q)) { # close was not successful... || die "Could not close script fi
   die "Failed to close the script file (full disk?)";
 }
 
+#print STDERR $qsub_cmd . "\n";
 my $ret = system ($qsub_cmd);
 if ($ret != 0) {
   if ($sync && $ret == 256) { # this is the exit status when a job failed (bad exit status)
