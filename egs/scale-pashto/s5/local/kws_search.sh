@@ -25,7 +25,7 @@ stage=0
 word_ins_penalty=0
 extraid=
 silence_word=  # specify this if you did to in kws_setup.sh, it's more accurate.
-ntrue_scale=1.5
+ntrue_scale=1.1,1.5,2.0,2.2,2.5,3.0,3.5
 max_silence_frames=50
 # End configuration section.
 
@@ -69,9 +69,13 @@ if [[ ! -f "$kwsdatadir/ecf.xml"  ]] ; then
     exit 1;
 fi
 
-duration=`head -1 $kwsdatadir/ecf.xml |\
-    grep -o -E "duration=\"[0-9]*[    \.]*[0-9]*\"" |\
-    perl -e 'while($m=<>) {$m=~s/.*\"([0-9.]+)\".*/\1/; print $m/2;}'`
+[ ! -f $kwsdatadir/duration ] && \
+  echo "File $kwsdatadir/duration does not exist!" && exit 1
+duration=`cat $kwsdatadir/duration`
+
+#duration=`head -1 $kwsdatadir/ecf.xml |\
+#    grep -o -E "duration=\"[0-9]*[    \.]*[0-9]*\"" |\
+#    perl -e 'while($m=<>) {$m=~s/.*\"([0-9.]+)\".*/\1/; print $m/2;}'`
 
 #duration=`head -1 $kwsdatadir/ecf.xml |\
 #    grep -o -E "duration=\"[0-9]*[    \.]*[0-9]*\"" |\
@@ -120,17 +124,6 @@ if [ $stage -le 1 ]; then
 fi
 
 if [ $stage -le 2 ]; then
-  echo "Writing normalized results"
-  $cmd LMWT=$min_lmwt:$max_lmwt $kwsoutdir/log/write_normalized.LMWT.log \
-    set -e ';' set -o pipefail ';'\
-    cat ${kwsoutdir}/LMWT/result.* \| \
-      utils/write_kwslist.pl  --Ntrue-scale=$ntrue_scale --flen=0.01 --duration=$duration \
-        --segments=$datadir/segments --normalize=true --duptime=$duptime --remove-dup=true\
-        --map-utter=$kwsdatadir/utter_map --digits=3 \
-        - ${kwsoutdir}/LMWT/kwslist.xml || exit 1
-fi
-
-if [ $stage -le 3 ]; then
   echo "Writing unnormalized results"
   $cmd LMWT=$min_lmwt:$max_lmwt $kwsoutdir/log/write_unnormalized.LMWT.log \
     set -e ';' set -o pipefail ';'\
@@ -141,8 +134,39 @@ if [ $stage -le 3 ]; then
           - ${kwsoutdir}/LMWT/kwslist.unnormalized.xml || exit 1;
 fi
 
+if [ $stage -le 3 ]; then
+  echo "Converting the normalized results to hitlist for optimization"
+  for scale in ${ntrue_scale//,/ }; do
+    $cmd LMWT=$min_lmwt:$max_lmwt $kwsoutdir/log/ntrue_scale.${scale}.LMWT.log \
+      set -e ';' set -o pipefail ';' mkdir -p $kwsoutdir/LMWT/ntrue-scale\; \
+      cat ${kwsoutdir}/LMWT/result.* \| \
+        utils/write_kwslist.pl  --Ntrue-scale=$scale --flen=0.01 --duration=$duration \
+          --segments=$datadir/segments --normalize=true --duptime=$duptime --remove-dup=true\
+          --map-utter=$kwsdatadir/utter_map --digits=3 - - \|\
+        local/kwlist2hitlist.pl \| utils/sym2int.pl -f 2 $kwsdatadir/file_id \|\
+        compute-atwv --sweep-step=0.005 $duration \
+          ark,t:$kwsdatadir/hits ark,t:- \> $kwsoutdir/LMWT/ntrue-scale/${scale}
+  done
+  
+  for lmwt in `seq $min_lmwt $max_lmwt` ; do
+    best=`grep ATWV $kwsoutdir/$lmwt/ntrue-scale/* | sort -k2rn -t'=' | cut -d ':'  -f 1 | head -n 1`
+    echo `basename $best` > $kwsoutdir/$lmwt/best_ntrue_scale
+  done
+fi
 
 if [ $stage -le 4 ]; then
+  echo "Writing normalized results (using the optimized ntrue-scale)"
+  $cmd LMWT=$min_lmwt:$max_lmwt $kwsoutdir/log/write_normalized.LMWT.log \
+    set -e ';' set -o pipefail ';'\
+    cat ${kwsoutdir}/LMWT/result.* \| \
+    utils/write_kwslist.pl  --Ntrue-scale=\$\(cat $kwsoutdir/LMWT/best_ntrue_scale\)\
+        --flen=0.01 --duration=$duration --segments=$datadir/segments \
+        --normalize=true --duptime=$duptime --remove-dup=true\
+        --map-utter=$kwsdatadir/utter_map --digits=3 \
+        - ${kwsoutdir}/LMWT/kwslist.xml || exit 1
+fi
+
+if [ $stage -le 5 ]; then
   if [[ (! -x local/kws_score.sh ) ]] ; then
     echo "Not scoring, because the file local/kws_score.sh is not present"
   elif [[ $skip_scoring == true ]] ; then
@@ -154,9 +178,12 @@ if [ $stage -le 4 ]; then
   fi
 fi
 
-if [ $stage -le 5 ]; then
-  grep "MTWV" ${kwsoutdir}/*/metrics.txt /dev/null | sort -k2nr -t '=' | head -n 1 > ${kwsoutdir}/best_mtwv
-  grep "ATWV" ${kwsoutdir}/*/metrics.txt /dev/null | sort -k2nr -t '=' | head -n 1 > ${kwsoutdir}/best_atwv
+if [ $stage -le 6 ]; then
+  grep "MTWV" ${kwsoutdir}/*/metrics.txt /dev/null | sort -k2nr -t '=' | head -n 1 | cut -f 1 -d ':' |xargs dirname > ${kwsoutdir}/best_system
+  f=`cat $kwsoutdir/best_system`
+  cp $f/metrics.txt $kwsoutdir/best_scores
+  echo `dirname $f` $kwsoutdir/best_lmwt
+  cp $f/best_ntrue_scale $kwsoutdir/best_ntrue_scale
 fi
 
 exit 0

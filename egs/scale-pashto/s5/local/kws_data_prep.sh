@@ -131,6 +131,7 @@ cat $datadir/segments | \
 
 # Map utterance to the names that will appear in the rttm file. You have 
 # to modify the commands below accoring to your rttm file
-cat $datadir/segments | awk '{print $1" "$2}' | sort | uniq > $kwsdatadir/utter_map;
+cat $datadir/segments | awk '{print $1" "$2}' | sort -u > $kwsdatadir/utter_map;
+cat $datadir/segments | awk '{print $2}' | sort -u | awk 'BEGIN{i=0} {print $1, i; i+=1; }'  > $kwsdatadir/file_id;
 
 echo "$0: Kws data preparation succeeded"

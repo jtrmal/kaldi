@@ -8,7 +8,6 @@ cmd=run.pl
 case_insensitive=true
 subset_ecf=
 rttm_file=
-extraid=
 use_icu=true
 icu_transform="Any-Lower"
 kwlist_wordlist=false
@@ -17,10 +16,6 @@ silence_word=  # Optional silence word to insert (once) between words of the tra
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging
-
-set -e 
-set -u
-set -o pipefail
 
 help_message="$0: Initialize and setup the KWS task directory
 Usage:
@@ -42,7 +37,11 @@ allowed switches:
 [ -f ./path.sh ] && . ./path.sh; # source the path.
 . parse_options.sh || exit 1;
 
-if [ "$#" -ne "5" ] &&  [ "$#" -ne "4" ] ; then
+set -e 
+set -u
+set -o pipefail
+
+if [ "$#" -ne "6" ] &&  [ "$#" -ne "5" ] ; then
     printf "FATAL: invalid number of arguments.\n\n"
     printf "$help_message\n"
     exit 1
@@ -52,7 +51,8 @@ kwlist_file=$1
 rttm_file=$2
 datadir=$3
 langdir=$4
-output=$5
+alidir=$5
+output=$6
 
 mkdir -p $output
 
@@ -84,6 +84,10 @@ else
 fi
 
 cat $datadir/segments | local/segments_to_ecf.pl > $output/ecf.xml
+duration=`head -1 $output/ecf.xml |\
+    grep -o -E "duration=\"[0-9]*[    \.]*[0-9]*\"" |\
+    perl -e 'while($m=<>) {$m=~s/.*\"([0-9.]+)\".*/\1/; print $m/2;}'`
+echo "$duration" > $output/duration
 
 if [ ! -z $rttm_file ] ; then
   test -f $output/rttm && rm -f $output/rttm
@@ -96,3 +100,6 @@ local/kws_data_prep.sh --case-insensitive ${case_insensitive} \
   $sil_opt --use_icu ${use_icu} --icu-transform "${icu_transform}" \
   $langdir $datadir $output || exit 1
 
+local/prepare_kws_hitlist.sh $output $langdir $alidir || exit 1
+cp $alidir/$(basename $output)/hits $output/hits || exit 1
+echo "Success"
