@@ -134,10 +134,10 @@ if ($phonemap) {
 ###############################################################################
 
 
-open (INLEX, $inDict)
+open (INLEX, "<:encoding(utf8)", $inDict)
     || die "Unable to open input dictionary $inDict";
 
-open (OUTLEX, "| sort -u > $outLex")
+open (OUTLEX, "|-:encoding(utf8)", "sort -u > $outLex")
     || die "Unable to open output dictionary $outLex";
 
 $numWords = $numProns = 0;
@@ -203,7 +203,7 @@ while ($line=<INLEX>) {
                       if (( $is_original_phone{$phone} ) and not defined( $substituted_phones{phone}) ) {
                         die "ERROR, the $new_phone and $phone are both existing phones, so we cannot do automatic map!";
                       } else {
-                        print STDERR "WARNING, phone $phone was replaced with $new_phone\n" unless $substituted_phones{$phone};
+                        print STDERR "WARNING, phone \"$phone\" was replaced with \"$new_phone\"\n" unless $substituted_phones{$phone};
                       }
                       $is_original_phone{$new_phone} = "$new_phone";
                       $substituted_phones{$phone} = $new_phone;

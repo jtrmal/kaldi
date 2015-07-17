@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #===============================================================================
-# Copyright 2015  (Author: Yenda Trmal <jtrmal@gmail.com>)
+# Copyright (c) 2015, Johns Hopkins University (Author: Yenda Trmal <jtrmal@gmail.com>)
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ open(my $WAVLIST, $wavlist);
 while(<$WAVLIST>) {
   chomp;
   my $filename = $_;
-  my $base=`basename $filename .wav`;
+  my $base=`basename "$filename" .wav`;
   chomp $base;
   if ( $FILES{$base} ) {
     $WAVMAP{$base}=$filename;
@@ -60,7 +60,7 @@ if ( scalar(keys %WAVMAP) != scalar(keys %FILES) ) {
 my $sox=`which sox` || die "Could not find sox binary: $!\n"; chomp $sox;
 open(my $WAV, "|-:encoding(utf8)", "sort -u > $dest/wav.scp") or die "Cannot open $dest/wav.scp: $!";
 open(my $UTT2SPK, "|-:encoding(utf8)",  "sort -u > $dest/utt2spk") or die "Cannot open $dest/utt2spk: $!";
-open(my $TEXT, "|-:encoding(utf8)", "sort -u > $dest/text") or die "Cannot open $dest/text: $!";
+open(my $TEXT, "|-:encoding(utf8)", "sort -u > $dest/transcripts") or die "Cannot open $dest/transcripts: $!";
 open(my $SEGMENTS, "|-:encoding(utf8)", "sort -u > $dest/segments") or die "Cannot open $dest/segments: $!";
 
 while (<STDIN>) {
@@ -70,10 +70,35 @@ while (<STDIN>) {
         $transcript,  $section, $turn,  
         %segment, %sectionType, $suType,  %speakerRole) = @F;
 
+
+    $transcript =~ s/%دانسان=غږ/<spk>/gu;
+    $transcript =~ s/%نابشپوړ//gu;
+    #$transcript =~ s/././gu;
+    $transcript =~ s/؟/?/gu;
+    $transcript =~ s/%په=وار=غږ/<noise>/gu;
+    $transcript =~ s/%د=عږ=پیل/<begin_noise>/gu;
+    $transcript =~ s/%د=غږ=پاې/<end_noise>/gu;
+    $transcript =~ s/%د=ګډوډ=پیل/<begin_overlap>/gu;
+    $transcript =~ s/%د=ګډوډ=پاې/<end_overlap>/gu;
+    $transcript =~ s/%او/<hes>/gu;
+    $transcript =~ s/%ام/<yes>/gu;
+   
+    $transcript =~ s/\(\( +/((/gu;
+    $transcript =~ s/ +\)\)/))/gu;
+    my $transcript2 = $transcript;
+    $transcript2 =~ s/(?<=\(\()([^\s\)]+) /$1_/gu;
+    while( $transcript2 ne $transcript) {
+      $transcript = $transcript2;
+      $transcript2 =~ s/(?<=\(\()([^\s\)]+) /$1_/gu;
+    }
+    $transcript =~ s/([^(])\(([^(])/$1 $2/g;
+    $transcript =~ s/([^)])\)([^)])/$1 $2/g;
+    $transcript =~ s/\(\^/^/g;
+
     if ($transcript =~ m/\p{Script=Arabic}/g) {
         my $UTT_START = sprintf("%08d", $start * 1000);
             
-        my $SOXCHANNEL = $chan;
+        my $SOXCHANNEL = $chan + 1;
         my $CHANNEL = ($chan % 2) == 0 ? "A" : "B";
         if ($filename =~ /sif/) {
             # The bilingual files info is more complicated;
@@ -83,7 +108,7 @@ while (<STDIN>) {
             # interpreter: phys:1 tdf:2
             # respondent:  phys:0 tdf:1
             $CHANNEL = ($chan % 2) == 0 ? "B" : "A";
-            $SOXCHANNEL = ($CHANNEL eq "A") ? 0 : 1;
+            $SOXCHANNEL = ($CHANNEL eq "A") ? 1 : 2;
         } 
         my $FILENAME = $filename;
         $FILENAME =~ s/\.wav//g;
@@ -99,7 +124,7 @@ while (<STDIN>) {
         print $UTT2SPK "$UTT_ID $SPK_ID\n";
         #print "$filename $speaker" . " $chan " . $transcript . "\n";
     } else {
-        #print "$filename $speaker" . " $chan " . $transcript . "\n";
+        #print STDERR "$filename $speaker" . " $chan " . $transcript . "\n";
 
     }
 }

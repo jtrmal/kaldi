@@ -194,8 +194,8 @@ decode=exp/tri5/decode_${dataset_type}
   echo ---------------------------------------------------------------------
   
   mkdir -p $decode
-  #By default, we do not care about the lattices for this step -- we just want the transforms
-  #Therefore, we will reduce the beam sizes, to reduce the decoding times
+  # By default, we do not care about the lattices for this step -- we just want the transforms
+  # Therefore, we will reduce the beam sizes, to reduce the decoding times
   steps/decode_fmllr_extra.sh --beam 10 --lattice-beam 4\
     --nj $my_nj --cmd "$decode_cmd" "${decode_extra_opts[@]}"\
     exp/tri5/graph ${dataset_dir} ${decode} |tee ${decode}/decode.log

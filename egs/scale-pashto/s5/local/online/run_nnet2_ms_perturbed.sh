@@ -144,9 +144,12 @@ fi
 
 if [ $stage -le 11 ]; then
   # dump iVectors for the testing data.
-  for decode_set in dev10h dev_appen; do
+  for decode_set in dev_transtac dev10h dev_appen; do
+      [ ! -x data/${decode_set} ] && echo "Skipping set data/$decode_set" && continue;
       [ -f exp/nnet2_online/ivectors_${decode_set}_hires/.done ] && continue;
       num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+      [ $num_jobs -gt 200 ] && num_jobs=200; 
+      [ $num_jobs -le 0   ] && return 1;
       steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj $num_jobs \
         data/${decode_set}_hires exp/nnet2_online/extractor exp/nnet2_online/ivectors_${decode_set}_hires || exit 1;
   done
@@ -158,10 +161,14 @@ if [ $stage -le 12 ]; then
   [ ! -f data/langp_test/L.fst ] && cp -r data/langp/tri5/ data/langp_test
   [ ! -f data/langp_test/G.fst ] && local/arpa2G.sh data/srilm/lm.gz data/langp_test data/langp_test
   utils/mkgraph.sh data/langp_test $dir $dir/graph
-  for decode_set in dev10h dev_appen; do
+  #utils/mkgraph.sh data/lang_test $dir $dir/graph
+  for decode_set in decode_transtac dev10h dev_appen; do
+      [ ! -x data/${decode_set} ] && "Skipping set data/$decode_set" && continue
       [ -f  $dir/decode_${decode_set}/.done  ] && continue;
       (
         num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        [ $num_jobs -gt 200 ] && num_jobs=200; 
+        [ $num_jobs -le 0   ] && return 1;
         steps/nnet2/decode.sh --nj $num_jobs --cmd "$decode_cmd" --config conf/decode.config \
           --online-ivector-dir exp/nnet2_online/ivectors_${decode_set}_hires \
           $dir/graph data/${decode_set}_hires $dir/decode_${decode_set}
@@ -181,10 +188,13 @@ wait;
 if [ $stage -le 14 ]; then
   # do the actual online decoding with iVectors, carrying info forward from 
   # previous utterances of the same speaker.
-  for decode_set in dev10h dev_appen; do
+  for decode_set in dev_transtac dev10h dev_appen; do
+    [ ! -x data/${decode_set} ] && "Skipping set data/$decode_set" && continue
     [ -f  ${dir}_online/decode_${decode_set}/.done ] && continue;
     (
       num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+      [ $num_jobs -gt 200 ] && num_jobs=200; 
+      [ $num_jobs -le 0   ] && return 1;
       steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
         $dir/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set}
       touch ${dir}_online/decode_${decode_set}/.done 
@@ -196,10 +206,13 @@ wait
 if [ $stage -le 15 ]; then
   # this version of the decoding treats each utterance separately
   # without carrying forward speaker information.
-  for decode_set in dev10h dev_appen; do
+  for decode_set in dev_transtac dev10h dev_appen; do
+      [ ! -x data/${decode_set} ] && "Skipping set data/$decode_set" && continue
       [ -f  ${dir}_online/decode_${decode_set}_utt/.done ] && continue;
       (
         num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        [ $num_jobs -gt 200 ] && num_jobs=200; 
+        [ $num_jobs -le 0   ] && return 1;
         steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
           --per-utt true $dir/graph data/${decode_set}_hires ${dir}_online/decode_${decode_set}_utt 
         touch ${dir}_online/decode_${decode_set}_utt/.done 
@@ -211,10 +224,13 @@ if [ $stage -le 16 ]; then
   # this version of the decoding treats each utterance separately
   # without carrying forward speaker information, but looks to the end
   # of the utterance while computing the iVector (--online false)
-  for decode_set in  dev10h dev_appen; do
+  for decode_set in dev_transtac dev10h dev_appen; do
+      [ ! -x data/${decode_set} ] && "Skipping set data/$decode_set" && continue;
       [ -f  ${dir}_online/decode_${decode_set}_utt_offline/.done ] && continue;
       (
         num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        [ $num_jobs -gt 200 ] && num_jobs=200; 
+        [ $num_jobs -le 0   ] && return 1;
         steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
           --per-utt true --online false $dir/graph data/${decode_set}_hires \
             ${dir}_online/decode_${decode_set}_utt_offline 
