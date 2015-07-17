@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Copyright 2012  Johns Hopkins University (Author: Yenda Trmal)
+# Apache 2.0.
+
+#Begin configuration
+#End configuration
 echo "$0 $@"  # Print the command line for logging
 
 [ -f ./path.sh ] && . ./path.sh; # source the path.

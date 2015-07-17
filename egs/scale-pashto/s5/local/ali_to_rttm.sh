@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2012-2013  Johns Hopkins University (Author: Guoguo Chen, Yenda Trmal)
+# Copyright (c) 2012-2013  Johns Hopkins University (Author: Guoguo Chen, Yenda Trmal)
 # Apache 2.0.
 
 # Licensed under the Apache License, Version 2.0 (the "License");

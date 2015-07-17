@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #===============================================================================
-# Copyright 2015  (Author: Yenda Trmal <jtrmal@gmail.com>)
+# Copyright (c) 2015, Johns Hopkins University (Author: Yenda Trmal <jtrmal@gmail.com>)
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
