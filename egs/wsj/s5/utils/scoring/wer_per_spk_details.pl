@@ -30,8 +30,6 @@ use Getopt::Long;
 use Pod::Usage;
 
 
-#use Data::Dumper;
-
 binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 
@@ -115,6 +113,9 @@ while (<STDIN>) {
   
   my $UTT=$entries[0];
   my $SPK=$UTTMAP{$UTT};
+  if (! defined $SPK) {
+    die "Cannot find speaker for utterance $UTT";
+  }
   $PERSPK_STATS{$SPK}->{"C"} += $c;
   $PERSPK_STATS{$SPK}->{"S"} += $s;
   $PERSPK_STATS{$SPK}->{"I"} += $i;

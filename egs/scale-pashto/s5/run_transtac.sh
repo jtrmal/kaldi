@@ -24,7 +24,7 @@ LEXICON='/export/corpora2/TRANSTAC/data/Phase IV/Pashto - TX-TL/LEXICON/FINAL_LE
 OTHER_SYSTEM="../exp_07_A_and_B_rules_from_david/"
 wavlist=transtac/wav.list
 
-if true; then
+if false; then
 [ -d $(dirname $wavlist)/audio ] && rm  `dirname $wavlist`/audio/*
 mkdir -p `dirname $wavlist`/audio
 find "$AUDIO" -name "*.wav" | grep -v -i  'helmand' > $wavlist
@@ -195,6 +195,10 @@ if [ ! -f exp/tri2/.done ]; then
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" $numLeavesTri2 $numGaussTri2 \
     data/train_sub3 data/lang exp/tri1_ali_sub3 exp/tri2
+  
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train_sub3 data/lang data/local/dict \
+    exp/tri2 data/local/dictp/tri2 data/local/langp/tri2 data/langp/tri2
 
   touch exp/tri2/.done
 fi
@@ -205,12 +209,15 @@ echo ---------------------------------------------------------------------
 if [ ! -f exp/tri3/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/lang exp/tri2 exp/tri2_ali
+    data/train data/langp/tri2 exp/tri2 exp/tri2_ali
 
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
-    $numLeavesTri3 $numGaussTri3 data/train data/lang exp/tri2_ali exp/tri3
+    $numLeavesTri3 $numGaussTri3 data/train data/langp/tri2 exp/tri2_ali exp/tri3
   
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri3 data/local/dictp/tri3 data/local/langp/tri3 data/langp/tri3
 
   touch exp/tri3/.done
 fi
@@ -221,12 +228,15 @@ echo ---------------------------------------------------------------------
 if [ ! -f exp/tri4/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/lang exp/tri3 exp/tri3_ali
+    data/train data/langp/tri3 exp/tri3 exp/tri3_ali
 
   steps/train_lda_mllt.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
-    $numLeavesMLLT $numGaussMLLT data/train data/lang exp/tri3_ali exp/tri4
+    $numLeavesMLLT $numGaussMLLT data/train data/langp/tri3 exp/tri3_ali exp/tri4
 
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri4 data/local/dictp/tri4 data/local/langp/tri4 data/langp/tri4
 
   touch exp/tri4/.done
 fi
@@ -238,40 +248,56 @@ echo ---------------------------------------------------------------------
 if [ ! -f exp/tri5/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/lang exp/tri4 exp/tri4_ali
+    data/train data/langp/tri4 exp/tri4 exp/tri4_ali
 
   steps/train_sat.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
-    $numLeavesSAT $numGaussSAT data/train data/lang exp/tri4_ali exp/tri5
+    $numLeavesSAT $numGaussSAT data/train data/langp/tri4 exp/tri4_ali exp/tri5
+  
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri5 data/local/dictp/tri5 data/local/langp/tri5 data/langp/tri5
   
   touch exp/tri5/.done
 fi
 
 
-utils/mkgraph.sh \
-  data/lang_test exp/tri5 exp/tri5/graph |tee exp/tri5/mkgraph.log
-
-my_nj=32
-for dataset in dev_transtac ; do
-dataset_dir=data/$dataset
-decode=exp/tri5/decode_${dataset}
-if [ ! -f ${decode}/.done ]; then
+if [ ! -f exp/tri5_ali/.done ]; then
   echo ---------------------------------------------------------------------
-  echo "Spawning decoding with SAT models  on" `date`
+  echo "Starting exp/tri5_ali on" `date`
   echo ---------------------------------------------------------------------
+  steps/align_fmllr.sh \
+    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
+    data/train data/langp/tri5 exp/tri5 exp/tri5_ali
   
-  mkdir -p $decode
-  # By default, we do not care about the lattices for this step -- we just want the transforms
-  # Therefore, we will reduce the beam sizes, to reduce the decoding times
-  steps/decode_fmllr_extra.sh --beam 10 --lattice-beam 4\
-    --nj $my_nj --cmd "$decode_cmd" "${decode_extra_opts[@]}"\
-    exp/tri5/graph ${dataset_dir} ${decode} |tee ${decode}/decode.log
-  touch ${decode}/.done
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri5_ali data/local/dictp/tri6 data/local/langp/tri6 data/langp/tri6
 fi
-done
-wait
-
 
 exit 0
+if [ -x ./decode.sh ] ; then
+  ## Spawn decoding....
+  echo ---------------------------------------------------------------------
+  echo "Starting decoding on" `date`
+  echo ---------------------------------------------------------------------
+  ./decode.sh
+fi
+
+if [ ! -f exp/tri5_ali/.done ]; then
+  echo ---------------------------------------------------------------------
+  echo "Starting exp/tri5_ali on" `date`
+  echo ---------------------------------------------------------------------
+  steps/align_fmllr.sh \
+    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
+    data/train data/langp/tri5 exp/tri5 exp/tri5_ali
+  
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri5_ali data/local/dictp/tri6 data/local/langp/tri6 data/langp/tri6
+fi
+
+
+
 
 
