@@ -18,13 +18,13 @@ set -o pipefail  #Exit if any of the commands in the pipeline will
                  #return non-zero return code
 set -u           #Fail on an undefined variable
 
-AUDIO='/export/corpora2/TRANSTAC/data/Phase IV/Pashto - Audio'
-TRANSCRIPTS='/export/corpora2/TRANSTAC/data/Phase IV/Pashto - TX-TL'
-LEXICON='/export/corpora2/TRANSTAC/data/Phase IV/Pashto - TX-TL/LEXICON/FINAL_LEXICON/PAS_AFG_Lexicon_CombinedCollections_20090226_u8.txt'
+AUDIO="${train_data_transtac_dir}"/'Pashto - Audio'
+TRANSCRIPTS="${train_data_transtac_dir}"/'Pashto - TX-TL'
+LEXICON="$lexicon_transtac_file"
 OTHER_SYSTEM="../exp_07_A_and_B_rules_from_david/"
 wavlist=transtac/wav.list
 
-if false; then
+if true; then
 [ -d $(dirname $wavlist)/audio ] && rm  `dirname $wavlist`/audio/*
 mkdir -p `dirname $wavlist`/audio
 find "$AUDIO" -name "*.wav" | grep -v -i  'helmand' > $wavlist
@@ -272,10 +272,10 @@ if [ ! -f exp/tri5_ali/.done ]; then
   
   local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
     data/train data/lang data/local/dict \
-    exp/tri5_ali data/local/dictp/tri6 data/local/langp/tri6 data/langp/tri6
+    exp/tri5_ali data/local/dictp/tri5_ali data/local/langp/tri5_ali data/langp/tri5_ali
 fi
 
-exit 0
+exit  0
 if [ -x ./decode.sh ] ; then
   ## Spawn decoding....
   echo ---------------------------------------------------------------------
@@ -284,18 +284,6 @@ if [ -x ./decode.sh ] ; then
   ./decode.sh
 fi
 
-if [ ! -f exp/tri5_ali/.done ]; then
-  echo ---------------------------------------------------------------------
-  echo "Starting exp/tri5_ali on" `date`
-  echo ---------------------------------------------------------------------
-  steps/align_fmllr.sh \
-    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/langp/tri5 exp/tri5 exp/tri5_ali
-  
-  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
-    data/train data/lang data/local/dict \
-    exp/tri5_ali data/local/dictp/tri6 data/local/langp/tri6 data/langp/tri6
-fi
 
 
 
