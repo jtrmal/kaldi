@@ -19,7 +19,7 @@
 stage=0
 train_stage=-10
 use_gpu=true
-srcdir=exp/nnet2_online/nnet_ms_h_sp
+srcdir=exp/nnet2_online/nnet_ms_j_sp
 criterion=smbr
 drop_frames=true  # only matters for MMI anyway.
 boost=0.1
