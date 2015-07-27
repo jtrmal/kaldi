@@ -10,7 +10,7 @@ boost_sil=1.5
 [ -f local.conf ] && . ./local.conf
 
 . ./utils/parse_options.sh
-
+module add perl
 
 
 set -e           #Exit on non-zero return code from any command

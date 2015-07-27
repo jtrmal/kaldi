@@ -82,7 +82,7 @@ if [ -f path.sh ]; then . ./path.sh; fi
 . parse_options.sh || exit 1;
 
 if [ $# -lt 6 -o $[$#%2] -ne 0 ]; then
-  # num-args must be at least 6 and must be even.
+  echo "Num-args $# must be at least 6 and must be even "
   echo "Usage: $0 [opts] <ali0> <egs0> <ali1> <egs1> ... <aliN-1> <egsN-1> <input-model> <exp-dir>"
   echo " e.g.: $0 data/train exp/tri6_ali exp/tri6_egs exp_lang2/tri6_ali exp_lang2/tri6_egs exp/dnn6a/10.mdl exp/tri6_multilang"
   echo ""

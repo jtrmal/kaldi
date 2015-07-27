@@ -68,7 +68,7 @@ for dataset_type in $datasets ; do
   p=`declare -p ${dataset_type}_data_dir | sed 's/'${dataset_type}_data_dir'=/my_data_dir=/'`
   eval $p
 
-  if [ -z $my_data_dir ] || [ -z $my_data_list ] ; then
+  if [ -z "$my_data_dir" ] || [ -z "$my_data_list" ] ; then
     echo "Error: The dir you specified ($dataset_type) does not have existing config";
     exit 1
   fi

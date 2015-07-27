@@ -115,7 +115,7 @@ fi
 
 if [ $stage -le 10 ]; then
   steps/nnet2/train_multisplice_accel2.sh --stage $train_stage \
-    --remove-egs false \
+    --egs-dir exp/nnet2_online/nnet_ms_h_sp/egs --remove-egs false \
     --num-jobs-initial 3 --num-jobs-final 12 \
     --splice-indexes "$splice_indexes" --feat-type raw \
     --online-ivector-dir exp/nnet2_online/ivectors_train_hires_sp2 \
