@@ -3,15 +3,19 @@
 # Copyright 2013  Johns Hopkins University (author: Daniel Povey)
 #           2014  Tom Ko
 #           2014  Vijay Peddinti
+#           2015  Yenda Trmal
 # Apache 2.0
 
-# This example script demonstrates how speed perturbation of the data helps the nnet training in the SWB setup.
+# This scripts is a modified example of how to train a speed-perturbed
+# system that IS NOT using ivectors (+I did some cleanup that could
+# be backported back to the SWB scripts, eventually)
+# It's based on the Vijay's SWB recipe
 
 stage=6
 train_stage=-10
 use_gpu=true
 corpus=none
-name=
+
 . ./cmd.sh
 . ./path.sh
 . ./utils/parse_options.sh
@@ -121,10 +125,36 @@ fi
 if [ $stage -le 12 ]; then
   # this does offline decoding that should give about the same results as the
   # real online decoding (the one with --per-utt true)
+  if [ ! -f data/lang_test/L.fst ] || [ ! -f data/lang_test/G.fst ] ;
+    echo "Decoding lang directory data/lang_test not created"
+    exit 1
+  fi
+
+  utils/mkgraph.sh data/lang_test $dir $dir/graph
+  for decode_set in decode_transtac dev10h dev_appen; do
+      decode=$dir/decode_${decode_set}
+      [ ! -x data/${decode_set} ] && \
+        echo "Skipping set data/$decode_set" && continue
+      [ -f  $decode/.done  ] && continue;
+      (
+        num_jobs=`cat data/${decode_set}/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+        [ $num_jobs -gt 200 ] && num_jobs=200;
+        [ $num_jobs -le 0   ] && return 1;
+        steps/nnet2/decode.sh --config conf/decode.config \
+          --nj $num_jobs --cmd "$decode_cmd" \
+          $dir/graph data/${decode_set}_hires $decode
+        touch $decode/.done
+      ) &
+  done
+fi
+wait
+
+if [ $stage -le 13 ]; then
+  # this does offline decoding that should give about the same results as the
+  # real online decoding (the one with --per-utt true)
   [ ! -f data/langp_test/L.fst ] && cp -r data/langp/tri5/ data/langp_test
   [ ! -f data/langp_test/G.fst ] && cp -r data/lang_test/G.fst data/langp_test
   utils/mkgraph.sh data/langp_test $dir $dir/graphp
-  #utils/mkgraph.sh data/lang_test $dir $dir/graph
   for decode_set in decode_transtac dev10h dev_appen; do
       decode=$dir/decode_${decode_set}_prob
       [ ! -x data/${decode_set} ] && \
@@ -139,6 +169,37 @@ if [ $stage -le 12 ]; then
           $dir/graphp data/${decode_set}_hires $decode
         touch $decode/.done
       ) &
+  done
+fi
+
+if [ $stage -le 14 ]; then
+  # If this setup used PLP features, we'd have to give the option --feature-type plp
+  # to the script below.
+  # For a system not using iVectors, we still have to set up
+  # the system like this -- but the extractor directory will not
+  # be used, so we could probably set up a dummy one
+  steps/online/nnet2/prepare_online_decoding.sh \
+    --mfcc-config conf/mfcc_hires.conf \
+    data/lang exp/nnet2_online/extractor "$dir" ${dir}_online || exit 1;
+fi
+wait;
+
+if [ $stage -le 15 ]; then
+  # Online decoding works without ivectors as well -- and it seems faster
+  for decode_set in dev_transtac dev10h dev_appen; do
+    decode=${dir}_online/decode_${decode_set}_prob
+    [ ! -x data/${decode_set} ] && \
+      echo "Skipping set data/$decode_set" && continue
+    [ -f  $decode/.done ] && continue;
+    (
+      num_jobs=`cat data/${decode_set}/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+      [ $num_jobs -gt 200 ] && num_jobs=200;
+      [ $num_jobs -le 0   ] && return 1;
+      steps/online/nnet2/decode.sh --config conf/decode.config \
+        --cmd "$decode_cmd" --nj $num_jobs \
+        $dir/graphp data/${decode_set}_hires $decode
+      touch $decode/.done
+    ) &
   done
 fi
 wait
