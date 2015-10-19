@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2012-2014  Johns Hopkins University (Author: Daniel Povey). 
+# Copyright 2012-2014  Johns Hopkins University (Author: Daniel Povey).
 #           2013  Xiaohui Zhang
 #           2013  Guoguo Chen
 #           2014  Vimal Manohar
@@ -37,7 +37,7 @@ final_learning_rate=0.004
 
 minibatch_size=128 # by default use a smallish minibatch size for neural net
                    # training; this controls instability which would otherwise
-                   # be a problem with multi-threaded update. 
+                   # be a problem with multi-threaded update.
 
 num_jobs_nnet="2 2"    # Number of neural net jobs to run in parallel.  This option
                        # is passed to get_egs.sh.  Array must be same length
@@ -73,6 +73,7 @@ parallel_opts="--num-threads 16 --mem 1G"  # default suitable for CPU-based trai
 combine_num_threads=8
 combine_parallel_opts="--num-threads 8"  # queue options for the "combine" stage.
 cleanup=false # while testing, leaving cleanup=false.
+unshare_layers=
 # End configuration section.
 
 
@@ -118,8 +119,9 @@ if [ $# -lt 6 -o $[$#%2] -ne 0 ]; then
   exit 1;
 fi
 
+echo "$@"
 
-argv=("$@") 
+argv=("$@")
 num_args=$#
 num_lang=$[($num_args-2)/2]
 
@@ -133,10 +135,10 @@ mkdir -p $dir/log
 
 num_jobs_nnet_array=($num_jobs_nnet)
 ! [ "${#num_jobs_nnet_array[@]}" -eq "$num_lang" ] && \
-  echo "$0: --num-jobs-nnet option must have size equal to the number of languages" && exit 1;
+  echo "$0: --num-jobs-nnet option (${#num_jobs_nnet_array[@]}) must have size equal to the number of languages ($num_lang)" && exit 1;
 mix_up_array=($mix_up)
 ! [ "${#mix_up_array[@]}" -eq "$num_lang" ] && \
-  echo "$0: --mix-up option must have size equal to the number of languages" && exit 1;
+  echo "$0: --mix-up option must have size equal to the number of languages ($num_lang)" && exit 1;
 
 
 # Language index starts from 0.
@@ -151,7 +153,7 @@ for lang in $(seq 0 $[$num_lang-1]); do
 
   for f in ${egs_dir[$lang]}/{final.mat,cmvn_opts,splice_opts}; do
     # Copy any of these files that exist.
-    cp $f $dir/$lang/ 2>/dev/null 
+    cp $f $dir/$lang/ 2>/dev/null
   done
 done
 
@@ -276,9 +278,14 @@ first_model_combine=$[$num_iters-$num_models_combine+1]
 
 x=0
 
+skip_layers_opt=""
+if [ ! -z $unshare_layers ]; then
+  skip_layers_opt=" --skip-layers=\"$unshare_layers\""
+  echo "$skip_layers_opt"
+fi
 
 while [ $x -lt $num_iters ]; do
-    
+
   if [ $x -ge 0 ] && [ $stage -le $x ]; then
     for lang in $(seq 0 $[$num_lang-1]); do
       # Set off jobs doing some diagnostics, in the background.
@@ -307,7 +314,7 @@ while [ $x -lt $num_iters ]; do
       this_keep_proportion=1.0
       # use half the examples on iteration 1, out of a concern that the model-averaging
       # might not work if we move too far before getting close to convergence.
-      [ $x -eq 1 ] && this_keep_proportion=0.5 
+      [ $x -eq 1 ] && this_keep_proportion=0.5
     fi
 
     rm $dir/.error 2>/dev/null
@@ -316,12 +323,12 @@ while [ $x -lt $num_iters ]; do
     ( # this sub-shell is so that when we "wait" below,
       # we only wait for the training jobs that we just spawned,
       # not the diagnostic jobs that we spawned above.
-      
+
       # We can't easily use a single parallel SGE job to do the main training,
       # because the computation of which archive and which --frame option
       # to use for each job is a little complex, so we spawn each one separately.
-      
-      
+
+
       for lang in $(seq 0 $[$num_lang-1]); do
         this_num_jobs_nnet=${num_jobs_nnet_array[$lang]}
         this_frames_per_eg=$(cat ${egs_dir[$lang]}/info/frames_per_eg) || exit 1;
@@ -385,14 +392,14 @@ while [ $x -lt $num_iters ]; do
       # the next command takes the averaged hidden parameters from language zero, and
       # the last layer from language $lang.  It's not really doing averaging.
       $cmd $dir/$lang/log/combine_average.$x.log \
-        nnet-am-average --weights=0.0:1.0 --skip-last-layer=true \
+        nnet-am-average --weights=0.0:1.0 --skip-last-layer=true $skip_layers_opt\
           $dir/$lang/$[$x+1].tmp.mdl $dir/0/$[$x+1].mdl $dir/$lang/$[$x+1].mdl || exit 1;
     done
 
     $cleanup && rm $dir/*/$[$x+1].tmp.mdl
 
     if [ $x -eq $mix_up_iter ]; then
-      for lang in $(seq 0 $[$num_lang-1]); do     
+      for lang in $(seq 0 $[$num_lang-1]); do
         this_mix_up=${mix_up_array[$lang]}
         if [ $this_mix_up -gt 0 ]; then
           echo "$0: for language $lang, mixing up to $this_mix_up components"
@@ -433,7 +440,7 @@ if [ $stage -le $num_iters ]; then
       cur_offset=0 # current offset from first_model_combine.
       for n in $(seq $max_models_combine); do
         next_offset=$[($n*$num_models_combine)/$max_models_combine]
-        sub_list="" 
+        sub_list=""
         for o in $(seq $cur_offset $[$next_offset-1]); do
           iter=$[$first_model_combine+$o]
           mdl=$dir/$lang/$iter.mdl
@@ -474,13 +481,13 @@ if [ $stage -le $num_iters ]; then
       - \| nnet-normalize-stddev - $dir/$lang/final.mdl || touch $dir/.error &
   done
   wait
-  
+
   [ -f $dir/.error ] && echo "$0: error doing model combination" && exit 1;
 fi
 
 
 if [ $stage -le $[$num_iters+1] ]; then
-  for lang in $(seq 0 $[$num_lang-1]); do  
+  for lang in $(seq 0 $[$num_lang-1]); do
     # Run the diagnostics for the final models.
     $cmd $dir/$lang/log/compute_prob_valid.final.log \
       nnet-compute-prob $dir/$lang/final.mdl ark:${egs_dir[$lang]}/valid_diagnostic.egs &

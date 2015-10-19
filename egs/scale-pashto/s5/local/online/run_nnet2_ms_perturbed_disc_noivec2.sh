@@ -28,7 +28,7 @@ num_jobs_nnet=6
 train_stage=-10 # can be used to start training in the middle.
 decode_start_epoch=2 # can be used to avoid decoding all epochs, e.g. if we decided to run more.
 num_epochs=4
-num_nj_denlats=96
+num_nj_denlats=32
 cleanup=false  # run with --cleanup true --stage 6 to clean up (remove large things like denlats,
                # alignments and degs).
 
@@ -55,8 +55,8 @@ else
   parallel_opts="--num-threads $num_threads"
 fi
 
-if [ ! -f ${srcdir}_online/final.mdl ]; then
-  echo "$0: expected ${srcdir}_online/final.mdl to exist; first run run_nnet2_ms.sh."
+if [ ! -f ${srcdir}/final.mdl ]; then
+  echo "$0: expected ${srcdir}/final.mdl to exist; first run run_nnet2_ms.sh."
   exit 1;
 fi
 
@@ -67,7 +67,6 @@ if [ $stage -le 1 ]; then
   num_threads_denlats=6
   subsplit=$nj
   steps/nnet2/make_denlats.sh --cmd "$decode_cmd --mem 1G --num-threads $num_threads_denlats " \
-      --online-ivector-dir exp/nnet2_online/ivectors_train_hires_sp2// \
       --nj $nj --sub-split $subsplit --num-threads "$num_threads_denlats" --config conf/decode.config \
      data/train_hires_sp/ data/lang $srcdir ${srcdir}_denlats || exit 1;
 
@@ -82,11 +81,10 @@ if [ $stage -le 2 ]; then
   # hardcode no-GPU for alignment, although you could use GPU [you wouldn't
   # get excellent GPU utilization though.]
   nj=$num_nj_denlats
-  use_gpu=yes
+  use_gpu=no
   gpu_opts=
 
-  steps/nnet2/align.sh  --cmd "$cuda_cmd $gpu_opts" --use-gpu "$use_gpu" \
-     --online-ivector-dir exp/nnet2_online/ivectors_train_hires_sp2/ \
+  steps/nnet2/align.sh  --cmd "$decode_cmd $gpu_opts" --use-gpu "$use_gpu" \
      --nj $nj data/train_hires_sp/ data/lang $srcdir ${srcdir}_ali || exit 1;
 
   # the command below is a more generic, but slower, way to do it.
@@ -104,20 +102,19 @@ if [ $stage -le 3 ]; then
   if [ -d ${srcdir}_degs/storage ]; then max_jobs=20; else max_jobs=5; fi
 
   if [[ $(hostname -f) == *.cm.cluster  ]] ; then
-    max_jobs=50
+    max_jobs=15
   fi
 
   steps/nnet2/get_egs_discriminative2.sh \
     --cmd "$decode_cmd --max-jobs-run $max_jobs" \
-    --online-ivector-dir exp/nnet2_online/ivectors_train_hires_sp2// \
     --criterion $criterion --drop-frames $drop_frames \
      data/train_hires_sp/ data/lang ${srcdir}{_ali,_denlats,/final.mdl,_degs} || exit 1;
 
   # the command below is a more generic, but slower, way to do it.
   #steps/online/nnet2/get_egs_discriminative2.sh \
-  #  --cmd "$decode_cmd --max-jobs-run $max_jobs" \
+  #  --cmd "$decode_cmd -tc $max_jobs" \
   #  --criterion $criterion --drop-frames $drop_frames \
-  #   data/train_hires_sp data/lang ${srcdir}{_ali,_denlats,_online,_degs2} || exit 1;
+  #   data/train_hires data/lang ${srcdir}{_ali,_denlats,_online,_degs} || exit 1;
 fi
 
 outputdir=${srcdir}_${criterion}_${effective_lrate}
@@ -138,19 +135,22 @@ fi
 
 if [ $stage -le 5 ]; then
   dir=$outputdir
-  ln -sf $(readlink -f ${srcdir}_online/conf) $dir/conf # so it acts like an online-decoding directory
-
-  for epoch in $(seq $decode_start_epoch $num_epochs); do
-    for decode_set in dev10h dev_appen  dev_transtac; do
-      (
-        num_jobs=`cat data/${decode_set}_hires/utt2spk|cut -d' ' -f2|sort -u|wc -l`
-        [ $num_jobs -gt 200 ] && num_jobs=200;
-        [ $num_jobs -le 0   ] && return 1;
-        steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $num_jobs \
-          --iter epoch$epoch $srcdir/graph data/${decode_set}_hires $dir/decode_epoch${epoch}_${decode_set} || exit 1
-      ) &
+  for epoch in `seq 1 4` ; do
+    for decode_set in decode_transtac dev10h dev_appen; do
+        decode=$dir/decode_${decode_set}_prob_epoch$epoch
+        [ ! -x data/${decode_set} ] && \
+          echo "Skipping set data/$decode_set" && continue
+        [ -f  $decode/.done  ] && continue;
+        (
+          num_jobs=`cat data/${decode_set}/utt2spk|cut -d' ' -f2|sort -u|wc -l`
+          [ $num_jobs -gt 50 ] && num_jobs=50;
+          [ $num_jobs -le 0   ] && return 1;
+          steps/nnet2/decode.sh --config conf/decode.config \
+            --nj $num_jobs --cmd "$decode_cmd" --iter epoch$epoch\
+            $srcdir/graphp data/${decode_set}_hires $decode
+          touch $decode/.done
+        ) &
     done
-    sleep 60s
   done
   wait
   for decode_set in dev10h dev_appen; do

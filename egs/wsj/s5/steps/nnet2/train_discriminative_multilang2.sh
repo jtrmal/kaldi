@@ -10,6 +10,7 @@
 cmd=run.pl
 num_epochs=4       # Number of epochs of training
 learning_rate=0.00002
+effective_lrate=    # If supplied, overrides the learning rate, which gets set to effective_lrate * num_jobs_nnet.
 acoustic_scale=0.1  # acoustic scale for MMI/MPFE/SMBR training.
 boost=0.0       # option relevant for MMI
 
@@ -33,14 +34,19 @@ shuffle_buffer_size=5000 # This "buffer_size" variable controls randomization of
 
 stage=-3
 
-
+adjust_priors=false
 num_threads=16  # this is the default but you may want to change it, e.g. to 1 if
                 # using GPUs.
+parallel_opts="--num-threads 16 --mem 1G"
+  # by default we use 16 threads; this lets the queue know.
+  # note: parallel_opts doesn't automatically get adjusted if you adjust num-threads.
+
 cleanup=true
 retroactive=false
 remove_egs=false
 src_models=  # can be used to override the defaults of <degs-dir1>/final.mdl <degs-dir2>/final.mdl .. etc.
              # set this to a space-separated list.
+unshare_layers=
 # End configuration section.
 
 
@@ -55,7 +61,7 @@ if [ $# -lt 3 ]; then
   echo " e.g.: $0 exp/tri4_mpe_degs exp_other_lang/tri4_mpe_degs exp/tri4_mpe_multilang"
   echo ""
   echo "You have to first call get_egs_discriminative2.sh to dump the egs."
-  echo "Caution: the options 'drop_frames' and 'criterion' are taken here"
+  echo "Caution: the options 'drop-frames' and 'criterion' are taken here"
   echo "even though they were required also by get_egs_discriminative2.sh,"
   echo "and they should normally match."
   echo ""
@@ -64,6 +70,8 @@ if [ $# -lt 3 ]; then
   echo "  --cmd (utils/run.pl|utils/queue.pl <queue opts>) # how to run jobs."
   echo "  --num-epochs <#epochs|4>                        # Number of epochs of training (measured on language 0)"
   echo "  --learning-rate <learning-rate|0.0002>           # Learning rate to use"
+  echo "  --effective-lrate <effective-learning-rate>      # If supplied, learning rate will be set to"
+  echo "                                                   # this value times num-jobs-nnet."
   echo "  --num-jobs-nnet <num-jobs|4 4>                   # Number of parallel jobs to use for main neural net:"
   echo "                                                   # space separated list of num-jobs per language. Affects"
   echo "                                                   # relative weighting."
@@ -78,12 +86,13 @@ if [ $# -lt 3 ]; then
   echo "  --boost <boost|0.0>                              # Boosting factor for MMI (e.g., 0.1)"
   echo "  --drop-frames <true,false|false>                 # Option that affects MMI training: if true, we exclude gradients from frames"
   echo "                                                   # where the numerator transition-id is not in the denominator lattice."
+  echo "  --one-silence-class <true,false|false>           # Option that affects MPE/SMBR training (will tend to reduce insertions)"
   echo "  --modify-learning-rates <true,false|false>       # If true, modify learning rates to try to equalize relative"
   echo "                                                   # changes across layers."
   exit 1;
 fi
 
-argv=("$@") 
+argv=("$@")
 num_args=$#
 num_lang=$[$num_args-1]
 
@@ -96,6 +105,24 @@ num_jobs_nnet_array=($num_jobs_nnet)
 for lang in $(seq 0 $[$num_lang-1]); do
   degs_dir[$lang]=${argv[$lang]}
 done
+
+
+if $adjust_priors ; then
+  for lang in $(seq 0 $[$num_lang-1]); do
+    if [ ! -f $degs_dir/$lang/priors_egs.1.ark ]; then
+      echo "$0: Expecting $degs_dir/$lang/priors_egs.1.ark to exist since --adjust-priors was true."
+      echo "$0: Run this script with --adjust-priors false to not adjust priors"
+      exit 1
+    fi
+
+    this_num_archives_priors=`cat $degs_dir/$lang/info/num_archives_priors` ||
+    {
+      echo "$0: Could not find $degs_dir/$lang/info/num_archives_priors. Set --adjust-priors false to not adjust priors"
+      exit 1;
+    }
+    num_archives_priors_array[$lang]=$this_num_archives_priors
+  done
+fi
 
 if [ ! -z "$src_models" ]; then
   src_model_array=($src_models)
@@ -131,6 +158,13 @@ for lang in $(seq 0 $[$num_lang-1]); do
     num_jobs_nnet_array[$lang]=$this_num_archives
   fi
 
+  this_iter_to_epoch=
+  for e in $(seq 1 $num_epochs); do
+    x=$[($e*$this_num_archives)/$this_num_jobs_nnet] # gives the iteration number.
+    this_iter_to_epoch[$x]=$e
+  done
+  iter_to_epoch_array[$lang]=`declare -p this_iter_to_epoch`
+
   # copy some things from the input directories.
   for f in splice_opts cmvn_opts tree final.mat; do
     if [ -f $this_degs_dir/$f ]; then
@@ -138,10 +172,11 @@ for lang in $(seq 0 $[$num_lang-1]); do
     fi
   done
   if [ -f $this_degs_dir/conf ]; then
-    ln -sf $(readlink -f $this_degs_dir/conf) $dir/ || exit 1; 
+    ln -sf $(readlink -f $this_degs_dir/conf) $dir/ || exit 1;
   fi
 done
 
+silphonelist=`cat $degs_dir/info/silence.csl` || exit 1;
 
 # work out number of iterations.
 num_archives0=$(cat ${degs_dir[0]}/info/num_archives) || exit 1;
@@ -174,7 +209,13 @@ if [ $stage -le -1 ]; then
   # little, later on, although I doubt it matters once the --num-samples-history
   # is large enough.
 
+
   for lang in $(seq 0 $[$num_lang-1]); do
+    if [ ! -z "$effective_lrate" ]; then
+      learning_rate=$(perl -e "print (${num_jobs_nnet_array[$lang]}*$effective_lrate);")
+      echo "$0: setting learning rate to $learning_rate = --num-jobs-nnet * --effective-lrate."
+    fi
+
     $cmd $dir/$lang/log/convert.log \
       nnet-am-copy --learning-rate=$learning_rate ${src_model_array[$lang]} - \| \
       nnet-am-switch-preconditioning  --num-samples-history=50000 - $dir/$lang/0.mdl || exit 1;
@@ -190,11 +231,19 @@ else
   train_suffix="-parallel --num-threads=$num_threads"
 fi
 
+priors_jobs=
 
-x=0   
+skip_layers_opt=""
+if [ ! -z $unshare_layers ]; then
+  skip_layers_opt=" --skip-layers=\"$unshare_layers\""
+  echo "$skip_layers_opt"
+fi
+
+rm -f $dir/.error
+x=0
 while [ $x -lt $num_iters ]; do
   if [ $stage -le $x ]; then
-    
+
     echo "Training neural net (pass $x)"
 
 
@@ -212,7 +261,7 @@ while [ $x -lt $num_iters ]; do
       # all archives.
 
       (
-        $cmd JOB=1:$this_num_jobs_nnet $dir/$lang/log/train.$x.JOB.log \
+        $cmd $parallel_opts JOB=1:$this_num_jobs_nnet $dir/$lang/log/train.$x.JOB.log \
           nnet-combine-egs-discriminative \
           "ark:$this_degs_dir/degs.\$[((JOB-1+($x*$this_num_jobs_nnet))%$this_num_archives)+1].ark" ark:- \| \
           nnet-train-discriminative$train_suffix --silence-phones=$this_silphonelist \
@@ -251,18 +300,18 @@ while [ $x -lt $num_iters ]; do
     # final layer corresponding to language zero.  Note, if we did modify-learning-rates,
     # it will also have the modified learning rates.
     $cmd $dir/log/average.$x.log \
-      nnet-am-average --weights=$weights_csl --skip-last-layer=true \
+      nnet-am-average --weights=$weights_csl --skip-last-layer=true $skip_layers_opt \
       $nnets_list $dir/0/$[$x+1].mdl || exit 1;
 
     # we'll transfer these learning rates to the other models.
-    learning_rates=$(nnet-am-info --print-learning-rates=true $dir/0/$[$x+1].mdl 2>/dev/null)        
+    learning_rates=$(nnet-am-info --print-learning-rates=true $dir/0/$[$x+1].mdl 2>/dev/null)
 
     for lang in $(seq 1 $[$num_lang-1]); do
       # the next command takes the averaged hidden parameters from language zero, and
       # the last layer from language $lang.  It's not really doing averaging.
       # we use nnet-am-copy to transfer the learning rates from model zero.
       $cmd $dir/$lang/log/combine_average.$x.log \
-        nnet-am-average --weights=0.0:1.0 --skip-last-layer=true \
+        nnet-am-average --weights=0.0:1.0 --skip-last-layer=true $skip_layers_opt\
           $dir/$lang/$[$x+1].tmp.mdl $dir/0/$[$x+1].mdl - \| \
         nnet-am-copy --learning-rates=$learning_rates - $dir/$lang/$[$x+1].mdl || exit 1;
     done
@@ -271,9 +320,58 @@ while [ $x -lt $num_iters ]; do
 
   fi
 
+  if $adjust_priors; then
+    for lang in $(seq 1 $[$num_lang-1]); do
+      # the next statement explicitly creates the $this_iter_to_epoch array
+      $(${iter_to_epoch_array[$lang]})
+      [ -z "${this_iter_to_epoch[$x]}" ] && continue
+
+      num_archives_priors=$num_archives_priors_array[$lang]
+      e=${this_iter_to_epoch[$x]}
+      (
+        rm -f $dir/$lang/.error
+
+        $cmd JOB=1:$num_archives_priors $dir/$lang/log/get_post.epoch$e.JOB.log \
+          nnet-compute-from-egs "nnet-to-raw-nnet $dir/$lang/$x.mdl -|" \
+          ark:$degs_dir/$lang/priors_egs.JOB.ark ark:- \| \
+          matrix-sum-rows ark:- ark:- \| \
+          vector-sum ark:- $dir/$lang/post.epoch$e.JOB.vec || \
+          {
+            touch $dir/$lang/.error;
+            echo "Error in getting posteriors for adjusting priors. " \
+                 "See $dir/$lang/log/get_post.epoch$e.*.log";
+            exit 1;
+          }
+
+          sleep 10;
+
+        $cmd $dir/$lang/log/sum_post.epoch$e.log \
+          vector-sum $dir/$lang/post.epoch$e.*.vec $dir/$lang/post.epoch$e.vec ||
+          {
+            touch $dir/$lang/.error;
+            echo "Error in summing posteriors. " \
+                 "See $dir/$lang/log/sum_post.epoch$e.log";
+            exit 1;
+          }
+
+        rm -f $dir/post.epoch$e.*.vec
+
+        echo "Re-adjusting priors based on computed posteriors for iter $x"
+        $cmd $dir/$lang/log/adjust_priors.epoch$e.log \
+          nnet-adjust-priors $dir/$lang/$x.mdl \
+            $dir/$lang/post.epoch$e.vec $dir/$lang/epoch$e.adj.mdl ||
+          {
+            touch $dir/$lang/.error;
+            echo "Error in adjusting priors." \
+                 "See $dir/$lang/log/adjust_priors.epoch$e.log";
+            exit 1;
+          }
+      ) &
+    done
+  fi
   x=$[$x+1]
 done
-
+wait
 
 for lang in $(seq 0 $[$num_lang-1]); do
   rm $dir/$lang/final.mdl 2>/dev/null
@@ -287,10 +385,11 @@ for lang in $(seq 0 $[$num_lang-1]); do
     epoch_final_iters="$epoch_final_iters $x"
   done
 
+
   if $cleanup; then
     echo "Removing most of the models for language $lang"
     for x in `seq 0 $num_iters`; do
-      if ! echo $epoch_final_iters | grep -w $x >/dev/null; then 
+      if ! echo $epoch_final_iters | grep -w $x >/dev/null; then
         # if $x is not an epoch-final iteration..
         rm $dir/$lang/$x.mdl 2>/dev/null
       fi

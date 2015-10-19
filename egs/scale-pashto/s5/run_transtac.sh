@@ -12,7 +12,6 @@ boost_sil=1.5
 . ./utils/parse_options.sh
 module add perl
 
-
 set -e           #Exit on non-zero return code from any command
 set -o pipefail  #Exit if any of the commands in the pipeline will 
                  #return non-zero return code
