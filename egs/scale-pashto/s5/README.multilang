@@ -1,0 +1,24 @@
+The multilang/multicorpora scripts assume you've trained all following systems
+A-only corpora
+B-only corpora 
+T-only corpora
+A+B corpora
+
+Then, inside the AB corpora structure, the rest of the systems
+is symlinked under lang/ subdirectory, i.e.
++AB-corpora
+|
++-+lang/
+  |
+  +--A -> somewhere/where/A-only/is
+  +--B -> somewhere/where/B-only/is
+  +--T -> somewhere/where/T-only/is
+
+As the multilang scripts use "numerical" ids of the individual languages,
+this mapping is always kept 
+language 0 -- A+B corpora
+language 1 -- A-only corpora
+language 2 -- B-only corpora
+language 3 -- T-only corpora
+
+

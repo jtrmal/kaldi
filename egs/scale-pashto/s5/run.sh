@@ -1,22 +1,23 @@
 #!/bin/bash
+# Copyright (c) 2015, Johns Hopkins University (Author: Yenda Trmal <jtrmal@gmail.com>)
+# License: Apache 2.0
 
 # This is not necessarily the top-level run.sh as it is in other directories.   see README.txt first.
 tri5_only=false
 sgmm5_only=false
 data_only=false
 
-
+# Begin configuration section.
 boost_sil=1.5
+# End configuration section
 . ./path.sh
 . ./cmd.sh
 [ -f local.conf ] && . ./local.conf
 
 . ./utils/parse_options.sh
 
-
-
 set -e           #Exit on non-zero return code from any command
-set -o pipefail  #Exit if any of the commands in the pipeline will 
+set -o pipefail  #Exit if any of the commands in the pipeline will
                  #return non-zero return code
 set -u           #Fail on an undefined variable
 
@@ -25,9 +26,9 @@ romanized=false
 if [ ! -f data/raw_dev10h_data/.done ]; then
   echo ---------------------------------------------------------------------
   echo "Subsetting the DEV10H set"
-  echo ---------------------------------------------------------------------  
+  echo ---------------------------------------------------------------------
   local/make_corpus_subset.sh --romanized $romanized "$dev10h_data_dir" "$dev10h_data_list" ./data/raw_dev10h_data || exit 1
-  touch data/raw_dev10h_data/.done  
+  touch data/raw_dev10h_data/.done
 fi
 
 if [ ! -f data/raw_babel_train_data/.done ]; then
@@ -116,7 +117,7 @@ fi
 
 if [ ! -f data/train/.done ] ; then
   if [ ! -z ${train_data_appen_dir+x}  ] && [ ! -z ${train_data_dir+x} ]  ; then
-    combine_data.sh data/train data/train_appen data/train_babel 
+    combine_data.sh data/train data/train_appen data/train_babel
   elif  [ ! -z ${train_data_appen_dir+x}  ] ; then
     utils/copy_data_dir.sh data/train_appen data/train
   else
@@ -141,7 +142,7 @@ if [[ ! -f data/srilm/lm.gz || data/srilm/lm.gz -ot data/train/text ]]; then
   echo "Training SRILM language models on" `date`
   echo ---------------------------------------------------------------------
   local/train_lms_srilm.sh  --oov-symbol "<unk>" \
-    --train-text data/train/text data/ data/srilm 
+    --train-text data/train/text data/ data/srilm
 fi
 
 if [ ! -f data/train/.plp.done ]; then
@@ -200,7 +201,7 @@ if [ ! -f exp/tri1/.done ]; then
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" $numLeavesTri1 $numGaussTri1 \
     data/train_sub2 data/lang exp/mono_ali_sub2 exp/tri1
-  
+
   touch exp/tri1/.done
 fi
 
@@ -216,13 +217,10 @@ if [ ! -f exp/tri2/.done ]; then
     --boost-silence $boost_sil --cmd "$train_cmd" $numLeavesTri2 $numGaussTri2 \
     data/train_sub3 data/lang exp/tri1_ali_sub3 exp/tri2
 
-  steps/get_prons.sh --cmd "$train_cmd" data/train_sub3 data/lang exp/tri2
-  utils/dict_dir_add_pronprobs.sh --max-normalize true data/local/dict  \
-    exp/tri2/pron_counts_nowb.txt exp/tri2/sil_counts_nowb.txt \
-    exp/tri2/pron_bigram_counts_nowb.txt data/local/dictp/tri2
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train_sub3 data/lang data/local/dict \
+    exp/tri2 data/local/dictp/tri2 data/local/langp/tri2 data/langp/tri2
 
-  utils/prepare_lang.sh data/local/dictp/tri2 "<unk>" \
-    data/local/langp/tri2 data/langp/tri2
   touch exp/tri2/.done
 fi
 
@@ -237,14 +235,10 @@ if [ ! -f exp/tri3/.done ]; then
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
     $numLeavesTri3 $numGaussTri3 data/train data/langp/tri2 exp/tri2_ali exp/tri3
-  
-  steps/get_prons.sh --cmd "$train_cmd" data/train data/lang exp/tri3
-  utils/dict_dir_add_pronprobs.sh --max-normalize true data/local/dict  \
-    exp/tri3/pron_counts_nowb.txt exp/tri3/sil_counts_nowb.txt \
-    exp/tri3/pron_bigram_counts_nowb.txt data/local/dictp/tri3
 
-  utils/prepare_lang.sh data/local/dictp/tri3 "<unk>" \
-    data/local/langp/tri3 data/langp/tri3
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri3 data/local/dictp/tri3 data/local/langp/tri3 data/langp/tri3
 
   touch exp/tri3/.done
 fi
@@ -261,13 +255,9 @@ if [ ! -f exp/tri4/.done ]; then
     --boost-silence $boost_sil --cmd "$train_cmd" \
     $numLeavesMLLT $numGaussMLLT data/train data/langp/tri3 exp/tri3_ali exp/tri4
 
-  steps/get_prons.sh --cmd "$train_cmd" data/train data/lang exp/tri4
-  utils/dict_dir_add_pronprobs.sh --max-normalize true data/local/dict  \
-    exp/tri4/pron_counts_nowb.txt exp/tri4/sil_counts_nowb.txt \
-    exp/tri4/pron_bigram_counts_nowb.txt data/local/dictp/tri4
-
-  utils/prepare_lang.sh data/local/dictp/tri4 "<unk>" \
-    data/local/langp/tri4 data/langp/tri4
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri4 data/local/dictp/tri4 data/local/langp/tri4 data/langp/tri4
 
   touch exp/tri4/.done
 fi
@@ -284,18 +274,27 @@ if [ ! -f exp/tri5/.done ]; then
   steps/train_sat.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
     $numLeavesSAT $numGaussSAT data/train data/langp/tri4 exp/tri4_ali exp/tri5
-  
-  steps/get_prons.sh --cmd "$train_cmd" data/train data/lang exp/tri5
-  utils/dict_dir_add_pronprobs.sh --max-normalize true data/local/dict  \
-    exp/tri5/pron_counts_nowb.txt exp/tri5/sil_counts_nowb.txt \
-    exp/tri5/pron_bigram_counts_nowb.txt data/local/dictp/tri5
 
-  utils/prepare_lang.sh data/local/dictp/tri5 "<unk>" \
-    data/local/langp/tri5 data/langp/tri5
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri5 data/local/dictp/tri5 data/local/langp/tri5 data/langp/tri5
 
   touch exp/tri5/.done
 fi
 
+
+if [ ! -f exp/tri5_ali/.done ]; then
+  echo ---------------------------------------------------------------------
+  echo "Starting exp/tri5_ali on" `date`
+  echo ---------------------------------------------------------------------
+  steps/align_fmllr.sh \
+    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
+    data/train data/langp/tri5 exp/tri5 exp/tri5_ali
+
+  local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
+    data/train data/lang data/local/dict \
+    exp/tri5_ali data/local/dictp/tri5_ali data/local/langp/tri5_ali data/langp/tri5_ali
+fi
 
 if $tri5_only ; then
   echo "Exiting after stage TRI5, as requested. "
@@ -310,37 +309,33 @@ if [ -x ./decode.sh ] ; then
   echo ---------------------------------------------------------------------
   ./decode.sh
 fi
-################################################################################
-# Ready to start SGMM training
-################################################################################
 
-if [ ! -f exp/tri5_ali/.done ]; then
-  echo ---------------------------------------------------------------------
-  echo "Starting exp/tri5_ali on" `date`
-  echo ---------------------------------------------------------------------
-  steps/align_fmllr.sh \
-    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/train data/langp/tri5 exp/tri5 exp/tri5_ali
+# this part of the recipe is only for the KWS
+# if [ ! -f exp/tri5_ali/.done ]; then
+#   echo ---------------------------------------------------------------------
+#   echo "Starting exp/tri5_ali on" `date`
+#   echo ---------------------------------------------------------------------
+#
+#   local/ali_to_rttm.sh  --cmd "$decode_cmd" \
+#     data/train data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/
+#
+#   steps/align_fmllr.sh \
+#     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
+#     data/dev10h data/langp/tri5 exp/tri5 exp/tri5_ali/dev10h
+#
+#   local/ali_to_rttm.sh  --cmd "$decode_cmd" \
+#     data/dev10h data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/dev10h
+#
+#   steps/align_fmllr.sh \
+#     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
+#     data/dev_appen data/langp/tri5 exp/tri5 exp/tri5_ali/dev_appen
+#
+#   local/ali_to_rttm.sh  --cmd "$decode_cmd" \
+#     data/dev_appen data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/dev_appen
+#
+#   touch exp/tri5_ali/.done
+# fi
 
-  local/ali_to_rttm.sh  --cmd "$decode_cmd" \
-    data/train data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/
-
-  steps/align_fmllr.sh \
-    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/dev10h data/langp/tri5 exp/tri5 exp/tri5_ali/dev10h
-  
-  local/ali_to_rttm.sh  --cmd "$decode_cmd" \
-    data/dev10h data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/dev10h
-
-  steps/align_fmllr.sh \
-    --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
-    data/dev_appen data/langp/tri5 exp/tri5 exp/tri5_ali/dev_appen
-  
-  local/ali_to_rttm.sh  --cmd "$decode_cmd" \
-    data/dev_appen data/langp/tri5 data/local/langp/tri5/ exp/tri5_ali/dev_appen
-
-  touch exp/tri5_ali/.done
-fi
-
-
+echo "All done OK"
 exit 0
+
