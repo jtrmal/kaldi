@@ -1,6 +1,16 @@
 #!/bin/bash
 
-# this script contains some common (shared) parts of the run_nnet*.sh scripts.
+
+# Copyright 2013  Johns Hopkins University (author: Daniel Povey)
+#           2014  Tom Ko
+#           2014  Vijay Peddinti
+#           2015  Yenda Trmal
+# Apache 2.0
+
+# This scripts is a modified example of how to train a speed-perturbed
+# system that is using ivectors (+I did some cleanup that could
+# be backported back to the SWB scripts, eventually)
+# It's based on the Vijay's SWB recipe
 
 . cmd.sh
 
@@ -21,11 +31,16 @@ if [ $stage -le 1 ]; then
   # them overwrite each other.
   mfccdir=mfcc
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $mfccdir/storage ]; then
-    utils/create_split_dir.pl /export/b0{1,2,3,4}/$USER/kaldi-data/egs/tedlium-$(date +'%m_%d_%H_%M')/s5/$mfccdir/storage $mfccdir/storage
+    utils/create_split_dir.pl \
+      /export/b0{1,2,3,4}/$USER/kaldi-data/egs/scale-pashto-$(date +'%m_%d_%H_%M')/s5/$mfccdir/storage $mfccdir/storage
   fi
 
   for datadir in train dev10h dev_appen dev_transtac; do
-    [ ! -x data/$datadir  ] && echo "Data directory data/${datadir} does not exist" && continue;
+    if [ ! -x data/$datadir  ] ; then
+      echo "Data directory data/${datadir} does not exist (ignoring)..." 
+      continue;
+    fi
+
     if [ ! -f data/${datadir}_hires/.done ] ; then
       utils/copy_data_dir.sh data/$datadir data/${datadir}_hires
 
@@ -35,6 +50,7 @@ if [ $stage -le 1 ]; then
 
       steps/compute_cmvn_stats.sh data/${datadir}_hires \
         exp/make_hires/$datadir $mfccdir || exit 1;
+
       touch data/${datadir}_hires/.done
     fi
   done
@@ -70,7 +86,8 @@ fi
 if [ $stage -le 5 ]; then
   ivectordir=exp/nnet2_online/ivectors_train_hires
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $ivectordir/storage ]; then
-    utils/create_split_dir.pl /export/b0{1,2,3,4}/$USER/kaldi-data/egs/scale-pashto-$(date +'%m_%d_%H_%M')/s5/$ivectordir/storage $ivectordir/storage
+    utils/create_split_dir.pl \
+      /export/b0{1,2,3,4}/$USER/kaldi-data/egs/scale-pashto-$(date +'%m_%d_%H_%M')/s5/$ivectordir/storage $ivectordir/storage
   fi
   # We extract iVectors on all the train data, which will be what we train the
   # system on.  With --utts-per-spk-max 2, the script.  pairs the utterances

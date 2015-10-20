@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Copyright 2012  Johns Hopkins University (Author: Guoguo Chen)
 # Apache 2.0.
 
