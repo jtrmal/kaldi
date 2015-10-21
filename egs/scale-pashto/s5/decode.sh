@@ -52,61 +52,68 @@ if [ ! -f data/lang_test/.done ]; then
   touch data/lang_test/.done
 fi
 if [ ! -f data/langp_test/.done ]; then
-  cp -R data/langp/tri5 data/langp_test
+  cp -R data/langp/tri5_ali data/langp_test
   local/arpa2G.sh data/srilm/lm.gz data/langp_test data/langp_test
   touch data/langp_test/.done
 fi
 
 for dataset_type in $datasets ; do
   echo "Dataset: $dataset_type"
-
+  set -x
   dataset_dir=data/$dataset_type
   #The $dataset_type value will be the dataset name without any extrension
   eval my_nj=\$${dataset_type}_nj  #for shadow, this will be re-set when appropriate
   eval my_data_list=( "\${${dataset_type}_data_list[@]}" )
   eval my_data_dir=( "\${${dataset_type}_data_dir[@]}" )
   p=`declare -p ${dataset_type}_data_dir | sed 's/'${dataset_type}_data_dir'=/my_data_dir=/'`
-  eval $p
+  eval "$p"
+  declare -p my_data_dir
 
   if [ -z "$my_data_dir" ] || [ -z "$my_data_list" ] ; then
     echo "Error: The dir you specified ($dataset_type) does not have existing config";
     exit 1
   fi
-  declare -p my_data_dir
+
   l1=${#my_data_dir[*]}
   
   set -p my_data_dir
-  resource_string=""
+  resource_string=()
   for i in `seq 0 $(($l1 - 1))`; do
-    resource_string+="  " 
-    resource_string+="${my_data_dir[$i]}"
-    resource_string+="  "
-    resource_string+="${my_data_list[$i]}"
+    resource_string+=("${my_data_dir[$i]}")
+    resource_string+=("${my_data_list[$i]}")
   done
-
+  set -x
   echo $dataset_type
   if [ ! -f data/raw_${dataset_type}_data/.done ] ; then
     if [[ $dataset_type =~ .*appen.* ]] ; then
-      local/make_appen_corpus_subset.sh $resource_string ./data/raw_${dataset_type}_data
+      local/make_appen_corpus_subset.sh \
+        "${resource_string[@]}" ./data/raw_${dataset_type}_data
     elif [[ $dataset_type =~ .*transtac.* ]] ; then
-      echo "The run_transtac should have already prepared that directory, ignoring..."
-      mkdir -p data/raw_${dataset_type}_data
-      touch $dataset_dir/.done
+      local/subset_transtac_data.sh \
+        "${resource_string[@]}" data/raw_${dataset_type}_data
     else
-      local/make_corpus_subset.sh $resource_string ./data/raw_${dataset_type}_data
+      local/make_corpus_subset.sh \
+       "${resource_string[@]}" ./data/raw_${dataset_type}_data
     fi
     touch data/raw_${dataset_type}_data/.done
   fi
   my_data_dir=data/raw_${dataset_type}_data/
-
+  set +x
 
   if [ ! -f $dataset_dir/.done ] ; then
     echo ---------------------------------------------------------------------
     echo "Preparing ${dataset_type} data lists in ${dataset_dir} on" `date`
     echo ---------------------------------------------------------------------
     mkdir -p ${dataset_dir}
-    local/prepare_acoustic_training_data.pl --fragmentMarkers \-\*\~  \
-      $my_data_dir ${dataset_dir} > ${dataset_dir}/skipped_utts.log || exit 1
+    if [[ $dataset_type =~ .*transtac.* ]] ; then
+      local/prepare_transtac_data_dir.sh \
+        $my_data_dir data/lang ${dataset_dir}
+
+      utils/fix_data_dir.sh ${dataset_dir}
+    else
+      local/prepare_acoustic_training_data.pl --fragmentMarkers \-\*\~  \
+        $my_data_dir ${dataset_dir} > ${dataset_dir}/skipped_utts.log || exit 1
+    fi
 
     if [ ! -f ${dataset_dir}/.plp.done ]; then
       echo ---------------------------------------------------------------------

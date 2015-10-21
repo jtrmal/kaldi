@@ -10,10 +10,17 @@ data_only=false
 # Begin configuration section.
 boost_sil=1.5
 # End configuration section
+
 . ./path.sh
 . ./cmd.sh
-[ -f local.conf ] && . ./local.conf
 
+if [ ! -f ./local.conf ]; then
+  echo "You must create (or symlink from conf/) data sources configuration"
+  echo "Symlink it to your experiment's root directory as local.conf"
+  echo "See conf/lang-clsp-ab.conf for an example"
+  exit 1
+fi
+. ./local.conf
 . ./utils/parse_options.sh
 
 set -e           #Exit on non-zero return code from any command
@@ -21,39 +28,45 @@ set -o pipefail  #Exit if any of the commands in the pipeline will
                  #return non-zero return code
 set -u           #Fail on an undefined variable
 
-#Preparing dev2h and train directories
 romanized=false
-if [ ! -f data/raw_dev10h_data/.done ]; then
-  echo ---------------------------------------------------------------------
-  echo "Subsetting the DEV10H set"
-  echo ---------------------------------------------------------------------
-  local/make_corpus_subset.sh --romanized $romanized "$dev10h_data_dir" "$dev10h_data_list" ./data/raw_dev10h_data || exit 1
-  touch data/raw_dev10h_data/.done
-fi
 
 if [ ! -f data/raw_babel_train_data/.done ]; then
-    echo ---------------------------------------------------------------------
-    echo "Creating  the BABEL-TRAIN set"
-    echo ---------------------------------------------------------------------
-    mkdir -p data/raw_babel_train_data
-    if [ ! -z ${train_data_dir+x}  ]; then
-      local/make_corpus_subset.sh --romanized $romanized "$train_data_dir" "$train_data_list" ./data/raw_babel_train_data
-    fi
-    touch data/raw_babel_train_data/.done
+  echo ---------------------------------------------------------------------
+  echo "Creating  the BABEL-TRAIN set"
+  echo ---------------------------------------------------------------------
+  mkdir -p data/raw_babel_train_data
+  if [ ! -z ${train_data_dir+x}  ]; then
+    local/make_corpus_subset.sh --romanized $romanized "$train_data_dir" "$train_data_list" ./data/raw_babel_train_data
+  fi
+  touch data/raw_babel_train_data/.done
 fi
 babel_train=`readlink -f ./data/raw_babel_train_data`
 
 if [ ! -f data/raw_appen_train_data/.done ]; then
-    echo ---------------------------------------------------------------------
-    echo "Creating the APPEN-TRAIN set"
-    echo ---------------------------------------------------------------------
-    mkdir -p data/raw_appen_train_data
-    if [ ! -z ${train_data_appen_dir+x}  ]; then
-      local/make_appen_corpus_subset.sh --romanized $romanized  "$train_data_appen_dir" "$train_data_appen_list" ./data/raw_appen_train_data
-    fi
-    touch data/raw_appen_train_data/.done
+  echo ---------------------------------------------------------------------
+  echo "Creating the APPEN-TRAIN set"
+  echo ---------------------------------------------------------------------
+  mkdir -p data/raw_appen_train_data
+  if [ ! -z ${train_data_appen_dir+x}  ]; then
+    local/make_appen_corpus_subset.sh --romanized $romanized  "$train_data_appen_dir" "$train_data_appen_list" ./data/raw_appen_train_data
+  fi
+  touch data/raw_appen_train_data/.done
 fi
 appen_train=`readlink -f ./data/raw_appen_train_data`
+
+if [ ! -f data/raw_transtac_train_data/.done ]; then
+  echo ---------------------------------------------------------------------
+  echo "Subsetting the TRANSTAC-TRAIN set"
+  echo ---------------------------------------------------------------------
+  mkdir -p data/raw_transtac_train_data
+  if [ ! -z ${train_data_transtac_dir+x}  ]; then
+    local/subset_transtac_data.sh "$train_data_transtac_dir" \
+      conf/lists/transtac_pashto.train data/raw_transtac_train_data
+  fi
+  touch data/raw_transtac_train_data/.done
+fi
+transtac_train=`readlink -f ./data/raw_transtac_train_data`
+
 
 mkdir -p data/local/dict
 if [[ ! -f data/local/dict/lexicon.txt ]]; then
@@ -61,21 +74,47 @@ if [[ ! -f data/local/dict/lexicon.txt ]]; then
   echo "Preparing lexicon in data/local on" `date`
   echo ---------------------------------------------------------------------
 
-  if [ ! -z ${train_data_appen_dir+x}  ] && [ ! -z ${train_data_dir+x} ]  ; then
+  romanized=true
+  if [ ! -z ${train_data_transtac_dir+x} ] ; then
+    echo "Using only the TransTac Lexicon..."
+    romanized=false
+    local/convert_transtac_lexicon.sh \
+      "$lexicon_transtac_file" data/local/dict/filtered_lexicon.txt
+  elif [ ! -z ${train_data_appen_dir+x}  ] && [ ! -z ${train_data_dir+x} ]  ; then
     echo "Merging the lexicons..."
-    local/make_lexicon_subset.sh $babel_train/transcription <(local/convert_charsets.pl $lexicon_file) data/local/dict/filtered_babel_lexicon.txt
-    cut -f 1,2,3 $lexicon_appen_file | local/convert_charsets.pl | local/lexicon_to_babel_format.pl --tag 1 > data/local/dict/filtered_appen_lexicon.txt
+    local/make_lexicon_subset.sh $babel_train/transcription \
+      <(local/convert_charsets.pl $lexicon_file) \
+      data/local/dict/filtered_babel_lexicon.txt
+    cut -f 1,2,3 $lexicon_appen_file | local/convert_charsets.pl | \
+      local/lexicon_to_babel_format.pl --tag 1 > data/local/dict/filtered_appen_lexicon.txt
+    
+    cat data/local/dict/filtered_*_lexicon.txt | \
+      local/lexicon_to_babel_format.pl > data/local/dict/filtered_lexicon.txt
+
   elif  [ ! -z ${train_data_appen_dir+x}  ] ; then
     echo "Using only the Appen Lexicon..."
-    cut -f 1,2,3 $lexicon_appen_file | local/convert_charsets.pl | local/lexicon_to_babel_format.pl --tag 1 > data/local/dict/filtered_appen_lexicon.txt
+    cut -f 1,2,3 $lexicon_appen_file | local/convert_charsets.pl | \
+      local/lexicon_to_babel_format.pl --tag 1 > data/local/dict/filtered_appen_lexicon.txt
+    
+    cat data/local/dict/filtered_*_lexicon.txt | \
+      local/lexicon_to_babel_format.pl > data/local/dict/filtered_lexicon.txt
+
   else
     echo "Using only the Babel Lexicon..."
-    local/make_lexicon_subset.sh $babel_train/transcription <(local/convert_charsets.pl $lexicon_file) data/local/dict/filtered_babel_lexicon.txt
-  fi
-  cat data/local/dict/filtered_*_lexicon.txt | \
-    local/lexicon_to_babel_format.pl > data/local/dict/filtered_lexicon.txt
+    local/make_lexicon_subset.sh $babel_train/transcription \
+      <(local/convert_charsets.pl $lexicon_file) \
+      data/local/dict/filtered_babel_lexicon.txt
+    
+    cat data/local/dict/filtered_*_lexicon.txt | \
+      local/lexicon_to_babel_format.pl > data/local/dict/filtered_lexicon.txt
 
-  local/prepare_lexicon.pl  --romanized --phonemap "$phoneme_mapping" \
+  fi
+
+  if $romanized ; then
+    lexiconFlags=" --romanized $lexiconFlags "
+  fi
+
+  local/prepare_lexicon.pl \
     $lexiconFlags data/local/dict/filtered_lexicon.txt data/local/dict/
 fi
 
@@ -115,9 +154,24 @@ if [[ ! -f data/train_appen/wav.scp || data/train_appen/wav.scp -ot "$appen_trai
   fi
 fi
 
+if [[ ! -f data/train_transtac/wav.scp || data/train_transtac/wav.scp -ot "$transtac_train" ]]; then
+  echo ---------------------------------------------------------------------
+  echo "Preparing acoustic training lists in data/train_transtac on" `date`
+  echo ---------------------------------------------------------------------
+  mkdir -p data/train_transtac
+  if  [ ! -z ${train_data_transtac_dir+x}  ] ; then
+    local/prepare_transtac_data_dir.sh \
+      $transtac_train data/lang data/train_transtac
+
+    utils/fix_data_dir.sh data/train_transtac
+  fi
+fi
+
 if [ ! -f data/train/.done ] ; then
   if [ ! -z ${train_data_appen_dir+x}  ] && [ ! -z ${train_data_dir+x} ]  ; then
     combine_data.sh data/train data/train_appen data/train_babel
+  elif  [ ! -z ${train_data_transtac_dir+x} ]; then
+    utils/copy_data_dir.sh data/train_transtac data/train
   elif  [ ! -z ${train_data_appen_dir+x}  ] ; then
     utils/copy_data_dir.sh data/train_appen data/train
   else
@@ -134,15 +188,18 @@ if [[ "$nj_max" -lt "$train_nj" ]] ; then
     train_nj=$nj_max
 fi
 
-
-
-# We will simply override the default G.fst by the G.fst generated using SRILM
-if [[ ! -f data/srilm/lm.gz || data/srilm/lm.gz -ot data/train/text ]]; then
+if [ ! -f data/lang_test/.done ]; then
   echo ---------------------------------------------------------------------
   echo "Training SRILM language models on" `date`
   echo ---------------------------------------------------------------------
   local/train_lms_srilm.sh  --oov-symbol "<unk>" \
-    --train-text data/train/text data/ data/srilm
+    --train-text data/train/text \
+    --words-file data/lang/words.txt data/ data/srilm
+
+  rm -rf data/lang_test/
+  cp -R data/lang/ data/lang_test
+  local/arpa2G.sh data/srilm/lm.gz data/lang_test data/lang_test
+  touch data/lang_test/.done
 fi
 
 if [ ! -f data/train/.plp.done ]; then
@@ -294,6 +351,8 @@ if [ ! -f exp/tri5_ali/.done ]; then
   local/reestimate_langp.sh --cmd "$train_cmd" --unk "<unk>" \
     data/train data/lang data/local/dict \
     exp/tri5_ali data/local/dictp/tri5_ali data/local/langp/tri5_ali data/langp/tri5_ali
+
+  touch exp/tri5_ali/.done
 fi
 
 if $tri5_only ; then
