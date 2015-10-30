@@ -6,7 +6,7 @@
 system=nnet_ms_j_sp
 use_gpu=true
 train_stage=-99
-stage=-1
+stage=-99
 num_jobs=50
 # End configuration section
 . ./utils/parse_options.sh
@@ -143,4 +143,5 @@ fi
 wait
 
 
+echo "Done OK."
 
