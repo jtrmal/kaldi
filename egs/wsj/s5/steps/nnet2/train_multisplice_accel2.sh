@@ -225,7 +225,7 @@ if [ $stage -le -3 ] && [ -z "$egs_dir" ]; then
       --io-opts "$io_opts" \
       --cmd "$cmd" $egs_opts \
       --frames-per-eg $frames_per_eg \
-      $data $alidir $dir/egs || exit 1;
+      $data $alidir $dir/egs | tee $dir/egs/get_egs.log || exit 1;
 fi
 
 [ -z $egs_dir ] && egs_dir=$dir/egs

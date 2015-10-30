@@ -15,14 +15,16 @@ stage=6
 train_stage=-10
 use_gpu=true
 corpus=none
+config=nnet_ms_j_sp
+
+. ./utils/parse_options.sh
+name=$config
 
 . ./cmd.sh
 . ./path.sh
-. ./utils/parse_options.sh
 
 [ ! -f conf/nnet.conf ] && echo "File conf/nnet.conf does not exist" && exist 1
 . ./conf/nnet.conf
-
 
 set -e -o pipefail
 if $use_gpu; then
@@ -156,7 +158,7 @@ fi
 if [ $stage -le 12 ]; then
   # this does offline decoding that should give about the same results as the
   # real online decoding (the one with --per-utt true)
-  if [ ! -f data/lang_test/L.fst ] || [ ! -f data/lang_test/G.fst ] ;
+  if [ ! -f data/lang_test/L.fst ] || [ ! -f data/lang_test/G.fst ] ; then
     echo "Decoding lang directory data/lang_test not created"
     exit 1
   fi

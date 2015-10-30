@@ -1,0 +1,23 @@
+%WER 71.53 [ 35602 / 49770, 4903 ins, 9230 del, 21469 sub ] exp/tri3/decode_dev_appen/wer_14_1.0
+%WER 69.80 [ 34740 / 49770, 4676 ins, 9858 del, 20206 sub ] exp/tri4/decode_dev_appen/wer_15_1.0
+%WER 65.21 [ 32457 / 49770, 6436 ins, 6439 del, 19582 sub ] exp/tri5/decode_dev_appen/wer_14_1.0
+%WER 62.99 [ 31352 / 49770, 6210 ins, 6108 del, 19034 sub ] exp/tri5/decode_dev_appen_prob/wer_15_1.0
+%WER 51.51 [ 25638 / 49770, 5266 ins, 6561 del, 13811 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev_appen_prob/wer_10_0.5
+%WER 51.63 [ 25695 / 49770, 5074 ins, 6948 del, 13673 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev_appen_utt_offline_prob/wer_10_0.5
+%WER 51.52 [ 25641 / 49770, 4780 ins, 7130 del, 13731 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev_appen_utt_prob/wer_11_0.5
+
+%WER 66.91 [ 73059 / 109186, 6966 ins, 17448 del, 48645 sub ] exp/tri3/decode_dev10h/wer_13_0.5
+%WER 64.56 [ 70490 / 109186, 6318 ins, 18527 del, 45645 sub ] exp/tri4/decode_dev10h/wer_13_0.5
+%WER 61.97 [ 67667 / 109186, 7529 ins, 15818 del, 44320 sub ] exp/tri5/decode_dev10h/wer_13_0.5
+%WER 60.36 [ 65900 / 109186, 7679 ins, 14997 del, 43224 sub ] exp/tri5/decode_dev10h_prob/wer_14_0.5
+%WER 47.77 [ 52154 / 109186, 6508 ins, 13460 del, 32186 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev10h_prob/wer_10_0.5
+%WER 47.83 [ 52225 / 109186, 6654 ins, 12982 del, 32589 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev10h_utt_offline_prob/wer_10_0.5
+%WER 48.58 [ 53040 / 109186, 6929 ins, 12907 del, 33204 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev10h_utt_prob/wer_10_0.5
+
+%WER 69.44 [ 27843 / 40095, 3880 ins, 5119 del, 18844 sub ] exp/tri3/decode_dev_transtac/wer_13_1.0
+%WER 68.28 [ 27377 / 40095, 3432 ins, 5843 del, 18102 sub ] exp/tri4/decode_dev_transtac/wer_15_1.0
+%WER 69.54 [ 27884 / 40095, 5238 ins, 4493 del, 18153 sub ] exp/tri5/decode_dev_transtac/wer_12_1.0
+%WER 69.27 [ 27775 / 40095, 5259 ins, 4569 del, 17947 sub ] exp/tri5/decode_dev_transtac_prob/wer_15_1.0
+%WER 56.16 [ 22517 / 40095, 3959 ins, 4229 del, 14329 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev_transtac_prob/wer_12_1.0
+%WER 56.66 [ 22716 / 40095, 4277 ins, 4016 del, 14423 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev_transtac_utt_offline_prob/wer_12_1.0
+%WER 56.12 [ 22503 / 40095, 3970 ins, 4211 del, 14322 sub ] exp/nnet2_online/nnet_ms_j_sp_online/decode_dev_transtac_utt_prob/wer_12_1.0
