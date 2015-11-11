@@ -90,6 +90,7 @@ sub print_usage() {
   exit 1;
 }
 
+#print STDERR "$0 " . join(" ", @ARGV) . "\n";
 if (@ARGV < 2) {
   print_usage();
 }
