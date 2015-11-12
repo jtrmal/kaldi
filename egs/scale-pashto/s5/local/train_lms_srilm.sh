@@ -8,7 +8,8 @@ oov_symbol="<UNK>"
 
 echo "$0 $@"
 
-. ./utils/parse_options.sh
+if [ -f path.sh ]; then . path.sh; fi
+. ./utils/parse_options.sh || exit 1
 
 echo "-------------------------------------"
 echo "Building an SRILM language model     "
@@ -134,6 +135,18 @@ ngram-count -lm $tgtdir/3gram.kn012.gz -kndiscount1 -gt1min 0 -kndiscount2 -gt2m
 ngram-count -lm $tgtdir/3gram.kn022.gz -kndiscount1 -gt1min 0 -kndiscount2 -gt2min 2 -kndiscount3 -gt3min 2 -order 3 -text $tgtdir/train.txt -vocab $tgtdir/vocab -unk -sort -map-unk "$oov_symbol"
 ngram-count -lm $tgtdir/3gram.kn023.gz -kndiscount1 -gt1min 0 -kndiscount2 -gt2min 2 -kndiscount3 -gt3min 3 -order 3 -text $tgtdir/train.txt -vocab $tgtdir/vocab -unk -sort -map-unk "$oov_symbol"
 
+if [ ! -z ${LIBLBFGS} ]; then 
+	
+    echo "-------------------"
+    echo "Maxent 3grams"
+    echo "-------------------"
+    #-map-unk "$oov_symbol" - if this is used with -maxent-convert-to-arpa, ngram-count will segfault   
+    ngram-count -lm - -kndiscount1 -order 3 -text $tgtdir/train.txt -vocab $tgtdir/vocab -unk -sort \
+        -maxent -maxent-convert-to-arpa | sed "s/<unk>/${oov_symbol}/" | gzip -c > $tgtdir/3gram.me.gz || exit 1
+
+
+fi
+    
 
 echo "-------------------"
 echo "Good-Turing 4grams"
@@ -156,6 +169,17 @@ ngram-count -lm $tgtdir/4gram.kn0122.gz -kndiscount1 -gt1min 0 -kndiscount2 -gt2
 ngram-count -lm $tgtdir/4gram.kn0123.gz -kndiscount1 -gt1min 0 -kndiscount2 -gt2min 1 -kndiscount3 -gt3min 2 -kndiscount4 -gt4min 3 -order 4 -text $tgtdir/train.txt -vocab $tgtdir/vocab -unk -sort -map-unk "$oov_symbol"
 ngram-count -lm $tgtdir/4gram.kn0222.gz -kndiscount1 -gt1min 0 -kndiscount2 -gt2min 2 -kndiscount3 -gt3min 2 -kndiscount4 -gt4min 2 -order 4 -text $tgtdir/train.txt -vocab $tgtdir/vocab -unk -sort -map-unk "$oov_symbol"
 ngram-count -lm $tgtdir/4gram.kn0223.gz -kndiscount1 -gt1min 0 -kndiscount2 -gt2min 2 -kndiscount3 -gt3min 2 -kndiscount4 -gt4min 3 -order 4 -text $tgtdir/train.txt -vocab $tgtdir/vocab -unk -sort -map-unk "$oov_symbol"
+
+if [ ! -z ${LIBLBFGS} ]; then 
+    echo "-------------------"
+    echo "Maxent 4grams"
+    echo "-------------------"
+    #-map-unk "$oov_symbol" - if this is used with -maxent-convert-to-arpa, ngram-count will segfault
+    ngram-count -lm - -kndiscount1 -order 4 -text $tgtdir/train.txt -vocab $tgtdir/vocab -unk -sort \
+        -maxent -maxent-convert-to-arpa | sed "s/<unk>/${oov_symbol}/" | gzip -c > $tgtdir/4gram.me.gz || exit 1
+
+fi
+
 
 echo "--------------------"
 echo "Computing perplexity"
