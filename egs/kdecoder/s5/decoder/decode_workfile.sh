@@ -26,6 +26,7 @@ threaded=false
 online=false
 use_gpu=false
 lattice_beam=6
+clean=true
 # end configuration
 
 echo "Running: $0 $@"
@@ -186,6 +187,10 @@ done
 $SCRIPTDIR/decode/split_output.pl $workfile $datadir/segments \
     $ctmfile $decode/htk-out
 
+
+if $clean; then
+    rm -rf $tmpdir
+fi
 
 exit 0
 
