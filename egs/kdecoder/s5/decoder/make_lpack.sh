@@ -12,8 +12,13 @@ expdir=$1
 graphdir=$2
 model=$3
 ivdir=$4
-lpdir=$5
+lpack=$5
 
+if [ -z $TMP ]; then
+    TMP=/tmp
+fi
+
+lpdir=$TMP/kaldi-lp-`uuidgen`
 
 if [[ ! -d $lpdir ]]; then
    mkdir -p $lpdir
@@ -121,3 +126,12 @@ echo optlmwt=$lmwt >> $lpdir/local.conf
 
 touch $lpdir/conf/decode.config
 
+fullpath=`readlink -f $lpack`
+
+pushd $lpdir
+zip -r $fullpath *
+popd
+
+rm -rf $lpdir
+
+exit 0
