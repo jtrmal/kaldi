@@ -32,7 +32,7 @@ while (<CTM>) {
 	$file = $utt;
 	$file =~ s/_\d+$//;
  	@words = ();
-	    
+	@rest = ();
     }
     else {
 	($file, @rest) = split;
@@ -46,10 +46,11 @@ while (<CTM>) {
     }
     print F "$_\n";
     $lastfile = $file;
-    @f = split;
-    $conf = pop @f;
-    $word = pop @f;
-    push @words, $word;
+    if (@rest > 0) {
+	$conf = pop @rest;
+	$word = pop @rest;
+	push @words, $word;
+    }
 }
 
 print F;
