@@ -54,7 +54,7 @@ mkdir $tmpdir || \
 echo "Using tmpdir=$tmpdir"
 
 if [[ ! -d $lpack ]]; then
-    mkdir $tmpdir/lpack
+    mkdir -p $tmpdir/lpack
     unzip $lpack -d $tmpdir/lpack &> /dev/null
     lpack=$tmpdir/lpack
 fi
