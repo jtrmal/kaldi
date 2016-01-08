@@ -16,6 +16,7 @@
 
 # Begin configuration section.
 cmd=run.pl
+train_cmd=run.pl
 num_epochs=15      # Number of epochs of training;
                    # the number of iterations is worked out from this.
 initial_effective_lrate=0.01
@@ -285,7 +286,7 @@ fi
 if [ $pnorm_input_dim -eq $pnorm_output_dim ] && [ $fix_nnet ]; then fix_nnet=true;fi
 if [ $stage -le -1 ]; then
   echo "Training transition probabilities and setting priors"
-  $cmd $dir/log/train_trans.log \
+  $train_cmd $dir/log/train_trans.log \
     nnet-train-transitions $dir/0.mdl "ark:gunzip -c $alidir/ali.*.gz|" $dir/0.mdl \
     || exit 1;
 
@@ -512,7 +513,7 @@ while [ $x -lt $num_iters ]; do
         # same archive with different frame indexes will give similar gradients,
         # so we want to separate them in time.
 
-        $cmd $parallel_opts $dir/log/train.$x.$n.log \
+        $train_cmd $parallel_opts $dir/log/train.$x.$n.log \
           nnet-train$parallel_suffix $parallel_train_opts \
           --minibatch-size=$this_minibatch_size --srand=$x "$mdl" \
           "ark:nnet-copy-egs --frame=$frame ark:$cur_egs_dir/egs.$archive.ark ark:-|nnet-shuffle-egs --buffer-size=$shuffle_buffer_size --srand=$x ark:- ark:-|" \

@@ -30,6 +30,7 @@
 
 # Begin configuration section.
 cmd=run.pl
+train_cmd=run.pl
 num_epochs=10      # Number of epochs of training (for first language);
                    # the number of iterations is worked out from this.
 initial_learning_rate=0.04
@@ -342,7 +343,7 @@ while [ $x -lt $num_iters ]; do
           archive=$[($k%$this_num_archives)+1]; # work out the 1-based archive index.
           frame=$[(($k/$this_num_archives)%$this_frames_per_eg)];
 
-          $cmd $parallel_opts $dir/$lang/log/train.$x.$n.log \
+          $train_cmd $parallel_opts $dir/$lang/log/train.$x.$n.log \
             nnet-train$parallel_suffix $parallel_train_opts \
             --minibatch-size=$this_minibatch_size --srand=$x $dir/$lang/$x.mdl \
             "ark:nnet-copy-egs --keep-proportion=$this_keep_proportion --frame=$frame ark:${egs_dir[$lang]}/egs.$archive.ark ark:-|nnet-shuffle-egs --buffer-size=$shuffle_buffer_size --srand=$x ark:- ark:-|" \
