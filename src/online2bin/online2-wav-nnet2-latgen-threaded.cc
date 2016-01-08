@@ -258,8 +258,8 @@ int main(int argc, char *argv[]) {
         bool end_of_utterance = true;
         decoder.GetLattice(end_of_utterance, &clat, NULL);
         
-        GetDiagnosticsAndPrintOutput(utt, word_syms, clat,
-                                     &num_frames, &tot_like);
+        //GetDiagnosticsAndPrintOutput(utt, word_syms, clat,
+        //                             &num_frames, &tot_like);
         
         decoding_timer.OutputStats(&timing_stats);
         

@@ -1,0 +1,22 @@
+I got three transtac filelists from Florian: 
+spkLst.dev.phase4 spkLst.test.phase4 spkLst.train.phase4
+
+He didn't participate on Transtac, so he doesn't really know what the files are.
+I created three files (using the Florian's files as a hint):
+  transtac_pashto.dev
+  transtac_pashto.dev2
+  transtac_pashto.train
+
+transtac_pashto.dev was created by merging spkLst.{dev,test}.phase4 together,
+as they differed only in one file -- the rest was the same
+spkLst.dev.phase4:  NISTPS_B12_sM16iM42fM45_042509_sif
+spkLst.test.phase4: NISTPS_A42_sM09iM42fM45_042609_sif
+
+transtac_pashto.train was created by removing the files in transtac_pashto.dev
+from the list spkLst.train.phase4. So now transtac_pashto.{dev,train} are 
+completely disjoint
+
+transtac_pashto.dev2 was created by listing out all the wav files in TRANSTAC
+corpus and filtering out all files from transtac_pashto.{train,dev}.
+I.e. dev2 is completely disjoint from dev,train and their union should give
+back the list of all wavs (with tdf) in the TRANSTAC corpus

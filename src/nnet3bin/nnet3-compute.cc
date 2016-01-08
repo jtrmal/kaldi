@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
     BaseFloatMatrixWriter matrix_writer(matrix_wspecifier);
 
     int32 num_success = 0, num_fail = 0;
-    int64 frame_count = 0;
+    kaldi::int64 frame_count = 0;
 
     SequentialBaseFloatMatrixReader feature_reader(feature_rspecifier);
       
