@@ -20,11 +20,7 @@ num_jobs=50
 
 if $use_gpu; then
   if ! cuda-compiled; then
-    cat <<EOF && exit 1
-This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
-If you want to use GPUs (and have them), go to src/, and configure and make on a machine
-where "nvcc" is installed.  Otherwise, call this script with --use-gpu false
-EOF
+    echo Main script not on CUDA machine
   fi
   parallel_opts="  --gpu 1"
   combine_num_threads=24
@@ -47,8 +43,8 @@ if [ $stage -le 0 ]; then
     --combine-parallel-opts "$combine_parallel_opts" \
     --combine-num-threads $combine_num_threads --unshare-layers "0:1:2"\
     --num-epochs 6 --mix-up "0 0 0" --num-jobs-nnet "6 4 4"\
-    --cmd "$train_cmd --config conf/queue_jhu.conf"  --stage $train_stage \
-    --gpucmd "$cuda_cmd --config conf/queue_jhu.conf" \
+    --cmd "$train_cmd --config conf/queue.conf"  --stage $train_stage \
+    --train-cmd "$cuda_cmd --config conf/queue.conf" \
     ./exp/tri3_ali_sp  ./exp/nnet2_online/nnet_ms_p_sp/egs\
     ../exp_A/exp/tri3_ali_sp ../exp_A/exp/nnet2_online/nnet_ms_p_sp/egs\
     ../exp_B/exp/tri3_ali_sp ../exp_B/exp/nnet2_online/nnet_ms_p_sp/egs\
@@ -57,10 +53,24 @@ if [ $stage -le 0 ]; then
 fi
 
 if [ $stage -le 1 ] ; then
+
+  if [ ! -d data/langp_test_A ]; then
+	cp -r ../exp_A/data/langp_test data/langp_test_A
+  fi
+
+  if [ ! -d data/langp_test_B ]; then
+	cp -r ../exp_B/data/langp_test data/langp_test_B
+  fi
+
+  echo Making joint corpus graph
   utils/mkgraph.sh  data/langp_test/ exp_multilang/$system/0 \
     exp_multilang/$system/0/graphp
+
+  echo Making corpus A graph
   utils/mkgraph.sh  data/langp_test_A/ exp_multilang/$system/1 \
     exp_multilang/$system/1/graphp
+
+  echo Making corpus B graph
   utils/mkgraph.sh  data/langp_test_B/ exp_multilang/$system/2 \
     exp_multilang/$system/2/graphp
 fi
@@ -88,19 +98,22 @@ fi
 
 if [ $stage -le 3 ]; then
   for am in 0 1 2 ; do
-    for decode_set in dev10h dev_appen dev_transtac ; do
+    for decode_set in dev10h fsp_eval ; do
       decode=exp_multilang/${system}_online/$am/decode_${decode_set}_utt_offline_prob
       mkdir -p $decode;
+      if [ $decode_set == "dev10h" ]; then
+		num_jobs=20
+      else
+		num_jobs=50
+      fi
       steps/online/nnet2/decode.sh --config conf/decode.config\
         --cmd "$decode_cmd" --nj $num_jobs --per-utt true --online false \
         exp_multilang/${system}/$am/graphp \
-        data/${decode_set}_hires  $decode | tee $decode/decode.log &
+        data/${decode_set}_hires  $decode | tee $decode/decode.log 
     done
-    sleep 10s
   done
 fi
 
-wait
 
 
 

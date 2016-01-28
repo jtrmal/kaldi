@@ -6,11 +6,19 @@
 # the number of cpus on your machine.
 
 #a) JHU cluster options
-export train_cmd="queue.pl -l arch=*64"
-export decode_cmd="queue.pl -l arch=*64,mem_free=2G,ram_free=2G"
-export mkgraph_cmd="queue.pl -l arch=*64,ram_free=4G,mem_free=4G"
-export big_memory_cmd="queue.pl -l arch=*64,ram_free=8G,mem_free=8G"
-export cuda_cmd="queue.pl -l gpu=1"
+#export train_cmd="queue.pl -l arch=*64"
+#export decode_cmd="queue.pl -l arch=*64,mem_free=2G,ram_free=2G"
+#export mkgraph_cmd="queue.pl -l arch=*64,ram_free=4G,mem_free=4G"
+#export big_memory_cmd="queue.pl -l arch=*64,ram_free=8G,mem_free=8G"
+#export cuda_cmd="queue.pl -l gpu=1"
+
+# COE cluster options
+export train_cmd="queue.pl -l arch=*64,h_rt=12:00:00,mem_free=12G -q all.q,intel.q"
+export decode_cmd="queue.pl -l arch=*64,h_rt=12:00:00,mem_free=8G -q all.q,intel.q"
+export decode_cuda_cmd="queue.pl -l arch=*64,h_rt=12:00:00,mem_free=8G -q gpu.q -l gpu=1"
+export cuda_cmd="queue.pl -l arch=*64,h_rt=12:00:00,mem_free=8G -q gpu.q -l gpu=1"
+export mkgraph_cmd="queue.pl -l arch=*64,h_rt=12:00:00,mem_free=4G -q *.q"
+
 
 
 

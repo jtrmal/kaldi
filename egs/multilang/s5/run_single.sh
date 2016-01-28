@@ -3,7 +3,6 @@
 # License: Apache 2.0
 
 # This is not necessarily the top-level run.sh as it is in other directories.   see README.txt first.
-tri4_only=true
 tri5_only=true
 sgmm5_only=false
 data_only=false
@@ -227,9 +226,12 @@ echo ---------------------------------------------------------------------
 echo "Starting (full) triphone training in exp/tri3 on" `date`
 echo ---------------------------------------------------------------------
 if [ ! -f exp/tri3/.done ]; then
+  if [ ! -f exp/tri2_ali/.done ]; then
   steps/align_si.sh \
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
     data/train data/langp/tri2 exp/tri2 exp/tri2_ali
+  touch exp/tri2_ali/.done
+  fi
 
   steps/train_deltas.sh \
     --boost-silence $boost_sil --cmd "$train_cmd" \
@@ -270,14 +272,8 @@ if [ ! -f exp/tri4_ali/.done ]; then
     --boost-silence $boost_sil --nj $train_nj --cmd "$train_cmd" \
     data/train data/langp/tri4 exp/tri4 exp/tri4_ali
   
-  touch exi/tri4_ali/.done
+  touch exp/tri4_ali/.done
 
-fi
-
-if $tri4_only ; then
-  echo "Exiting after stage TRI5, as requested. "
-  echo "Everything went fine. Done"
-  exit 0;
 fi
 
 if [ ! -f exp/tri5/.done ]; then

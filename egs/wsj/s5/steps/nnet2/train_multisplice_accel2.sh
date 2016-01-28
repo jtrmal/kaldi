@@ -105,12 +105,14 @@ num_jobs_align=30       # Number of jobs for realignment
 frames_per_eg=8 # to be passed on to get_egs2.sh
 
 trap 'for pid in $(jobs -pr); do kill -KILL $pid; done' INT QUIT TERM
+echo "Now num_iters is $num_epochs"
 
 echo "$0 $@"  # Print the command line for logging
 
 if [ -f path.sh ]; then . ./path.sh; fi
 . parse_options.sh || exit 1;
 
+echo "Now num_iters is $num_epochs"
 echo $@
 if [ $# != 4 ]; then
   echo "Usage: $0 [opts] <data> <lang> <ali-dir> <exp-dir>"
@@ -188,6 +190,7 @@ utils/split_data.sh $data $nj
 mkdir -p $dir/log
 echo $nj > $dir/num_jobs
 cp $alidir/tree $dir
+echo "Now num_iters is $num_epochs"
 
 # process the splice_inds string, to get a layer-wise context string
 # to be processed by the nnet-components
@@ -199,6 +202,8 @@ eval $context_string || exit -1; #
   # initializes variables used by get_lda.sh and get_egs.sh
   # get_lda.sh : first_left_context, first_right_context,
   # get_egs.sh : nnet_left_context & nnet_right_context
+
+echo "Now num_iters is $num_epochs"
 
 extra_opts=()
 [ ! -z "$cmvn_opts" ] && extra_opts+=(--cmvn-opts "$cmvn_opts")
@@ -343,6 +348,7 @@ finish_add_layers_iter=$[$num_hidden_layers * $add_layers_period]
 # got: x = (j n-sqrt(-n^2 (j^2 (p-1)-k^2 p)))/(j-k) and j!=k and n!=0
 # simplified manually to: n * (sqrt(((1-p)j^2 + p k^2)/2) - j)/(j-k)
 mix_up_iter=$(perl -e '($j,$k,$n,$p)=@ARGV; print int(0.5 + ($j==$k ? $n*$p : $n*(sqrt((1-$p)*$j*$j+$p*$k*$k)-$j)/($k-$j))); ' $num_jobs_initial $num_jobs_final $num_iters 0.5)
+echo "Mix-up $mix_up_iter $n $num_iters $num_epochs"
 ! [ $mix_up_iter -gt $finish_add_layers_iter ] && \
   echo "Mix-up-iter is $mix_up_iter, should be greater than $finish_add_layers_iter -> add more epochs?" \
   && exit 1;
