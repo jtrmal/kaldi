@@ -1021,7 +1021,7 @@ bool WordAlignLatticeLexicon(const CompactLattice &lat,
   LatticeLexiconWordAligner aligner(phone_aligned_lat, tmodel, lexicon_info,
                                     max_states, opts.partial_word_label, lat_out);
   // We'll let the calling code warn if this is false; it will know the utterance-id.
-  ans = ans && aligner.AlignLattice();
+  ans = aligner.AlignLattice() && ans;
   if (ans && opts.test) { // We only test if it succeeded.
     if (!TestWordAlignedLattice(lexicon_info, tmodel, lat, *lat_out)) {
       KALDI_WARN << "Lattice failed test (activated because --test=true). "
