@@ -37,15 +37,6 @@ if [[ ! -f data/local/dict/lexicon.txt || data/local/dict/lexicon.txt -ot "$lexi
 fi
 
 
-#echo "Converting Appen lexicon to babel format"
-#local/corpora/chsp_fisher/ldclex2babel.pl $lexicon_file \
-#     data/local/dict/primary_lexicon.txt 
-#cp data/local/dict/filtered_lexicon.txt data/local/dict/primary_lexicon.txt
-
-
-
-#exit 0
-
 if [[ ! -z ${train_list_primary} ]]; then
     
     echo "Preparing Babel  training data from $train_data_dir ($train_list_primary)"
@@ -69,7 +60,7 @@ if [[ ! -z ${train_list_primary} ]]; then
 
     local/filter_lexicon_kaldi.pl data/train_primary  \
 	data/local/dict/primary_lexicon.txt \
-	data/local/dict/filtered_primary_lexicon.txt
+	data/local/dict/filtered_primary_lexicon.txt 1
 
     
     awk '{ print $1 }' < data/train_primary/utt2spk | sed 's/_[0-9]*$//' | sort -u > data/train_primary/list
@@ -105,27 +96,24 @@ if [[ ! -z ${train_list_secondary} ]]; then
     echo "Using primary lexicon\n";
     local/filter_lexicon_kaldi.pl data/train_secondary \
         data/local/dict/primary_lexicon.txt \
-        data/local/dict/filtered_secondary_lexicon.txt
+        data/local/dict/filtered_secondary_lexicon.txt 1
     
-#    if [[ -z ${train_list_primary+x} ]]; then
-#        mv data/local/dict/filtered_primary_lexicon.txt data/local/dict/old_lexicon.txt
-#    fi
 
 fi
 
 # prepare decode corpora
 
 for d in primary secondary ; do
-corpus="dev10h_$d"
-if [[ ! -f data/$corpus/.done ]]; then
+    corpus="dev10h_$d"
+    if [[ ! -f data/$corpus/.done ]]; then
 	local/make_corpus_subset.sh "$dev10h_data_dir" dev_${d}.list ./data/raw_$corpus
 	mkdir -p data/$corpus
 	local/prepare_acoustic_training_data.pl \
 	    --vocab data/local/dict/primary_lexicon.txt --fragmentMarkers \-\*\~ \
 	    `pwd`/data/raw_$corpus data/$corpus > data/$corpus/skipped_utts.log
-
-    touch data/$corpus/.done
-fi
+	
+	touch data/$corpus/.done
+    fi
 done
 
 

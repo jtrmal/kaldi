@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-my ($train, $lex, $out) = @ARGV;
+my ($train, $lex, $out, $romanized) = @ARGV;
 
 open TRANS, "<:utf8", "$train/text" or die "$!: $train/text";
 while (<TRANS>) {
@@ -30,10 +30,18 @@ else {
 
 while (<LEX>) {
     chomp;
-    ($word, @pron) = split;
-    if ($intrans{$word}) {
-        print OUT "$word\t$word\t@pron\n";
+    if (!$romanized) {
+	($word, @pron) = split;
+	if ($intrans{$word}) {
+	    print OUT "$word\t$word\t@pron\n";
+	}
     }
+    else {
+	($word, $rom, @pron) = split;
+	if ($intrans{$word}) {
+	    print OUT "$word\t$rom\t@pron\n";
+	}
+    }	
 }
 close LEX;
 close OUT;
