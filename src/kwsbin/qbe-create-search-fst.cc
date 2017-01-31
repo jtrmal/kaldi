@@ -93,8 +93,8 @@ namespace kws {
   }
 
   void LatticeToFst(CompactLattice *clat, int path_length,
-      vector<vector<double> > &scale,
-      vector<int> &extra_syms,
+      std::vector<std::vector<double> > &scale,
+      std::vector<int> &extra_syms,
       fst::VectorFst<fst::StdArc> *fst) {
     ScaleLattice(scale, clat);
     RemoveAlignmentsFromCompactLattice(clat);
@@ -122,8 +122,8 @@ namespace kws {
 }  // namespace kws
 }  // namespace kaldi
 
-vector<int> ParseIntSequence(const std::string &str, const char sep=',') {
-  vector<int> ret;
+std::vector<int> ParseIntSequence(const std::string &str, const char sep=',') {
+  std::vector<int> ret;
   size_t last = 0,
          next = 0;
   char *end = NULL;
@@ -210,7 +210,7 @@ int main(int argc, const char *argv[]) {
     int n_done = 0,
         n_fail = 0;
 
-    vector<vector<double> >
+    std::vector<std::vector<double> >
       scale = fst::LatticeScale(lm_scale, ac_scale);
 
     std::vector<int>
