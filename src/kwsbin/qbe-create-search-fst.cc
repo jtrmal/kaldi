@@ -29,7 +29,65 @@
 namespace kaldi {
 namespace kws {
 
-  void RemovePathsTooShort(fst::VectorFst<fst::StdArc> *fst, int states_limit) {
+  // this function computes the number of non-eps transitions
+  // assumes for each state there is only one outgoing arc
+  int ComputePathLength(fst::VectorFst<fst::StdArc> &fst, int state) {
+    int len = 0;
+    //std::cout << state << " " << fst.Final(state) << " " << fst::StdArc::Weight::Zero() << std::endl;
+    while ( fst.Final(state) == fst::StdArc::Weight::Zero() ) {
+      int num_arcs = fst.NumArcs(state);
+      KALDI_ASSERT(num_arcs == 1);
+      fst::ArcIterator<fst::VectorFst<fst::StdArc> > aiter(fst, state);
+      //std::cout << state << " " << aiter.Value().ilabel << std::endl;
+      len += (aiter.Value().ilabel == 0) ? 0 : 1;
+      KALDI_ASSERT(aiter.Value().ilabel == aiter.Value().olabel);
+      state = aiter.Value().nextstate;
+      //std::cout << state << " " << fst.Final(state) << " " << fst::StdArc::Weight::Zero() << std::endl;
+    }
+    return len;
+  }
+
+  // removes the paths from the fst that are too short (defined by states_limit)
+  // it does that by generating first paths_max best paths and then manually
+  // for each path of those either keeps it or trash it depending on its length
+  // after that, the fst is determinized again.
+  void RemovePathsTooShortApprox(fst::VectorFst<fst::StdArc> *fst, int states_limit, int paths_max) {
+    fst::VectorFst<fst::StdArc> ofst, ofst_without_weights;
+
+    //std::cout << "Input: " << std::endl;
+    //fst::WriteFstKaldi(std::cout, false, *fst);
+    //std::cout << " " << std::endl;
+
+    fst::StdArc::StateId start = fst->Start();
+    //fst->SetFinal(start, fst::StdArc::Weight::Zero());
+
+    fst::ShortestPath(*fst, &ofst, paths_max);
+    fst::TopSort(&ofst);
+    fst::StdArc::StateId dummy = ofst.AddState();
+    std::vector<fst::StdArc::Weight> distances;
+
+    for (fst::MutableArcIterator<fst::VectorFst<fst::StdArc> > aiter(&ofst, start);
+        !aiter.Done(); aiter.Next() ){
+
+      fst::StdArc arc = aiter.Value();
+      float my_length = ComputePathLength(ofst, arc.nextstate);
+      //std::cout << "len=" << my_length << ", limit=" << states_limit << std::endl;
+      if (my_length < states_limit) {
+        arc.nextstate = dummy;
+        aiter.SetValue(arc);
+      }
+    }
+    fst::Connect(&ofst);
+    fst::RmEpsilon(&ofst);
+    fst::Determinize(ofst, fst);
+    //fst::Minimize(fst);
+
+    //std::cout << "Input: " << std::endl;
+    //fst::WriteFstKaldi(std::cout, false, *fst);
+    //std::cout << " " << std::endl;
+  }
+
+  void RemovePathsTooShort2(fst::VectorFst<fst::StdArc> *fst, int states_limit) {
     std::vector<int> distance(fst->NumStates(), -1);
     std::vector<bool> visited(fst->NumStates(), false);
 
@@ -40,11 +98,13 @@ namespace kws {
       return;
     }
 
+    fst->SetFinal(start, fst::StdArc::Weight::Zero());
+
     for (fst::StateIterator<fst::StdFst> siter(*fst);
         !siter.Done(); siter.Next()) {
       fst::StdArc::StateId state_id = siter.Value();
 
-      if (distance[state_id] <= states_limit) {
+      if (distance[state_id] < states_limit) {
         fst->SetFinal(state_id, fst::StdArc::Weight::Zero());
       }
 
@@ -69,7 +129,7 @@ namespace kws {
 
     fst::VectorFst<fst::LogArc> tmp_fst;
     fst::Determinize(combined_fsts_logarc, &tmp_fst);
-    fst::Minimize(&tmp_fst);
+    //fst::Minimize(&tmp_fst);
 
     // Go back to StdArc (tropical semiring). Normalize the weights
     fst::Cast(tmp_fst, combined_fsts);
@@ -114,9 +174,9 @@ namespace kws {
       std::swap(*fst, tmp_fst);
     }
     fst::TopSort(fst);
-    if (path_length > 0) {
-      RemovePathsTooShort(fst, path_length);
-    }
+    RemovePathsTooShortApprox(fst, path_length, 10000);
+    bool acyclic = fst::TopSort(fst);
+    KALDI_ASSERT(acyclic == true);
   }
 
 }  // namespace kws
@@ -132,19 +192,19 @@ std::vector<int> ParseIntSequence(const std::string &str, const char sep=',') {
     std::string number_str = str.substr(last, next-last);
     int number = strtol(number_str.data(), &end, 10);
     if (end == number_str.data()) {
-      KALDI_ERR << "Invalid format of number: " << number_str;
+      KALDI_ERR << "Invalid format of number: \"" << number_str << "\"";
     }
-    KALDI_LOG << number;
     ret.push_back(number);
     last = next + 1;
   }
   std::string number_str = str.substr(last);
-  int number = strtol(number_str.data(), &end, 10);
-  if (end == number_str.data()) {
-    KALDI_ERR << "Invalid format of number: " << number_str;
+  if (number_str != "") {
+    int number = strtol(number_str.data(), &end, 10);
+    if (end == number_str.data()) {
+      KALDI_ERR << "Invalid format of number: \"" << number_str << "\"";
+    }
+    ret.push_back(number);
   }
-  KALDI_LOG << number;
-  ret.push_back(number);
   return ret;
 }
 
@@ -182,25 +242,25 @@ int main(int argc, const char *argv[]) {
     po.Register("minimize", &minimize,
         "Set true if the lattice slice should be minimized");
     po.Register("lm-scale", &lm_scale,
-        "Set true if the lattice slice should be determinized");
+        "Set the weight of the language model score.");
     po.Register("ac-scale", &ac_scale,
-        "Set true if the lattice slice should be minimized");
+        "Set the weight of the acoustic score.");
     po.Register("beam", &beam,
         "Prune the fst so that only paths falling into specified beam"
-        "will be retained. Set to zero to disable this feature");
+        "will be retained. Set to zero to disable this feature.");
     po.Register("nbest", &nbest,
         "Prune the fst so that only nbest paths will be retained."
-        "Set to zero to disable this feature");
+        "Set to zero to disable this feature.");
     po.Register("path-length", &path_length,
         "Remove all paths that are not AT LEAST path-length long."
         "Set to zero to disable this feature.");
     po.Register("remove-symbols", &remove_symbols_str,
-        "Remove all paths that are not AT LEAST path-length long."
-        "Set to zero to disable this feature.");
+        "Comma-separated list of symbols that should be removed."
+        "Default: empty string, i.e. no symbols will be removed");
 
     po.Read(argc, argv);
 
-    if (po.NumArgs() < 2 || po.NumArgs() > 2) {
+    if (po.NumArgs() != 2) {
       po.PrintUsage();
       exit(1);
     }
@@ -217,8 +277,8 @@ int main(int argc, const char *argv[]) {
       remove_symbols = ParseIntSequence(remove_symbols_str);
 
     std::string
-      lats_rspecifier = po.GetOptArg(1),
-      fsts_wscpecifier = po.GetOptArg(2);
+      lats_rspecifier = po.GetArg(1),
+      fsts_wscpecifier = po.GetArg(2);
 
     SequentialCompactLatticeReader lattice_reader(lats_rspecifier);
     TableWriter<fst::VectorFstHolder> fsts_writer(fsts_wscpecifier);
@@ -251,6 +311,7 @@ int main(int argc, const char *argv[]) {
 
           PostprocessLatticeUnion(&combined_fsts, beam, nbest);
           fst::Connect(&combined_fsts);
+          bool acyclic = fst::TopSort(&combined_fsts);
           if (combined_fsts.NumStates() > 0) {
             fsts_writer.Write(previous_key, combined_fsts);
           } else {
@@ -259,6 +320,7 @@ int main(int argc, const char *argv[]) {
                       << combined_fsts.NumStates();
             n_fail++;
           }
+          KALDI_ASSERT(acyclic == true);
         }
 
 
@@ -274,6 +336,7 @@ int main(int argc, const char *argv[]) {
       n_done++;
       PostprocessLatticeUnion(&combined_fsts, beam, nbest);
       fst::Connect(&combined_fsts);
+      bool acyclic = fst::TopSort(&combined_fsts);
       if (combined_fsts.NumStates() > 0) {
         fsts_writer.Write(previous_key, combined_fsts);
       } else {
@@ -282,6 +345,7 @@ int main(int argc, const char *argv[]) {
                   << combined_fsts.NumStates();
         n_fail++;
       }
+      KALDI_ASSERT(acyclic == true);
     }
 
     KALDI_LOG << "Done " << n_examples_done

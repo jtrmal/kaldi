@@ -23,6 +23,7 @@
 #include "util/common-utils.h"
 #include "lat/kaldi-lattice.h"
 #include "lat/lattice-functions.h"
+#include "fstext/fstext-utils.h"
 
 namespace kaldi {
 namespace kws {
@@ -156,23 +157,6 @@ void ExtractLatticeRange(
                                             end_frame - begin_frame);
 }
 
-void PostprocessLattice(bool determinize, bool minimize, Lattice *lattice) {
-  fst::RmEpsilon(lattice);
-  if (determinize) {
-    if (!minimize) {
-      Lattice tmp_lat;
-      fst::Determinize(*lattice, &tmp_lat);
-      std::swap(*lattice, tmp_lat);
-    } else {
-      Lattice tmp_lat;
-      fst::Reverse(*lattice, &tmp_lat);
-      fst::Determinize(tmp_lat, lattice);
-      fst::Reverse(*lattice, &tmp_lat);
-      fst::Determinize(tmp_lat, lattice);
-      fst::RmEpsilon(lattice);
-    }
-  }
-}
 
 void ComputeLatticeScores(const Lattice &lat, LatticeInfo *scores) {
   LatticeStateTimes(lat, &(scores->state_times));
@@ -209,7 +193,6 @@ struct QbeLatticeExamplesInfo {
 };
 
 void QbeReadExampleMap(const std::string &filename_rspecifier,
-                       int frames_per_sec,
                        kaldi::kws::QbeLatticeExamplesInfo *info) {
     Input ki(filename_rspecifier);
     std::string line;
@@ -232,7 +215,7 @@ void QbeReadExampleMap(const std::string &filename_rspecifier,
           start_str = split_line[2],
           end_str = split_line[3];
 
-      // VConvert the start time and endtime to real from string. Segment is
+      // Convert the start time and endtime to real from string. Segment is
       // ignored if start or end time cannot be converted to real.
       double start, end;
       if (!ConvertStringToReal(start_str, &start)) {
@@ -251,9 +234,10 @@ void QbeReadExampleMap(const std::string &filename_rspecifier,
         continue;
       }
 
-      info->lattice_to_example[utterance].push_back(example_id);
       int start_frame = static_cast<int>(start);
-      int end_frame = static_cast<int>(end) + 1;
+      int end_frame = static_cast<int>(end);
+
+      info->lattice_to_example[utterance].push_back(example_id);
       info->example_to_time.push_back(std::make_pair(start_frame, end_frame));
       info->example_to_kwid.push_back(example);
       example_id++;
@@ -272,26 +256,34 @@ int main(int argc, const char *argv[]) {
     const char *usage =
       "Extract lattice chunks corresponding to the individual keywords\n"
       "instances and writes them as a lattices archive. The instance id\n"
-      "will be used as a lattice name\n";
+      "will be used as a lattice name\n"
+      "The lattice chunks are specified by an index file having the same\n"
+      "format as the kws search output file, i.e.:\n"
+      " keyword utterance-id frame_start frame_end [ignored]"
+      "\n"
+      "Usage:\n"
+      "  qbe-extract-examples [options] "
+      " <index_rspecifier> <lattice_rspecifier> <examples_wscpecifier>\n"
+      "e.g.:\n"
+      "  qbe-extract-examples ark,t:keywords.txt ark:lattice.1 "
+      "  ark,scp:examples.ark,examples.scp\n";
 
-    bool determinize = false,
-         minimize = false;
+    int frame_subsampling_factor = 1;
+
     ParseOptions po(usage);
-    po.Register("determinize", &determinize,
-        "Set true if the lattice slice should be determinized");
-    po.Register("minimize", &minimize,
-        "Set true if the lattice slice should be minimized");
+    po.Register("frame-subsampling-factor", &frame_subsampling_factor,
+        "Set true if the lat");
 
     po.Read(argc, argv);
 
-    if (po.NumArgs() < 3 || po.NumArgs() > 4) {
+    if (po.NumArgs() != 3) {
       po.PrintUsage();
       exit(1);
     }
 
-    std::string table_rspecifier = po.GetOptArg(1),
+    std::string table_rspecifier = po.GetArg(1),
       lats_rspecifier = po.GetOptArg(2),
-      examples_wscpecifier = po.GetOptArg(3);
+      examples_wscpecifier = po.GetArg(3);
 
     int n_examples_done = 0,
         n_examples_failed = 0;
@@ -299,7 +291,7 @@ int main(int argc, const char *argv[]) {
         n_fail = 0;
 
     QbeLatticeExamplesInfo info;
-    QbeReadExampleMap(table_rspecifier, 100, &info);
+    QbeReadExampleMap(table_rspecifier, &info);
     SequentialLatticeReader lattice_reader(lats_rspecifier);
     LatticeWriter examples_writer(examples_wscpecifier);
 
@@ -326,21 +318,43 @@ int main(int argc, const char *argv[]) {
         Lattice out;
         int start_frame = info.example_to_time[*it].first;
         int end_frame = info.example_to_time[*it].second;
+        std::string example_name = info.example_to_kwid[*it];
+
+        int lattice_start_frame =
+          (1.0 * start_frame) / frame_subsampling_factor;
+        int lattice_end_frame =
+          (1.0 * end_frame) / frame_subsampling_factor + 1.0;
 
         if (end_frame >= (last_frame)) {
-          KALDI_LOG << "last frame: " << last_frame
-                    << " end frame: " << end_frame;
-          end_frame = last_frame;
+          if ((lattice_end_frame - last_frame) <= frame_subsampling_factor) {
+            KALDI_WARN << "the calculated example end index "
+                      << "is past the end of the lattice: "
+                      << " example: [" << example_name << " "
+                      << start_frame << " " <<  end_frame
+                      << "] lattice: " << key
+                      << " last lattice frame: " << last_frame
+                      << " computed example index: " << lattice_end_frame;
+            lattice_end_frame = last_frame;
+          } else {
+            KALDI_ERR << "the calculated example end index "
+                      << "is past the end of the lattice: "
+                      << " example: [" << example_name << " "
+                      << start_frame << " " <<  end_frame
+                      << "] lattice: " << key
+                      << " last lattice frame: " << last_frame
+                      << " computed example index: " << lattice_end_frame;
+          }
         }
 
         ExtractLatticeRange(lat, lattice_info,
-            start_frame, end_frame, false, &out);
+            lattice_start_frame, lattice_end_frame, false, &out);
 
-        std::string example_name = info.example_to_kwid[*it];
-        examples_writer.Write(example_name, out);
-
-        PostprocessLattice(determinize, minimize, &out);
-
+        n_examples_done++;
+        if (out.Start() == fst::kNoStateId) {
+          n_examples_failed++;
+        } else {
+          examples_writer.Write(example_name, out);
+        }
       }
     }
 
