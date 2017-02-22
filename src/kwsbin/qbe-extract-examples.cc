@@ -325,7 +325,7 @@ int main(int argc, const char *argv[]) {
         int lattice_end_frame =
           (1.0 * end_frame) / frame_subsampling_factor + 1.0;
 
-        if (end_frame >= (last_frame)) {
+        if (lattice_end_frame >= (last_frame)) {
           if ((lattice_end_frame - last_frame) <= frame_subsampling_factor) {
             KALDI_WARN << "the calculated example end index "
                       << "is past the end of the lattice: "

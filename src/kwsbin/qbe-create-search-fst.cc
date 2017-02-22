@@ -29,6 +29,41 @@
 namespace kaldi {
 namespace kws {
 
+	class FixedWeightArcMapper {
+	 public:
+		typedef fst::StdArc FromArc;
+		typedef fst::StdArc ToArc;
+		typedef FromArc::Weight FromWeight;
+		typedef ToArc::Weight ToWeight;
+
+		ToWeight fixedValue;
+
+		FixedWeightArcMapper(double value): fixedValue(value) {};
+
+		fst::StdArc operator()(const fst::StdArc &arc) {
+			ToWeight weight(arc.weight == FromWeight::Zero()
+                                    ? ToWeight::Zero()
+                                    : fixedValue);
+			return ToArc(arc.ilabel, arc.olabel, weight, arc.nextstate);
+		}
+
+		fst::MapFinalAction FinalAction() const {
+			return fst::MAP_NO_SUPERFINAL;
+		};
+
+		fst::MapSymbolsAction InputSymbolsAction() const {
+			return fst::MAP_COPY_SYMBOLS;
+		};
+
+		fst::MapSymbolsAction OutputSymbolsAction() const {
+			return fst::MAP_COPY_SYMBOLS;
+		};
+
+		uint64 Properties(uint64 props) const {
+			return props;
+		};
+	};
+
   // this function computes the number of non-eps transitions
   // assumes for each state there is only one outgoing arc
   int ComputePathLength(fst::VectorFst<fst::StdArc> &fst, int state) {
@@ -87,35 +122,6 @@ namespace kws {
     //std::cout << " " << std::endl;
   }
 
-  void RemovePathsTooShort2(fst::VectorFst<fst::StdArc> *fst, int states_limit) {
-    std::vector<int> distance(fst->NumStates(), -1);
-    std::vector<bool> visited(fst->NumStates(), false);
-
-    distance[0] = 0;
-    visited[0] = true;
-    fst::StdArc::StateId start = fst->Start();
-    if (start == fst::kNoStateId) {
-      return;
-    }
-
-    fst->SetFinal(start, fst::StdArc::Weight::Zero());
-
-    for (fst::StateIterator<fst::StdFst> siter(*fst);
-        !siter.Done(); siter.Next()) {
-      fst::StdArc::StateId state_id = siter.Value();
-
-      if (distance[state_id] < states_limit) {
-        fst->SetFinal(state_id, fst::StdArc::Weight::Zero());
-      }
-
-      for (fst::ArcIterator<fst::StdFst> aiter(*fst, state_id);
-          !aiter.Done(); aiter.Next()) {
-        const fst::StdArc &arc = aiter.Value();
-        int dist = distance[state_id] + 1;
-        distance[arc.nextstate] = distance[arc.nextstate] > 0 ? std::min(distance[arc.nextstate], dist) : dist;
-      }
-    }
-  }
 
   void PostprocessLatticeUnion(fst::VectorFst<fst::StdArc> *combined_fsts,
       int beam, int nbest) {
@@ -129,7 +135,7 @@ namespace kws {
 
     fst::VectorFst<fst::LogArc> tmp_fst;
     fst::Determinize(combined_fsts_logarc, &tmp_fst);
-    //fst::Minimize(&tmp_fst);
+    fst::Minimize(&tmp_fst);
 
     // Go back to StdArc (tropical semiring). Normalize the weights
     fst::Cast(tmp_fst, combined_fsts);
@@ -141,14 +147,17 @@ namespace kws {
     if (beam > 0) {
       fst::VectorFst<fst::StdArc> tmp_pruned_fst;
       fst::Prune(*combined_fsts, &tmp_pruned_fst, beam);
-      std::swap(tmp_pruned_fst, *combined_fsts);
+      fst::Determinize(tmp_pruned_fst, combined_fsts);
+      fst::Minimize(combined_fsts);
     }
 
     if (nbest > 0) {
       fst::VectorFst<fst::StdArc> tmp_path_fst;
       fst::ShortestPath(*combined_fsts, &tmp_path_fst, nbest);
-      std::swap(tmp_path_fst, *combined_fsts);
+      fst::Determinize(tmp_path_fst, combined_fsts);
+      fst::Minimize(combined_fsts);
     }
+    fst::Connect(combined_fsts);
     fst::RmEpsilon(combined_fsts);
   }
 
@@ -156,6 +165,7 @@ namespace kws {
       std::vector<std::vector<double> > &scale,
       std::vector<int> &extra_syms,
       fst::VectorFst<fst::StdArc> *fst) {
+
     ScaleLattice(scale, clat);
     RemoveAlignmentsFromCompactLattice(clat);
     {
@@ -175,6 +185,7 @@ namespace kws {
     }
     fst::TopSort(fst);
     RemovePathsTooShortApprox(fst, path_length, 10000);
+		fst::ArcMap(fst, FixedWeightArcMapper(0.1));
     bool acyclic = fst::TopSort(fst);
     KALDI_ASSERT(acyclic == true);
   }
@@ -235,6 +246,8 @@ int main(int argc, const char *argv[]) {
     int path_length = 1;
     int beam = 0;
     std::string remove_symbols_str;
+
+    bool remove_costs = true;
 
     ParseOptions po(usage);
     po.Register("determinize", &determinize,
@@ -310,8 +323,11 @@ int main(int argc, const char *argv[]) {
           n_done++;
 
           PostprocessLatticeUnion(&combined_fsts, beam, nbest);
-          fst::Connect(&combined_fsts);
           bool acyclic = fst::TopSort(&combined_fsts);
+          if (remove_costs) {
+            fst::Map(&combined_fsts,
+                fst::RmWeightMapper<fst::StdArc, fst::StdArc>());
+          }
           if (combined_fsts.NumStates() > 0) {
             fsts_writer.Write(previous_key, combined_fsts);
           } else {
@@ -337,6 +353,10 @@ int main(int argc, const char *argv[]) {
       PostprocessLatticeUnion(&combined_fsts, beam, nbest);
       fst::Connect(&combined_fsts);
       bool acyclic = fst::TopSort(&combined_fsts);
+      if (remove_costs) {
+        fst::Map(&combined_fsts,
+            fst::RmWeightMapper<fst::StdArc, fst::StdArc>());
+      }
       if (combined_fsts.NumStates() > 0) {
         fsts_writer.Write(previous_key, combined_fsts);
       } else {
