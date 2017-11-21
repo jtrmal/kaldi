@@ -14,8 +14,8 @@
 #
 # Begin configuration section.
 cmd=run.pl
-minibatch_size=512      # it is the number of consecutive egs that we take from 
-                        # each source, and it only affects the locality of disk 
+minibatch_size=512      # it is the number of consecutive egs that we take from
+                        # each source, and it only affects the locality of disk
                         # access. This does not have to be the actual minibatch size;
 num_jobs=10             # helps for better randomness across languages
                         # per archive.
@@ -55,10 +55,11 @@ combine_scp_list=
 
 # read paramter from $egs_dir[0]/info and cmvn_opts
 # to write in multilingual egs_dir.
-check_params="info/feat_dim info/ivector_dim info/left_context info/right_context info/frames_per_eg info/final.ie.id cmvn_opts"
+check_params="info/feat_dim info/ivector_dim info/left_context info/right_context info/frames_per_eg cmvn_opts"
 for param in $check_params; do
   cat ${args[0]}/$param > $megs_dir/$param || exit 1;
 done
+[ -f ${args[0]}/info/final.ie.id ] && cp ${args[0]}/info/final.ie.id $megs_dir/info/final.ie.id
 cat ${args[0]}/cmvn_opts > $megs_dir/cmvn_opts || exit 1; # caution: the top-level nnet training
                                                           # script should copy this to its
                                                           # own dir.
