@@ -14,8 +14,8 @@ stage=1
 set -e -o pipefail
 set -o nounset                              # Treat unset variables as an error
 
-corpus=/export/corpora5/MATERIAL/IARPA_MATERIAL_BASE-1A-BUILD_v1.0/
-#corpus=/export/corpora5/MATERIAL/IARPA_MATERIAL_BASE-1B-BUILD_v1.0/
+#corpus=/export/corpora5/MATERIAL/IARPA_MATERIAL_BASE-1A-BUILD_v1.0/
+corpus=/export/corpora5/MATERIAL/IARPA_MATERIAL_BASE-1B-BUILD_v1.0/
 
 if [ $stage -le 1 ]; then
   local/prepare_text_data.sh $corpus
@@ -51,13 +51,13 @@ fi
 
 # Create a subset with 40k short segments to make flat-start training easier
 if [ $stage -le 5 ]; then
-  utils/subset_data_dir.sh --shortest data/train 40000 data/train_40kshort
+  utils/subset_data_dir.sh --shortest data/train 45000 data/train_45kshort
 fi
 
 # monophone training
 if [ $stage -le 6 ]; then
   steps/train_mono.sh --nj $nj --cmd "$train_cmd" \
-    data/train_40kshort data/lang_nosp_test exp/mono
+    data/train_45kshort data/lang_nosp_test exp/mono
   (
     utils/mkgraph.sh data/lang_nosp_test \
       exp/mono exp/mono/graph_nosp
@@ -73,8 +73,10 @@ fi
 
 # train a first delta + delta-delta triphone system on all utterances
 if [ $stage -le 7 ]; then
+  steps/align_si.sh --nj $nj --cmd "$train_cmd" \
+    data/train data/lang_nosp_test exp/mono exp/mono_ali
   steps/train_deltas.sh --cmd "$train_cmd" \
-    2000 30000 data/train data/lang_nosp_test exp/mono_ali exp/tri1
+    4000 60000 data/train data/lang_nosp_test exp/mono_ali exp/tri1
 
   # decode using the tri1 model
   (
@@ -92,7 +94,7 @@ fi
 # train an LDA+MLLT system.
 if [ $stage -le 8 ]; then
   steps/train_lda_mllt.sh --cmd "$train_cmd" \
-    --splice-opts "--left-context=3 --right-context=3" 3000 60000 \
+    --splice-opts "--left-context=3 --right-context=3" 5000 80000 \
     data/train data/lang_nosp_test exp/tri1_ali exp/tri2
 
   # decode using the LDA+MLLT model
@@ -110,7 +112,7 @@ fi
 
 # Train tri3, which is LDA+MLLT+SAT
 if [ $stage -le 9 ]; then
-  steps/train_sat.sh --cmd "$train_cmd" 6000 80000 \
+  steps/train_sat.sh --cmd "$train_cmd" 7000 100000 \
     data/train data/lang_nosp_test exp/tri2_ali exp/tri3
 
   # decode using the tri3 model
