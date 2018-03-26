@@ -27,13 +27,15 @@ set -o pipefail
 ###############################################################################
 #                          PREPARE LANGUAGE DATA
 ###############################################################################
-langs="101 102 103 104 105 106 202 203 204 205 206 207 301 302 303 304 305 306
-       401 402 403"
+langs="101 102 103 104 105 106 202 203 204 205 206 207 301 302 303 304 305 306 401 402 403"
+#langs="101 102 103"
 
 # Just a subset of the training languages for now.
 # Decoding an unseen language takes more work to standardize the dictionary,
 # and to replace missing phonemes.
-decode_langs="105 206 304 403"
+dev_langs="104 101 202 "
+#test_langs="107 201 307 404"
+test_langs="201 307 404"
 
 # Just for documentation and debugging mostly, but these should probably be
 # organized differently to reflect important parts of the training script
@@ -59,108 +61,29 @@ set -x
 
 # For each language create the data and also create the lexicon
 # Save the current directory
-cwd=$(utils/make_absolute.sh `pwd`)
+cwd=$(utils/make_absolute.sh $PWD)
 
 if [ $stage -le 0 ]; then
-  # For each language setup the language directories
-  for l in ${langs}; do
-    mkdir -p data/${l}
-    cd data/${l}
-    ln -sf ${cwd}/local .
-    for f in ${cwd}/{utils,steps,conf}; do
-      link=`make_absolute.sh $f`
-      ln -sf $link .
-    done
-    conf_file=`find conf/lang -name "${l}-*limitedLP*.conf" -o -name "${l}-*LLP*.conf" | head -1`
-    echo ${conf_file}
-    cp $conf_file lang.conf
-
-    # This line will likely not be when the lang.conf files are corrected.
-    # It currently just fixes some paths on the CLSP grid that no longer exist.
-    sed -i 's/export\/babel\/data\/splits/export\/babel\/data\/OtherLR-data\/splits/g' lang.conf
-    cp ${cwd}/{cmd,path}.sh .
-    cd $cwd
+  for lang in $langs; do
+    config=`find conf/lang  -name "${lang}-*FLP*.conf" | head -1`
+    ./local/prepare_directories.sh "$lang" "$config" data/
+  done
+  for lang in $test_langs; do
+    config=`find conf/lang  -name "${lang}-*FLP*.conf" | head -1`
+    ./local/prepare_directories.sh "$lang" "$config" data/
   done
 fi
-
-# For each language
-for l in ${langs}; do
-  cd data/${l}
-
-  #############################################################################
-  # Prepare the data (acoustic data and train directories)
-  #############################################################################
-  if [ $stage -le 1 ]; then
-    ./local/prepare_data.sh
-
-    ###########################################################################
-    # Create dictionaries with split diphthongs and standardized tones
-    ###########################################################################
-    # In the lexicons provided by babel there are phonemes x_y, for which _y may
-    # or may not best be considered as a tag on phoneme x. In Lithuanian, for
-    # instance, there is a phoneme A_F for which _F or indicates failling tone.
-    # This same linguistic feature is represented in other languages as a "tag"
-    # (i.e. 判 pun3 p u: n _3), which means for the purposes of kaldi, that
-    # those phonemes share a root in the clustering decision tree, and the tag
-    # becomes an extra question. We may want to revisit this issue later.
-    echo "Dictionary ${l}"
-    dict=data/dict_universal
-    diphthongs=${cwd}/universal_phone_maps/diphthongs/${l}
-    tones=${cwd}/universal_phone_maps/tones/${l}
-
-    mkdir -p $dict
-    # Create silence lexicon
-    echo -e "<silence>\tSIL\n<unk>\t<oov>\n<noise>\t<sss>\n<v-noise>\t<vns>" \
-      > ${dict}/silence_lexicon.txt
-
-    # Create non-silence lexicon
-    grep -vFf ${dict}/silence_lexicon.txt data/local/lexicon.txt \
-      > data/local/nonsilence_lexicon.txt
-
-    # Create split diphthong and standarized tone lexicons for nonsilence words
-    ./local/prepare_universal_lexicon.py \
-      ${dict}/nonsilence_lexicon.txt data/local/nonsilence_lexicon.txt \
-      $diphthongs $tones
-
-    cat ${dict}/{,non}silence_lexicon.txt | sort > ${dict}/lexicon.txt
-
-    # Prepare the rest of the dictionary directory
-    # -----------------------------------------------
-    # The local/prepare_dict.py script, which is basically the same as
-    # prepare_unicode_lexicon.py used in the babel recipe to create the
-    # graphemic lexicons, is better suited for working with kaldi formatted
-    # lexicons and can be used for this task by only modifying optional input
-    # arguments. If we could modify local/prepare_lexicon.pl to accomodate this
-    # need it may be more intuitive.
-    ./local/prepare_dict.py \
-      --silence-lexicon ${dict}/silence_lexicon.txt ${dict}/lexicon.txt ${dict}
-
-    ###########################################################################
-    # Prepend language ID to all utterances to disambiguate between speakers
-    # of different languages sharing the same speaker id.
-    #
-    # The individual lang directories can be used for alignments, while a
-    # combined directory will be used for training. This probably has minimal
-    # impact on performance as only words repeated across languages will pose
-    # problems and even amongst these, the main concern is the <hes> marker.
-    ###########################################################################
-    echo "Prepend ${l} to data dir"
-    ./utils/copy_data_dir.sh --spk-prefix ${l} --utt-prefix ${l} \
-      data/train data/train_${l}
-  fi
-  cd $cwd
-done
 
 ###############################################################################
 # Combine all langauge specific training directories and generate a single
 # lang directory by combining all langauge specific dictionaries
 ###############################################################################
-if [ $stage -le 2 ]; then
+if [ $stage -le 1 ]; then
   train_dirs=""
   dict_dirs=""
   for l in ${langs}; do
     train_dirs="data/${l}/data/train_${l} ${train_dirs}"
-    dict_dirs="data/${l}/data/dict_universal ${dict_dirs}"
+    dict_dirs="data/${l}/data/dict ${dict_dirs}"
   done
 
   ./utils/combine_data.sh data/train $train_dirs
@@ -175,10 +98,25 @@ if [ $stage -le 2 ]; then
 
   # Prepare lang directory
   ./utils/prepare_lang.sh --share-silence-phones true \
-    data/dict_universal "<unk>" data/dict_universal/tmp.lang data/lang_universal
+    data/dict_universal "$oovSymbol" data/dict_universal/tmp.lang data/lang_universal
 fi
 
 
+if [ $stage -le 2 ]; then
+  set -x
+  for lang in $langs; do
+    ./utils/prepare_lang.sh --share-silence-phones true \
+      --phone_symbol_table data/lang_universal/phones.txt \
+      data/$lang/data/dict "$oovSymbol" data/$lang/data/dict_universal/tmp.lang data/$lang/data/lang_universal_test
+    cp data/$lang/data/lang_test/G.fst data/$lang/data/lang_universal_test/
+  done
+  for lang in $test_langs; do
+    ./utils/prepare_lang.sh --share-silence-phones true \
+      --phone_symbol_table data/lang_universal/phones.txt \
+      data/$lang/data/dict "$oovSymbol" data/$lang/data/dict_universal/tmp.lang data/$lang/data/lang_universal_test
+    cp data/$lang/data/lang_test/G.fst data/$lang/data/lang_universal_test/
+  done
+fi
 
 ###############################################################################
 #           Train the model through tri5 (like in babel recipe)
@@ -242,7 +180,7 @@ if [ $stage -le 3 ]; then
       data/train_sub2 data/lang_universal exp/mono exp/mono_ali_sub2
 
     steps/train_deltas.sh \
-      --boost-silence $boost_sil --cmd "$train_cmd" $numLeavesTri1 $numGaussTri1 \
+      --boost-silence $boost_sil --cmd "$train_cmd" 3000 30000\
       data/train_sub2 data/lang_universal exp/mono_ali_sub2 exp/tri1
 
     touch exp/tri1/.done
@@ -257,12 +195,13 @@ if [ $stage -le 3 ]; then
       data/train_sub3 data/lang_universal exp/tri1 exp/tri1_ali_sub3
 
     steps/train_deltas.sh \
-      --boost-silence $boost_sil --cmd "$train_cmd" $numLeavesTri2 $numGaussTri2 \
+      --boost-silence $boost_sil --cmd "$train_cmd" 3000 60000\
       data/train_sub3 data/lang_universal exp/tri1_ali_sub3 exp/tri2
 
     local/reestimate_langp.sh --cmd "$train_cmd" --unk "$oovSymbol" \
-      data/train_sub3 data/lang_universal data/dict_universal \
-      exp/tri2 data/dict_universal/dictp/tri2 data/dict_universal/langp/tri2 data/lang_universalp/tri2
+      data/train_sub3 data/lang_universal data/dict_universal\
+      exp/tri2 data/dict_universal/dictp/tri2 \
+      data/dict_universal/langp/tri2 data/lang_universalp/tri2
 
     touch exp/tri2/.done
   fi
@@ -276,12 +215,13 @@ if [ $stage -le 3 ]; then
       data/train data/lang_universalp/tri2 exp/tri2 exp/tri2_ali
 
     steps/train_deltas.sh \
-      --boost-silence $boost_sil --cmd "$train_cmd" \
-      $numLeavesTri3 $numGaussTri3 data/train data/lang_universalp/tri2 exp/tri2_ali exp/tri3
+      --boost-silence $boost_sil --cmd "$train_cmd" 18000 225000\
+      data/train data/lang_universalp/tri2 exp/tri2_ali exp/tri3
 
     local/reestimate_langp.sh --cmd "$train_cmd" --unk "$oovSymbol" \
       data/train data/lang_universal data/dict_universal/ \
-      exp/tri3 data/dict_universal/dictp/tri3 data/dict_universal/langp/tri3 data/lang_universalp/tri3
+      exp/tri3 data/dict_universal/dictp/tri3 \
+      data/dict_universal/langp/tri3 data/lang_universalp/tri3
 
     touch exp/tri3/.done
   fi
@@ -296,12 +236,13 @@ if [ $stage -le 3 ]; then
       data/train data/lang_universalp/tri3 exp/tri3 exp/tri3_ali
 
     steps/train_lda_mllt.sh \
-      --boost-silence $boost_sil --cmd "$train_cmd" \
-      $numLeavesMLLT $numGaussMLLT data/train data/lang_universalp/tri3 exp/tri3_ali exp/tri4
+      --boost-silence $boost_sil --cmd "$train_cmd" 18000 225000 \
+      data/train data/lang_universalp/tri3 exp/tri3_ali exp/tri4
 
     local/reestimate_langp.sh --cmd "$train_cmd" --unk "$oovSymbol" \
       data/train data/lang_universal data/dict_universal \
-      exp/tri4 data/dict_universal/dictp/tri4 data/dict_universal/langp/tri4 data/lang_universalp/tri4
+      exp/tri4 data/dict_universal/dictp/tri4 \
+      data/dict_universal/langp/tri4 data/lang_universalp/tri4
 
     touch exp/tri4/.done
   fi
@@ -316,12 +257,13 @@ if [ $stage -le 3 ]; then
       data/train data/lang_universalp/tri4 exp/tri4 exp/tri4_ali
 
     steps/train_sat.sh \
-      --boost-silence $boost_sil --cmd "$train_cmd" \
-      $numLeavesSAT $numGaussSAT data/train data/lang_universalp/tri4 exp/tri4_ali exp/tri5
+      --boost-silence $boost_sil --cmd "$train_cmd" 18000 225000\
+      data/train data/lang_universalp/tri4 exp/tri4_ali exp/tri5
 
     local/reestimate_langp.sh --cmd "$train_cmd" --unk "$oovSymbol" \
       data/train data/lang_universal data/dict_universal \
-      exp/tri5 data/dict_universal/dictp/tri5 data/dict_universal/langp/tri5 data/lang_universalp/tri5
+      exp/tri5 data/dict_universal/dictp/tri5 \
+      data/dict_universal/langp/tri5 data/lang_universalp/tri5
 
     touch exp/tri5/.done
   fi
@@ -336,7 +278,8 @@ if [ $stage -le 3 ]; then
 
     local/reestimate_langp.sh --cmd "$train_cmd" --unk "$oovSymbol" \
       data/train data/lang_universal data/dict_universal \
-      exp/tri5_ali data/dict_universal/dictp/tri5_ali data/dict_universal/langp/tri5_ali data/lang_universalp/tri5_ali
+      exp/tri5_ali data/dict_universal/dictp/tri5_ali \
+      data/dict_universal/langp/tri5_ali data/lang_universalp/tri5_ali
 
     touch exp/tri5_ali/.done
   fi
@@ -360,22 +303,45 @@ if [ $stage -le 4 ]; then
   ./local/run_cleanup_segmentation.sh --langdir data/lang_universalp/tri5
 fi
 
+if [ $stage -le 5 ] ; then
+if [ ! -f exp/tri6a/.done ]; then
+  echo ---------------------------------------------------------------------
+  echo "Starting exp/tri6a on" `date`
+  echo ---------------------------------------------------------------------
+  steps/train_sat.sh --cmd "$train_cmd" \
+    5000 100000 data/train_cleaned data/lang_universalp/tri5_ali exp/tri5_ali_cleaned/ exp/tri6a_cleaned
+fi
+if [ ! -f exp/tri6b/.done ]; then
+  echo ---------------------------------------------------------------------
+  echo "Starting exp/tri6b on" `date`
+  echo ---------------------------------------------------------------------
+  steps/train_sat.sh --cmd "$train_cmd" \
+    15000 225000 data/train_cleaned data/lang_universalp/tri5_ali exp/tri5_ali_cleaned/ exp/tri6b_cleaned
+fi
+if [ ! -f exp/tri6c/.done ]; then
+  echo ---------------------------------------------------------------------
+  echo "Starting exp/tri6c on" `date`
+  echo ---------------------------------------------------------------------
+  steps/train_sat.sh --cmd "$train_cmd" \
+    25000 330000 data/train_cleaned data/lang_universalp/tri5_ali exp/tri5_ali_cleaned/ exp/tri6c_cleaned
+fi
+fi
+
 ###############################################################################
 #                                DNN Training
 ###############################################################################
 
-if [ $stage -le 4 ]; then
-  ./local/chain/run_tdnn.sh --langdir data/lang_universalp/tri5_ali
+if [ $stage -le 6 ]; then
+  ./local/chain/run_tdnn.sh --langdir data/lang_universalp/tri5_ali --gmm tri6c_cleaned
 fi
 
 ###############################################################################
 #============================== END OF TRAINING ===============================
 ###############################################################################
-
-echo "Universal Acoustic Model Training finished." && \
-echo "To decode, comment out these lines in run.sh (390-391)." && exit 0;
-
-
+if [ $stage -le 7 ] ; then
+  echo "Universal Acoustic Model Training finished." && \
+  echo "To decode, comment out these lines in run.sh (390-391)." && exit 0;
+fi
 
 
 ###############################################################################
@@ -384,156 +350,36 @@ echo "To decode, comment out these lines in run.sh (390-391)." && exit 0;
 
 # Preparing Decoding Data
 # For each decoding language setup the language directories
-for l in ${decode_langs}; do
-  dict=data/dict
-  langdir=data/lang_dict
+for lang in ${dev_langs}; do
+  model=exp/chain_cleaned/tdnn_sp
+  decode_nj=$(wc -l < data/$lang/data/dev10h.pem/spk2utt)
 
-  if [ $stage -le 5 ]; then
-    mkdir -p data/${l}
-    cd data/${l}
-    ln -sf ${cwd}/local .
-    for f in ${cwd}/{utils,steps,conf}; do
-      link=`make_absolute.sh $f`
-      ln -sf $link .
-    done
-
-    # Use the FLP training lexicons and text to train LM
-    conf_file=`find conf/lang -name "${l}-*fullLP*.conf" -o -name "${l}-*FLP*.conf" | head -1`
-    echo ${conf_file}
-    cp $conf_file lang.conf
-
-    # This line will likely not be when the lang.conf files are corrected.
-    # It currently just fixes some paths on the CLSP grid that no longer exist.
-    sed -i 's/export\/babel\/data\/splits/export\/babel\/data\/OtherLR-data\/splits/g' lang.conf
-    cp ${cwd}/{cmd,path}.sh .
-    ./local/prepare_data.sh --extract-feats false
-  fi
-  
-
-  if [ $stage -le 6 ]; then 
-    echo "------------------------------------------------------------"
-    echo " Standardized Dictionaries and check Lang directories for"
-    echo " compatibility with the Univeral Acoustic Models"
-    echo "------------------------------------------------------------"
-        
-    mkdir -p ${dict}
-    diphthongs=${cwd}/universal_phone_maps/diphthongs/${l}
-    tones=${cwd}/universal_phone_maps/tones/${l}
-
-    echo -e "<silence> SIL\n<unk> <oov>\n<noise> <sss>\n<v-noise> <vns>" \
-      > ${dict}/silence_lexicon.txt
- 
-    # Create non-silence lexicon
-    grep -vFf ${dict}/silence_lexicon.txt data/local/lexicon.txt \
-      > data/local/nonsilence_lexicon.txt
-
-    # Create split diphthong and standarized tone lexicons for nonsilence words
-    ./local/prepare_universal_lexicon.py ${dict}/nonsilence_lexicon.txt \
-      data/local/nonsilence_lexicon.txt $diphthongs $tones
-
-    cat ${dict}/{,non}silence_lexicon.txt | sort > ${dict}/lexicon.txt
- 
-    # Create the rest of the dictionary    
-    ./local/prepare_dict.py \
-      --silence-lexicon ${dict}/silence_lexicon.txt ${dict}/lexicon.txt ${dict}
-
-    ./utils/prepare_lang.sh --share-silence-phones true \
-      ${dict} "<unk>" ${dict}/tmp.lang ${langdir}
- 
-    ./local/phoneset_diff.sh ${langdir}/phones.txt \
-      ${cwd}/data/lang_universalp/tri5_ali/phones.txt \
-      > ${langdir}/missing_phones_map  
-  fi 
-  
-  #############################################################################
-  # MAP MISSING PHONEMES HERE
-  #############################################################################
-  
-  # Resolve incompatibilities between diciontaries 
-  if [ $stage -le 7 ]; then  
-    ./local/convert_dict.sh ${dict}_universal \
-      ${langdir}_universal \
-      ${dict} ${cwd}/data/dict_universal \
-      ${cwd}/data/lang_universalp/tri5_ali \
-      ${langdir}/missing_phones_map
-
-    ###########################################################################
-    # Train the LM For the Decoding Language
-    ###########################################################################
-    
-    ./local/train_lms_srilm.sh --oov-symbol "<unk>" \
-                               --train-text data/train/text \
-                               --words-file ${langdir}_universal/words.txt \
-                               data data/srilm
-
-    ./local/arpa2G.sh data/srilm/lm.gz ${langdir}_universal ${langdir}_universal
-  fi
- 
-  # Make Decoding Graph 
+  # Make Decoding Graph
   if [ $stage -le 8 ]; then
-    ./utils/mkgraph.sh --self-loop-scale 1.0 ${langdir}_universal \
-      ${cwd}/exp/chain_cleaned/tdnn_sp_bi \
-      ${cwd}/exp/chain_cleaned/tdnn_sp_bi/graph_${l}
+    ./utils/mkgraph.sh --self-loop-scale 1.0 \
+      data/$lang/data/lang_universal_test/ $model $model/graph_${lang}
   fi
 
   # Prepare Acoustic Data
+  mkdir -p ${model}_online
   if [ $stage -le 9 ]; then
-    . ./lang.conf
-    if [ ! -d data/raw_dev10h_data ]; then
-      echo ---------------------------------------------------------------------
-      echo "Subsetting the DEV10H set"
-      echo ---------------------------------------------------------------------
-      local/make_corpus_subset.sh "$dev10h_data_dir" "$dev10h_data_list" ./data/raw_dev10h_data || exit 1
-    fi
-
-    mkdir -p data/dev10h.pem
-    dev10h_data_dir=`utils/make_absolute.sh ./data/raw_dev10h_data`
-
-    local/prepare_acoustic_training_data.pl --fragmentMarkers \-\*\~  \
-      dev10h_data_dir data/dev10h.pem > data/dev10h.pem/skipped_utts.log || exit 1
-    
-    local/prepare_stm.pl --fragmentMarkers \-\*\~ data/dev10h.pem
-
-    # Make plp + pitch features
-    steps/make_plp_pitch.sh --nj 32 --cmd "$train_cmd" data/dev10h.pem exp/make_mfcc/dev10h.pem mfcc
-    steps/compute_cmvn_stats.sh data/dev10h.pem exp/make_mfcc/dev10h.pem mfcc
-  
-    # Make hires mfcc features (for ivector extraction)
-    utils/copy_data_dir.sh data/dev10h.pem data/dev10h.pem_hires
-    steps/make_mfcc.sh --nj 32 --mfcc-config conf/mfcc_hires.conf \
-      --cmd "$train_cmd" data/dev10h.pem_hires exp/make_hires/dev10h.pem mfcc_hires;
-    steps/compute_cmvn_stats.sh data/dev10h.pem_hires exp/make_hires/dev10h.pem mfcc_hires;
-    utils/fix_data_dir.sh data/dev10h.pem_hires;
-
-    # Make mfcc + pitch features (for nnet decoding)
-    utils/copy_data_dir.sh data/dev10h.pem data/dev10h.pem_pitch_hires
-    steps/make_mfcc_pitch.sh --nj 32 --mfcc-config conf/mfcc_hires.conf \
-      --cmd "$train_cmd" data/dev10h.pem_pitch_hires exp/make_hires/dev10h.pem_pitch mfcc_pitch_hires;
-    steps/compute_cmvn_stats.sh data/dev10h.pem_pitch_hires exp/make_hires/dev10h.pem_pitch mfcc_pitch_hires;
-    utils/fix_data_dir.sh data/dev10h.pem_pitch_hires;
-  
-    steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 32 \
-      data/dev10h.pem_hires ${cwd}/exp/nnet3_cleaned/extractor/ ${cwd}/exp/nnet3_cleaned/ivectors_${l}_dev10h.pem/ || exit 1;
-  
+    steps/online/nnet3/prepare_online_decoding.sh \
+      --mfcc-config conf/mfcc_hires.conf \
+      --add-pitch true --online-pitch-config conf/online_pitch.conf \
+      data/$lang/data/lang_universal_test exp/nnet3_cleaned/extractor  \
+      $model  ${model}_online/$lang/
   fi
-  
+
   # Decode
   if [ $stage -le 10 ]; then
     # Assign 100 / num_decode_langs nj per lang
-    num_langs=`echo $decode_langs | wc -w`
-    my_decode_nj=$((100 / $num_langs))
+    steps/online/nnet3/decode.sh --skip-scoring false \
+        --acwt 1.0 --post-decode-acwt 10.0 \
+        --nj $decode_nj --cmd "$decode_cmd" \
+        $model/graph_${lang}\
+        data/$lang/data/dev10h.pem \
+        ${model}_online/$lang/decode_dev10h.pem
 
-    (
-      cd ${cwd};
-      ./steps/nnet3/decode.sh --skip-scoring false \
-          --acwt 1.0 --post-decode-acwt 10.0 \
-          --nj $my_decode_nj --cmd "$decode_cmd" \
-          --online-ivector-dir exp/nnet3_cleaned/ivectors_${l}_dev10h.pem \
-          exp/chain_cleaned/tdnn_sp_bi/graph_${l} \
-          data/${l}/data/dev10h.pem_pitch_hires \
-          exp/chain_cleaned/tdnn_sp_bi/decode_${l}_dev10h.pem
-    ) &
-  
   fi
 done
 

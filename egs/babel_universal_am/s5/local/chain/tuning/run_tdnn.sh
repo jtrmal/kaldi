@@ -16,12 +16,12 @@ max_param_change=2.0
 final_layer_normalize_target=0.5
 num_jobs_initial=3
 num_jobs_final=16
-minibatch_size=128
-frames_per_eg=150
+minibatch_size="1:128"
+frames_per_eg=150,101,43
 remove_egs=false
 common_egs_dir=
 xent_regularize=0.1
-
+dev_langs="104 101 202 201 307 404"
 
 # First the options that are passed through to run_ivector_common.sh
 # (some of which are also used in this script directly).
@@ -176,14 +176,14 @@ fi
 if [ $stage -le 18 ]; then
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $dir/egs/storage ]; then
     utils/create_split_dir.pl \
-     /export/b0{5,6,7,8}/$USER/kaldi-data/egs/babel-$(date +'%m_%d_%H_%M')/s5d/$RANDOM/$dir/egs/storage $dir/egs/storage
+     /export/b{05,06,08,10,11}/$USER/kaldi-data/egs/babel_universal_am-$(date +'%m_%d_%H_%M')/s5d/$RANDOM/$dir/egs/storage $dir/egs/storage
   fi
   [ ! -d $dir/egs ] && mkdir -p $dir/egs/
   touch $dir/egs/.nodelete # keep egs around when that run dies.
 
 
   steps/nnet3/chain/train.py --stage $train_stage \
-    --cmd "$decode_cmd" \
+    --cmd "$train_cmd" \
     --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
     --chain.xent-regularize $xent_regularize \
@@ -208,6 +208,39 @@ if [ $stage -le 18 ]; then
     --tree-dir $tree_dir \
     --lat-dir $lat_dir \
     --dir $dir  || exit 1;
+fi
+
+# Preparing Decoding Data
+# For each decoding language setup the language directories
+if [ $stage -le 19 ] ; then
+  for lang in ${dev_langs}; do
+    model=$dir
+    decode_nj=$(wc -l < data/$lang/data/dev10h.pem/spk2utt)
+
+    # Make Decoding Graph
+    if [ ! -f $model/graph_${lang}/.done ]; then
+      ./utils/mkgraph.sh --self-loop-scale 1.0 \
+        data/$lang/data/lang_universal_test/ $model $model/graph_${lang}
+      touch $model/graph_${lang}/.done
+    fi
+
+    # Prepare Acoustic Data
+    mkdir -p ${model}_online
+    steps/online/nnet3/prepare_online_decoding.sh \
+      --mfcc-config conf/mfcc_hires.conf \
+      --add-pitch true --online-pitch-config conf/online_pitch.conf \
+      data/$lang/data/lang_universal_test exp/nnet3_cleaned/extractor  \
+      $model  ${model}_online/$lang/
+
+    # Decode
+    steps/online/nnet3/decode.sh --skip-scoring false \
+        --acwt 1.0 --post-decode-acwt 10.0 \
+        --nj $decode_nj --cmd "$train_cmd" \
+        $model/graph_${lang}\
+        data/$lang/data/dev10h.pem \
+        ${model}_online/$lang/decode_dev10h.pem
+
+  done
 fi
 
 exit 0

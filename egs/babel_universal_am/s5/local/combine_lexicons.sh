@@ -23,7 +23,7 @@ if [ ! -z $list ]; then
   echo "Detected list input"
   while read line; do
     dicts+=("$line")
-  done < $list 
+  done < $list
 else
   for dict in $*; do
     dicts+=("$dict")
@@ -45,7 +45,11 @@ for dict in ${dicts[@]}; do
   cat ${dict}/lexicon.txt
 done | sort -u > ${odict}/lexicon.txt
 
-echo -e "<silence> SIL\n<unk>\t<oov>\n<noise>\t<sss>\n<v-noise>\t<vns>" > ${odict}/silence_lexicon.txt
+set -x
+for silence in "<silence>" "<noise>" "<v-noise>" "<unk>" ; do
+ grep "^${silence}" ${odict}/lexicon.txt
+done | sort -u > ${odict}/silence_lexicon.txt
+#echo -e "<silence> SIL\n<unk>\t<oov>\n<noise>\t<sss>\n<v-noise>\t<vns>" > ${odict}/silence_lexicon.txt
 ./local/prepare_dict.py --silence-lexicon ${odict}/silence_lexicon.txt \
   $odict/lexicon.txt $odict
 exit 0
