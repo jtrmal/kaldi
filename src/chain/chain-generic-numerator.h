@@ -106,18 +106,30 @@ class GenericNumeratorComputation {
   enum { kMaxDerivTimeSteps = 8 };
 
   // sets up the alpha for frame t = 0.
-  void AlphaFirstFrame();
+  void AlphaFirstFrame(int seq);
+
+
+  void CopySpecificPdfsProbs(int sequence_id, int num_sequences,
+                             int frames_per_sequence, int num_pdfs,
+                             const std::vector<MatrixIndexT> &indices,
+                             Matrix<BaseFloat> *out);
+  void CopyLogProbIndirect(int sequence_id,
+                           Matrix<BaseFloat> &logprobs,
+                           std::vector<MatrixIndexT> &indices,
+                           CuMatrixBase<BaseFloat> *output);
+
+  void AlphaGeneralSequence(int32 seq);
 
   // the alpha computation for some 0 < t <= num_time_steps_.
-  void AlphaGeneralFrame(int32 t);
+  BaseFloat AlphaGeneralFrame(int32 t);
 
   BaseFloat ComputeTotLogLike();
 
-  // sets up the beta for frame t = num_time_steps_.
-  void BetaLastFrame();
+  // sets up the beta for sequence 0 <= seq < supervision_.num_sequnces
+  void BetaLastFrame(int seq);
 
   // the beta computation for 0 <= beta < num_time_steps_.
-  void BetaGeneralFrame(int32 t);
+  void BetaGeneralFrame(int32 seq);
 
   // some checking that we can do if debug mode is activated, or on frame zero.
   // Sets ok_ to false if a bad problem is detected.
@@ -127,42 +139,40 @@ class GenericNumeratorComputation {
   const Supervision &supervision_;
 
   // the transposed neural net output.
-  Matrix<BaseFloat> exp_nnet_output_transposed_;
+  const CuMatrixBase<BaseFloat> &nnet_output_x_;
 
   // in_transitions_ lists all the incoming transitions for
   // each state of each numerator graph
   // out_transitions_ does the same but for the outgoing transitions
-  std::vector<std::vector<std::vector<DenominatorGraphTransition> > >
-  in_transitions_, out_transitions_;
+  typedef std::vector<std::vector<DenominatorGraphTransition> > TransitionMap;
+  std::vector<TransitionMap> in_transitions_, out_transitions_;
+  std::vector<std::vector<MatrixIndexT>> index_to_pdf_;
 
   // final probs for each state of each numerator graph
-  Matrix<double> final_probs_; // indexed by seq, state
+  Matrix<BaseFloat> final_probs_; // indexed by seq, state
 
   // an offset subtracted from the logprobs of transitions out of the first
   // state of each graph to help reduce numerical problems. Note the
   // generic forward-backward computations cannot be done in log-space.
   Vector<BaseFloat> offsets_;
 
-  // maximum number of states among all the numerator graphs
-  // (it is used as a stride in alpha_ and beta_)
-  int32 max_num_hmm_states_;
-
   // the derivs w.r.t. the nnet outputs (transposed)
   // (the dimensions and functionality is the same as in
   // DenominatorComputation)
-  Matrix<BaseFloat> nnet_output_deriv_transposed_;
+  std::vector<Matrix<BaseFloat>> nnet_output_deriv_;
 
   // forward and backward probs matrices. These have the
   // same dimension and functionality as alpha_ and beta_
   // in DenominatorComputation except here we don't use beta
   // sums (becasue we don't use leakyHMM). However, we use
   // alpha sums to help avoid numerical issues.
-  Matrix<double> alpha_;
-  Matrix<double> beta_;
+  std::vector<Matrix<BaseFloat>> alpha_;
+  std::vector<Matrix<BaseFloat>> beta_;
+  std::vector<Matrix<BaseFloat>> probs_;
 
   // vector of total probs (i.e. for all the sequences)
   // (it's exactly like 'tot_probe_' in DenominatorComputation)
-  Vector<double> tot_prob_;
+  Vector<BaseFloat> tot_prob_;
 
   bool ok_;
 };
