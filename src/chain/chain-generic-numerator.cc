@@ -136,8 +136,9 @@ void GenericNumeratorComputation::CopySpecificPdfsProbs(int sequence_id,
                                                         Matrix<BaseFloat> *out) {
   //BaseFloat *starting_ptr = const_cast<BaseFloat *>(nnet_output_.Data()) + sequence_id * nnet_output_.Stride();
 
-  const BaseFloat *starting_ptr = nnet_output_x_.Data() +
-                                  sequence_id * nnet_output_x_.Stride();
+  const BaseFloat *starting_ptr = nnet_output_x_.RowData(sequence_id);
+  //const BaseFloat *starting_ptr = nnet_output_x_.Data() +
+  //                                sequence_id * nnet_output_x_.Stride();
   int view_stride = num_sequences * nnet_output_x_.Stride();
   const CuSubMatrix<BaseFloat> sequence_view(starting_ptr,
                                              frames_per_sequence,
@@ -261,10 +262,8 @@ bool GenericNumeratorComputation::Backward(
   for (int seq = 0; seq < num_sequences; ++seq) {
     BetaLastFrame(seq);
     BetaGeneralFrame(seq);
-    //Expand(nnet_output_deriv);
     CopyLogProbIndirect(seq, nnet_output_deriv_[seq],
                         index_to_pdf_[seq], nnet_output_deriv);
-    KALDI_ASSERT(false);
   }
   return ok_;
 }
@@ -288,9 +287,9 @@ void GenericNumeratorComputation::BetaLastFrame(int seq) {
 
   BaseFloat inv_tot_prob = -tot_prob_(seq);
   beta_mat.Set(inv_tot_prob);
-  KALDI_LOG << beta_mat;
+  //KALDI_LOG << beta_mat;
   beta_mat.AddVec(1.0, final_probs);
-  KALDI_LOG << beta_mat;
+  //KALDI_LOG << beta_mat;
 }
 
 void GenericNumeratorComputation::BetaGeneralFrame(int32 seq) {
@@ -309,16 +308,16 @@ void GenericNumeratorComputation::BetaGeneralFrame(int32 seq) {
                           0, nnet_output_deriv_[seq].NumCols());
   log_prob_deriv.Set(-std::numeric_limits<BaseFloat>::infinity());
 
-  KALDI_LOG << alpha_[seq] << std::endl;
+  //KALDI_LOG << alpha_[seq] << std::endl;
 
-  KALDI_LOG << beta_[seq] << std::endl;
+  //KALDI_LOG << beta_[seq] << std::endl;
   for (int t = num_frames - 1; t >= 0; --t) {
     SubVector<BaseFloat> this_beta(beta_[seq].RowData(t % 2), num_states);
     const SubVector<BaseFloat> next_beta(beta_[seq].RowData((t + 1) % 2), num_states);
 
     BaseFloat inv_arbitrary_scale = alpha(t, num_states);
-    KALDI_LOG << inv_arbitrary_scale << std::endl;
-    std::unordered_map<int, double> derivs;
+    //KALDI_LOG << inv_arbitrary_scale << std::endl;
+    //std::unordered_map<int, double> derivs;
 
     for (int32 h = 0; h < supervision_.e2e_fsts[seq].NumStates(); h++) {
       BaseFloat tot_variable_factor = -std::numeric_limits<BaseFloat>::infinity();
@@ -336,21 +335,21 @@ void GenericNumeratorComputation::BetaGeneralFrame(int32 seq) {
         BaseFloat occupation_prob = variable_factor + alpha(t, h);
         log_prob_deriv(t, pdf_id) = LogAdd(log_prob_deriv(t, pdf_id),
                                            occupation_prob);
-        if ((seq == 0) && (std::isfinite(log_prob_deriv(t, pdf_id)))) {
-          derivs[pdf_id] = log_prob_deriv(t, pdf_id);
-        }
+        //if ((seq == 0) && (std::isfinite(log_prob_deriv(t, pdf_id)))) {
+        //  derivs[pdf_id] = log_prob_deriv(t, pdf_id);
+        //}
       }
       this_beta(h) = tot_variable_factor;
     }
-    if (seq == 0) {
-      KALDI_LOG << "Derivs in t = " << t << std::endl;
-      std::stringstream s;
-      for (auto x : derivs) {
-        s << x.first << " : " << (x.second) << ", ";
-      }
-      KALDI_LOG << s.str();
-    }
-    KALDI_LOG << beta_[seq] << std::endl;
+    //if (seq == 0) {
+    //  KALDI_LOG << "Derivs in t = " << t << std::endl;
+    //  std::stringstream s;
+    //  for (auto x : derivs) {
+    //    s << (index_to_pdf_[seq][x.first]) << " : " << (x.second) << ", ";
+    //  }
+    //  KALDI_LOG << s.str();
+    //}
+    //KALDI_LOG << beta_[seq] << std::endl;
   }
 }
 
@@ -360,8 +359,13 @@ void GenericNumeratorComputation::CopyLogProbIndirect(int sequence_id,
                                  std::vector<MatrixIndexT> &indices,
                                  CuMatrixBase<BaseFloat> *output) {
 
+  int num_sequences = supervision_.num_sequences;
   int frames_per_sequence = supervision_.frames_per_sequence;
   int num_pdfs = nnet_output_x_.NumCols();
+
+  BaseFloat *starting_ptr = output->RowData(sequence_id);
+  int view_stride = output->Stride() * num_sequences;
+
   KALDI_ASSERT(output->NumCols() == nnet_output_x_.NumCols());
   KALDI_ASSERT(frames_per_sequence * supervision_.num_sequences == output->NumRows());
 
@@ -377,13 +381,21 @@ void GenericNumeratorComputation::CopyLogProbIndirect(int sequence_id,
   }
 
   CuArray<MatrixIndexT> cu_indices(indices_expanded);
-  CuSubMatrix<BaseFloat> out(*output, sequence_id * frames_per_sequence,
-                             frames_per_sequence, 0, num_pdfs);
+  //CuSubMatrix<BaseFloat> out(*output, sequence_id * frames_per_sequence,
+  //                           frames_per_sequence, 0, num_pdfs);
+  CuSubMatrix<BaseFloat> out(starting_ptr, frames_per_sequence,
+                             num_pdfs, view_stride);
+  CuMatrix<BaseFloat> tmp(frames_per_sequence, num_pdfs);
   KALDI_ASSERT(specific_pdfs.NumRows() == out.NumRows());
 
   // CopyCols also relies on the fact that we do not work in log domain anymore
   // because CopyCols zeroes all columns for which it has -1 in the cu_indices
-  out.CopyCols(specific_pdfs, cu_indices);
+  tmp.CopyCols(specific_pdfs, cu_indices);
+  out.AddMat(supervision_.weight, tmp, kNoTrans);
+  //Matrix<BaseFloat> mem(out);
+  //KALDI_LOG << mem
+  //KALDI_LOG << mem(0,0);
+  //KALDI_ASSERT(false);
 }
 
 // /home/jtrmal/.local/bin//gdb  --args nnet3-chain-train --use-gpu=yes --apply-deriv-weights=False --l2-regularize=5e-05 --leaky-hmm-coefficient=0.1 --xent-regularize=0.0 --print-interval=10 --momentum=0.0 --max-param-change=2.0 --backstitch-training-scale=0.0 --backstitch-training-interval=1 --l2-regularize-factor=0.5 --srand=2 'nnet3-am-copy --raw=true --learning-rate=0.00173192864672 --scale=1.0 2.mdl - |' den.fst ark,bg:egs 3.2.x.raw
