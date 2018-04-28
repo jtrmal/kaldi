@@ -81,9 +81,7 @@ namespace chain {
 // and the numerator FSTs are stored in 'e2e_fsts' instead of 'fst'
 
 class GenericNumeratorComputation {
-
  public:
-
   /// Initializes the object.
   GenericNumeratorComputation(const Supervision &supervision,
                               const CuMatrixBase<BaseFloat> &nnet_output);
@@ -98,7 +96,6 @@ class GenericNumeratorComputation {
   bool Backward(CuMatrixBase<BaseFloat> *nnet_output_deriv);
 
  private:
-
   // Defining this constant as an enum is easier.  it controls a memory/speed
   // tradeoff, determining how many frames' worth of the transposed derivative
   // we store at a time.  It's not very critical; the only disadvantage from
@@ -108,15 +105,14 @@ class GenericNumeratorComputation {
   // sets up the alpha for frame t = 0.
   void AlphaFirstFrame(int seq);
 
-
-  void CopySpecificPdfsProbs(int sequence_id, int num_sequences,
-                             int frames_per_sequence, int num_pdfs,
+  //
+  void CopySpecificPdfsIndirect(int sequence_id,
                              const std::vector<MatrixIndexT> &indices,
                              Matrix<BaseFloat> *out);
-  void CopyLogProbIndirect(int sequence_id,
-                           Matrix<BaseFloat> &logprobs,
-                           std::vector<MatrixIndexT> &indices,
-                           CuMatrixBase<BaseFloat> *output);
+  void AddSpecificPdfsIndirect(int sequence_id,
+                             const Matrix<BaseFloat> &logprobs,
+                             const std::vector<MatrixIndexT> &indices,
+                             CuMatrixBase<BaseFloat> *output);
 
   void AlphaGeneralSequence(int32 seq);
 
@@ -133,7 +129,7 @@ class GenericNumeratorComputation {
 
   // some checking that we can do if debug mode is activated, or on frame zero.
   // Sets ok_ to false if a bad problem is detected.
-  void BetaGeneralFrameDebug(int32 t);
+  void BetaGeneralFrameDebug(int32 seq);
 
 
   const Supervision &supervision_;
@@ -149,7 +145,7 @@ class GenericNumeratorComputation {
   std::vector<std::vector<MatrixIndexT>> index_to_pdf_;
 
   // final probs for each state of each numerator graph
-  Matrix<BaseFloat> final_probs_; // indexed by seq, state
+  Matrix<BaseFloat> final_probs_;  // indexed by seq, state
 
   // an offset subtracted from the logprobs of transitions out of the first
   // state of each graph to help reduce numerical problems. Note the
