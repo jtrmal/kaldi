@@ -24,7 +24,7 @@ fi
 
 if [ $stage -le 1 ]; then
   echo "Preparing data and training language models"
-  #local/prepare_data.sh $corpus/
+  local/prepare_data.sh $corpus/
   local/prepare_dict.sh $corpus/
   utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
   local/prepare_lm.sh $corpus/
