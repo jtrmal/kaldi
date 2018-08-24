@@ -77,15 +77,16 @@ fi
 if [ $stage -le 9 ]; then
 
   steps/nnet3/train_dnn.py --stage $train_stage \
+    --use-gpu=wait \
     --cmd="$decode_cmd" \
     --trainer.optimization.num-jobs-initial 2 \
-    --trainer.optimization.num-jobs-final 4 \
+    --trainer.optimization.num-jobs-final 8 \
     --trainer.num-epochs 3 \
     --feat.online-ivector-dir=$train_ivector_dir \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
     --trainer.optimization.initial-effective-lrate 0.005 \
     --trainer.optimization.final-effective-lrate 0.0005 \
-    --trainer.samples-per-iter 120000 \
+    --trainer.samples-per-iter 400000 \
     --egs.dir "$common_egs_dir" \
     --cleanup.preserve-model-interval 10 \
     --cleanup.remove-egs=$remove_egs \
@@ -100,8 +101,9 @@ if [ $stage -le 10 ]; then
   # this does offline decoding that should give the same results as the real
   # online decoding.
   graph_dir=exp/tri3b/graph
+  nspk=$(wc -l <data/dev_hires/spk2utt)
   # use already-built graphs.
-    steps/nnet3/decode.sh --nj 6 --cmd "$decode_cmd" \
+    steps/nnet3/decode.sh --nj $nspk --cmd "$decode_cmd" \
         --online-ivector-dir exp/nnet3/ivectors_dev_hires --iter final \
        $graph_dir data/dev_hires $dir/decode_dev || exit 1;
 fi

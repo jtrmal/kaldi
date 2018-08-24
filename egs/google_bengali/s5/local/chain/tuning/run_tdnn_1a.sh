@@ -198,7 +198,7 @@ if [ $stage -le 13 ]; then
     --trainer.num-epochs=$num_epochs \
     --trainer.frames-per-iter=3000000 \
     --trainer.optimization.num-jobs-initial=2 \
-    --trainer.optimization.num-jobs-final=5 \
+    --trainer.optimization.num-jobs-final=8 \
     --trainer.optimization.initial-effective-lrate=0.001 \
     --trainer.optimization.final-effective-lrate=0.0001 \
     --trainer.num-chunk-per-minibatch=256,128,64 \
