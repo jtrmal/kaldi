@@ -169,7 +169,6 @@ if [ $stage -le 8 ]; then
   echo "Decoding the dev set using SGMM models"
   # Graph compilation
   utils/mkgraph.sh data/lang_test exp/sgmm2_5b2 exp/sgmm2_5b2/graph
-  utils/mkgraph.sh data/lang_test_fg/ exp/sgmm2_5b2 exp/sgmm2_5b2/graph_big
 
   steps/decode_sgmm2.sh --nj $dev_nj --cmd "$decode_cmd" \
       --transform-dir exp/tri3b/decode_dev \
@@ -179,13 +178,52 @@ if [ $stage -le 8 ]; then
       data/lang_test/ data/lang_test_fg/ data/dev \
       exp/sgmm2_5b2/decode_dev exp/sgmm2_5b2/decode_dev.rescored
 
-  steps/decode_sgmm2.sh --nj $dev_nj --cmd "$decode_cmd" \
-      --transform-dir exp/tri3b/decode_dev \
-      exp/sgmm2_5b2/graph_big data/dev exp/sgmm2_5b2/decode_dev.big
   echo "SGMM decoding done."
   ) &
+  # this is extremely computationally and memory-wise expensive, run with caution
+  # or just don't run at all, there is no practical benefit
+  #-(
+  #-echo "Decoding the dev set using SGMM models and LargeLM"
+  #-# Graph compilation
+  #-utils/mkgraph.sh data/lang_test_fg/ exp/sgmm2_5b2 exp/sgmm2_5b2/graph_big
+
+  #-steps/decode_sgmm2.sh --nj $dev_nj --cmd "$decode_cmd" \
+  #-    --transform-dir exp/tri3b/decode_dev \
+  #-    exp/sgmm2_5b2/graph_big data/dev exp/sgmm2_5b2/decode_dev.big
+  #-echo "SGMM decoding done."
+  #-) &
 fi
 
+  (
+  echo "Decoding the dev set using SGMM models"
+  # Graph compilation
+  #utils/mkgraph.sh data/lang_test exp/sgmm2_5b2 exp/sgmm2_5b2/graph
+
+  steps/decode_sgmm2.sh --nj $dev_nj --cmd "$decode_cmd" \
+      --transform-dir exp/tri3b/decode_dev \
+      exp/sgmm2_5b2/graph data/dev exp/sgmm2_5b2/decode_dev
+
+  steps/lmrescore_const_arpa.sh  --cmd "$decode_cmd" \
+      data/lang_test/ data/lang_test_fg/ data/dev \
+      exp/sgmm2_5b2/decode_dev exp/sgmm2_5b2/decode_dev.rescored
+
+  echo "SGMM decoding done."
+  ) &
 wait;
 #score
-for x in exp/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
+find exp -name "best_wer" | xargs cat  | sort -k2,2g
+
+# to run nnet3 model and chain model (notice the parameter --stage 9, that ensures the ivector wont get
+# overwritten and that certain portions of the training will be shared accross both models
+# ./local/nnet3/run_tdnn.sh
+# ./local/chain/run_tdnn.sh --stage 9
+
+# if you want to run chain system only or "normal" tdnn system only,
+# run either
+# ./local/nnet3/run_tdnn.sh
+# or
+# ./local/chain/run_tdnn.sh
+# (without the stage parameter)
+
+# you can check the scores again using
+# find exp -name "best_wer" | xargs cat  | sort -k2,2g
