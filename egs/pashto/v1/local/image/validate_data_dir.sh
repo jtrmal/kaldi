@@ -1,0 +1,1 @@
+../../../../cifar/v1/image/validate_data_dir.sh

@@ -1,0 +1,1 @@
+../../../../cifar/v1/image/fix_data_dir.sh

@@ -1,0 +1,6 @@
+%WER 4.56 [ 1033 / 22637, 1 ins, 10 del, 1022 sub ] exp/cnn_e2e/decode_test/wer_17_0.0
+%WER 6.52 [ 1476 / 22637, 3 ins, 12 del, 1461 sub ] exp/cnn/decode_test/wer_17_0.0
+%WER 32.61 [ 7383 / 22637, 1037 ins, 61 del, 6285 sub ] exp/tri2/decode_test/wer_17_1.0
+%WER 40.31 [ 9124 / 22637, 1556 ins, 88 del, 7480 sub ] exp/tri3/decode_test/wer_17_1.0
+%WER 65.19 [ 14758 / 22637, 3875 ins, 108 del, 10775 sub ] exp/tri/decode_test/wer_17_1.0
+%WER 115.93 [ 26244 / 22637, 9057 ins, 103 del, 17084 sub ] exp/mono/decode_test/wer_17_1.0

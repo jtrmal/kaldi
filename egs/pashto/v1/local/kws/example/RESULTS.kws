@@ -1,0 +1,4 @@
+exp/cnn_e2e/decode_test/kws_9/score.txt: aproximate ATWV = 0.9921
+exp/cnn_e2e/decode_test/kws_9/score.txt: aproximate STWV = 1.0000
+exp/cnn_e2e/decode_test/kws_9/score.txt: aproximate MTWV = 0.9921
+exp/cnn_e2e/decode_test/kws_9/score.txt: aproximate OTWV = 0.9921
