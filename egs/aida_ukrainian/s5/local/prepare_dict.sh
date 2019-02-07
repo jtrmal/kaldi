@@ -1,0 +1,1 @@
+/export/fs02/jtrmal/kaldi-clean-git/egs/aida_russian/s5/local/prepare_dict.sh
