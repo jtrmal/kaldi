@@ -2,16 +2,17 @@
 
 # Copyright 2017-2018  Johns Hopkins University (author: Daniel Povey)
 #           2017-2018  Yiming Wang
+#           2019       Johns Hopkins University (author: Jan "Yenda" Trmal)
 
-# 1b is trying a more complicated architecture with factored parameter matrices with dropout.
+# 1c is like 1a but half the epochs.
+#
+#$ cat exp/chain/tdnn_1c/decode_dev.rescored/scoring_kaldi/best_wer
+#%WER 24.00 [ 2157 / 8986, 153 ins, 298 del, 1706 sub ] exp/chain/tdnn_1c/decode_dev/wer_10_0.0
+#$ cat exp/chain/tdnn_1a/decode_dev.rescored/scoring_kaldi/best_wer
+#%WER 11.70 [ 1051 / 8986, 95 ins, 148 del, 808 sub ] exp/chain/tdnn_1a/decode_dev.rescored/wer_11_0.0
 
-# cat exp/chain/tdnn_1b/decode_dev/scoring_kaldi/best_wer
-# %WER 17.73 [ 1951 / 11006, 247 ins, 364 del, 1340 sub ] exp/chain/tdnn_1b/decode_dev/wer_10_0.0
-# cat exp/chain/tdnn_1b/decode_dev.rescored/scoring_kaldi/best_wer
-# %WER 16.14 [ 1776 / 11006, 210 ins, 377 del, 1189 sub ] exp/chain/tdnn_1b/decode_dev.rescored/wer_10_0.5
-
-# steps/info/chain_dir_info.pl exp/chain/tdnn_1b
-# exp/chain/tdnn_1b: num-iters=38 nj=2..5 num-params=12.0M dim=40+50->1592 combine=-0.062->-0.061 (over 2) xent:train/valid[24,37,final]=(-1.28,-1.03,-0.988/-1.61,-1.43,-1.36) logprob:train/valid[24,37,final]=(-0.069,-0.053,-0.049/-0.128,-0.124,-0.120)
+#$ steps/info/chain_dir_info.pl exp/chain/tdnn_1c
+#exp/chain/tdnn_1c: num-iters=32 nj=2..8 num-params=12.7M dim=40+50->1845 combine=-0.100->-0.100 (over 1) xent:train/valid[20,31,final]=(-1.18,-1.07,-1.07/-1.18,-1.07,-1.08) logprob:train/valid[20,31,final]=(-0.116,-0.103,-0.099/-0.117,-0.109,-0.107)
 
 set -e -o pipefail
 
@@ -24,7 +25,7 @@ test_sets="dev"
 gmm=tri3b
 
 # Options which are not passed through to run_ivector_common.sh
-affix=1b   #affix for TDNN+LSTM directory e.g. "1a" or "1b", in case we change the configuration.
+affix=1c   #affix for TDNN+LSTM directory e.g. "1a" or "1b", in case we change the configuration.
 common_egs_dir=
 reporting_email=
 
@@ -39,7 +40,7 @@ chunk_width=140,100,160
 chunk_left_context=0
 chunk_right_context=0
 dropout_schedule='0,0@0.20,0.3@0.50,0'
-num_epochs=15
+num_epochs=6
 
 # training options
 srand=0
@@ -135,11 +136,10 @@ if [ $stage -le 12 ]; then
   mkdir -p $dir
   echo "$0: creating neural net configs using the xconfig parser";
 
-  num_targets=$(tree-info $tree_dir/tree | grep num-pdfs | awk '{print $2}')
+  num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
   learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
-  opts="l2-regularize=0.08 dropout-per-dim=true dropout-per-dim-continuous=true"
-  linear_opts="orthonormal-constraint=-1.0"
-  output_opts="l2-regularize=0.04"
+  opts="l2-regularize=0.08 dropout-per-dim-continuous=true"
+  output_opts="l2-regularize=0.02 bottleneck-dim=256"
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
@@ -149,34 +149,21 @@ if [ $stage -le 12 ]; then
   # please note that it is important to have input layer with the name=input
   # as the layer immediately preceding the fixed-affine-layer to enable
   # the use of short notation for the descriptor
-  fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
+  fixed-affine-layer name=lda input=Append(-2,-1,0,1,2,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
 
   # the first splicing is moved before the lda layer, so no splicing here
   relu-batchnorm-dropout-layer name=tdnn1 $opts dim=768
-  linear-component name=tdnn2l dim=256 $linear_opts input=Append(-1,0)
-  relu-batchnorm-dropout-layer name=tdnn2 $opts input=Append(0,1) dim=768
-  linear-component name=tdnn3l dim=256 $linear_opts
+  relu-batchnorm-dropout-layer name=tdnn2 $opts dim=768 input=Append(-1,0,1)
   relu-batchnorm-dropout-layer name=tdnn3 $opts dim=768
-  linear-component name=tdnn4l dim=256 $linear_opts input=Append(-1,0)
-  relu-batchnorm-dropout-layer name=tdnn4 $opts input=Append(0,1) dim=768
-  linear-component name=tdnn5l dim=256 $linear_opts
-  relu-batchnorm-dropout-layer name=tdnn5 $opts dim=768 input=Append(0, tdnn3l)
-  linear-component name=tdnn6l dim=256 $linear_opts input=Append(-3,0)
-  relu-batchnorm-dropout-layer name=tdnn6 $opts input=Append(0,3) dim=1024
-  linear-component name=tdnn7l dim=256 $linear_opts input=Append(-3,0)
-  relu-batchnorm-dropout-layer name=tdnn7 $opts input=Append(0,3,tdnn6l,tdnn4l,tdnn2l) dim=768
-  linear-component name=tdnn8l dim=256 $linear_opts input=Append(-3,0)
-  relu-batchnorm-dropout-layer name=tdnn8 $opts input=Append(0,3) dim=1024
-  linear-component name=tdnn9l dim=256 $linear_opts input=Append(-3,0)
-  relu-batchnorm-dropout-layer name=tdnn9 $opts input=Append(0,3,tdnn8l,tdnn6l,tdnn5l) dim=768
-  linear-component name=tdnn10l dim=256 $linear_opts input=Append(-3,0)
-  relu-batchnorm-dropout-layer name=tdnn10 $opts input=Append(0,3) dim=1024
-  linear-component name=tdnn11l dim=256 $linear_opts input=Append(-3,0)
-  relu-batchnorm-dropout-layer name=tdnn11 $opts input=Append(0,3,tdnn10l,tdnn9l,tdnn7l) dim=768
-  linear-component name=prefinal-l dim=256 $linear_opts
+  relu-batchnorm-dropout-layer name=tdnn4 $opts dim=768 input=Append(-1,0,1)
+  relu-batchnorm-dropout-layer name=tdnn5 $opts dim=768
+  relu-batchnorm-dropout-layer name=tdnn6 $opts dim=768 input=Append(-3,0,3)
+  relu-batchnorm-dropout-layer name=tdnn7 $opts dim=768 input=Append(-3,0,3)
+  relu-batchnorm-dropout-layer name=tdnn8 $opts dim=768 input=Append(-6,-3,0)
 
-  relu-batchnorm-layer name=prefinal-chain input=prefinal-l $opts dim=1024
-  output-layer name=output include-log-softmax=false dim=$num_targets bottleneck-dim=256 max-change=1.5 $output_opts
+  ## adding the layers for chain branch
+  relu-batchnorm-layer name=prefinal-chain $opts dim=768
+  output-layer name=output include-log-softmax=false $output_opts dim=$num_targets max-change=1.5
 
   # adding the layers for xent branch
   # This block prints the configs for a separate output that will be
@@ -187,8 +174,8 @@ if [ $stage -le 12 ]; then
   # final-layer learns at a rate independent of the regularization
   # constant; and the 0.5 was tuned so as to make the relative progress
   # similar in the xent and regular final layers.
-  relu-batchnorm-layer name=prefinal-xent input=prefinal-l $opts dim=1024
-  output-layer name=output-xent $output_opts dim=$num_targets learning-rate-factor=$learning_rate_factor bottleneck-dim=256 max-change=1.5
+  relu-batchnorm-layer name=prefinal-xent input=tdnn8 $opts dim=768
+  output-layer name=output-xent $output_opts dim=$num_targets learning-rate-factor=$learning_rate_factor max-change=1.5
 EOF
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
 fi
@@ -212,7 +199,7 @@ if [ $stage -le 13 ]; then
     --trainer.num-epochs=$num_epochs \
     --trainer.frames-per-iter=3000000 \
     --trainer.optimization.num-jobs-initial=2 \
-    --trainer.optimization.num-jobs-final=5 \
+    --trainer.optimization.num-jobs-final=8 \
     --trainer.optimization.initial-effective-lrate=0.001 \
     --trainer.optimization.final-effective-lrate=0.0001 \
     --trainer.num-chunk-per-minibatch=256,128,64 \
