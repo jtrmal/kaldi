@@ -47,30 +47,15 @@ if [ $stage -le 8 ]; then
   #-(
   #-echo "Decoding the dev set using SGMM models and LargeLM"
   #-# Graph compilation
-  #-utils/mkgraph.sh data/lang_test_fg/ exp/sgmm2_5b2 exp/sgmm2_5b2/graph_big
+  #-utils/mkgraph.sh data/lang_test_fg/ exp/sgmm2_5b2 exp/sgmm2_5b2/graph.big
 
   #-steps/decode_sgmm2.sh --nj $dev_nj --cmd "$decode_cmd" \
   #-    --transform-dir exp/tri3b/decode_dev \
-  #-    exp/sgmm2_5b2/graph_big data/dev exp/sgmm2_5b2/decode_dev.big
+  #-    exp/sgmm2_5b2/graph.big data/dev exp/sgmm2_5b2/decode_dev.big
   #-echo "SGMM decoding done."
   #-) &
 fi
 
-  (
-  echo "Decoding the dev set using SGMM models"
-  # Graph compilation
-  #utils/mkgraph.sh data/lang_test exp/sgmm2_5b2 exp/sgmm2_5b2/graph
-
-  steps/decode_sgmm2.sh --nj $dev_nj --cmd "$decode_cmd" \
-      --transform-dir exp/tri3b/decode_dev \
-      exp/sgmm2_5b2/graph data/dev exp/sgmm2_5b2/decode_dev
-
-  steps/lmrescore_const_arpa.sh  --cmd "$decode_cmd" \
-      data/lang_test/ data/lang_test_fg/ data/dev \
-      exp/sgmm2_5b2/decode_dev exp/sgmm2_5b2/decode_dev.rescored
-
-  echo "SGMM decoding done."
-  ) &
 wait;
 
 
