@@ -2,7 +2,7 @@
 
 # This script is deprecated, please use ../xconfig_to_configs.py
 
-from __future__ import print_function
+
 import os
 import argparse
 import sys
@@ -317,7 +317,7 @@ def MakeConfigs(config_dir, feat_dim, ivector_dim, num_targets,
 
     # printing out the configs
     # init.config used to train lda-mllt train
-    for key in config_files.keys():
+    for key in list(config_files.keys()):
         PrintConfig(key, config_files[key])
 
 

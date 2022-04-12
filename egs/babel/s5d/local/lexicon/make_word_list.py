@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from __future__ import print_function
+
 import sys
 import os
 import codecs
@@ -49,8 +49,8 @@ def process_transcripts(transcripts_dir, transcripts_list):
                                     except KeyError:
                                         misprons[w] = 1
     
-    word_list = sorted(word_list.items(), key=lambda x: x[0])
-    misprons = sorted(misprons.items(), key=lambda x: x[0])
+    word_list = sorted(list(word_list.items()), key=lambda x: x[0])
+    misprons = sorted(list(misprons.items()), key=lambda x: x[0])
     print("")
 
     return word_list, misprons

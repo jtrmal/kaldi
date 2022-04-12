@@ -4,8 +4,8 @@
 #           2016   Johns Hopkins University (author: Daniel Povey)
 # Apache 2.0
 
-from __future__ import print_function
-from __future__ import division
+
+
 import argparse
 import copy
 import logging
@@ -286,7 +286,7 @@ def compute_segment_cores(split_lines_of_utt):
                 line_is_in_segment_core[i] = True
 
     # extend each proto-segment backwards as far as we can:
-    for i in reversed(range(0, num_lines - 1)):
+    for i in reversed(list(range(0, num_lines - 1))):
         if line_is_in_segment_core[i + 1] and not line_is_in_segment_core[i]:
             edit_type = split_lines_of_utt[i][7]
             if (not is_tainted(split_lines_of_utt[i])
@@ -1871,7 +1871,7 @@ class WordStats(object):
         # We'll reverse sort on badness^3 * total_count = pair[1]^3 /
         # pair[0]^2.
         for key, pair in sorted(
-                self.word_count_pair.items(),
+                list(self.word_count_pair.items()),
                 key=lambda item: (item[1][1] ** 3) * 1.0 / (item[1][0] ** 2),
                 reverse=True):
             badness = pair[1] * 1.0 / pair[0]

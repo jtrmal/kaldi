@@ -12,7 +12,7 @@
 # obtain per-frame targets for the recordings in the format:
 # [ silence single overlap ]
 
-from __future__ import division
+
 
 import argparse
 import logging

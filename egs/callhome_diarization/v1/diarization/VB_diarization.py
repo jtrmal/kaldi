@@ -122,14 +122,14 @@ def VB_diarization(X, m, invSigma, w, V, pi=None, gamma=None,
   print('Sparsity: ', len(zeta.row), float(len(zeta.row))/np.prod(zeta.shape))
   LL = np.sum(G) # total log-likelihod as calculated using UBM
 
-  mixture_sum = coo_matrix((np.ones(C*D), (np.repeat(range(C),D), range(C*D))))
+  mixture_sum = coo_matrix((np.ones(C*D), (np.repeat(list(range(C)),D), list(range(C*D)))))
 
   #G = np.sum((zeta.multiply(ll - np.log(w))).toarray(), 1) + Kx  # from eq. (30) # Aleready calculated above
 
   # Calculate per-frame first order statistics projected into the R-dim. subspace
   # V^T \Sigma^{-1} F_m
   F_s =coo_matrix((((X[zeta.row]-m[zeta.col])*zeta.data[:,np.newaxis]).flat,
-                   (zeta.row.repeat(D), zeta.col.repeat(D)*D+np.tile(range(D), len(zeta.col)))), shape=(nframes, D*C))
+                   (zeta.row.repeat(D), zeta.col.repeat(D)*D+np.tile(list(range(D)), len(zeta.col)))), shape=(nframes, D*C))
   rho = F_s.tocsr().dot((invSigma.flat * V).T)
   del F_s
   ## The code above is only efficient implementation of the following comented code
@@ -253,7 +253,7 @@ def DER(gamma, ref, expected=True, xentropy=False):
         # replace probabiities in gamma by zeros and ones
         hard_labels = gamma.argmax(1)
         gamma = np.zeros_like(gamma)
-        gamma[range(len(gamma)), hard_labels] = 1
+        gamma[list(range(len(gamma))), hard_labels] = 1
 
     err_mx = np.empty((ref.max()+1, gamma.shape[1]))
     for s in range(err_mx.shape[0]):
@@ -265,8 +265,8 @@ def DER(gamma, ref, expected=True, xentropy=False):
 
     # try all alignments (permutations) of reference and detected speaker
     # could be written in more efficient way using dynamic programing
-    acc = [err_mx[perm[:err_mx.shape[1]], range(err_mx.shape[1])].sum()
-              for perm in permutations(range(err_mx.shape[0]))]
+    acc = [err_mx[perm[:err_mx.shape[1]], list(range(err_mx.shape[1]))].sum()
+              for perm in permutations(list(range(err_mx.shape[0])))]
     if xentropy:
        return min(acc)/float(len(ref))
     return (len(ref) - max(acc))/float(len(ref))
@@ -343,7 +343,7 @@ def forward_backward(lls, tr, ip):
     for ii in  range(1,len(lls)):
         lfw[ii] =  lls[ii] + logsumexp(lfw[ii-1] + ltr.T, axis=1)
 
-    for ii in reversed(range(len(lls)-1)):
+    for ii in reversed(list(range(len(lls)-1))):
         lbw[ii] = logsumexp(ltr + lls[ii+1] + lbw[ii+1], axis=1)
 
     tll = logsumexp(lfw[-1])

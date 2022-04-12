@@ -27,7 +27,7 @@ query1 A B C D E
 query2 C D E
 """
 
-from __future__ import print_function
+
 import argparse
 import logging
 

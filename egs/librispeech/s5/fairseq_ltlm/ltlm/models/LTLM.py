@@ -1,5 +1,5 @@
 # Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov)
-from ltlm.modules.transformer_sentence_encoder import LatticeTransformerSentenceEncoder
+from .ltlm.modules.transformer_sentence_encoder import LatticeTransformerSentenceEncoder
 import torch
 import torch.nn as nn
 from fairseq.models import (

@@ -164,7 +164,7 @@ def get_wav_list(data_dir, reco2channels=None):
     if provided, the uttid is actually the recoid.
     """
     if reco2channels is not None:
-        keep_wavs = {reco2channels[reco][0]:reco for reco in reco2channels.keys()}
+        keep_wavs = {reco2channels[reco][0]:reco for reco in list(reco2channels.keys())}
     wav_list = {}
     with open(os.path.join(data_dir,'wav.scp'),'r') as f:
         for line in f.readlines():
@@ -204,7 +204,7 @@ def main():
         wav_list = get_wav_list(args.data_dir)
 
     vad = webrtcvad.Vad(args.mode)
-    for utt in wav_list.keys():
+    for utt in list(wav_list.keys()):
         get_speech_segments(utt, wav_list[utt], vad)
 
 

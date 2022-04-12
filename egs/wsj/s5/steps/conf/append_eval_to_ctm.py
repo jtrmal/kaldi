@@ -3,7 +3,7 @@
 # Copyright 2015  Brno University of Technology (author: Karel Vesely)
 # Apache 2.0
 
-from __future__ import print_function
+
 import sys,operator
 
 # Append Levenshtein alignment of 'hypothesis' and 'reference' into 'CTM':
@@ -55,7 +55,7 @@ with open(ctm_in) as f:
 
 # Build the 'ctm' with 'eval' column added,
 ctm_eval = []
-for utt,ctm_part in ctm.items():
+for utt,ctm_part in list(ctm.items()):
   ctm_part.sort(key = operator.itemgetter(2)) # Sort by 'beg' time,
   try:
     # merging 'tuples' by '+', the record has format:

@@ -4,9 +4,9 @@
     It is called by steps/pytorchnn/lmrescore_lattice_pytorchnn.sh
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import os
 import argparse
@@ -95,8 +95,8 @@ def write_scores(arc_scores, path):
         path (str): Output file of arc scores in the above format.
     """
     with open(path, 'w', encoding='utf-8') as f:
-        for key in arc_scores.keys():
-            for arc, score in arc_scores[key].items():
+        for key in list(arc_scores.keys()):
+            for arc, score in list(arc_scores[key].items()):
                 f.write('{0} {1} {2} {3}\n'.format(key, arc[0], arc[1], score))
     print("Write estimated neural LM scores to file {}.".format(path))
 

@@ -4,7 +4,7 @@
 """ This module contains some composite layers, which is basically a catch-all
     term for things like TDNN-F that contain several affine or linear comopnents.
 """
-from __future__ import print_function
+
 import math
 import re
 import sys

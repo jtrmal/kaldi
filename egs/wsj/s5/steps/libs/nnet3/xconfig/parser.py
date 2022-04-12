@@ -5,7 +5,7 @@
 """ This module contains the top level xconfig parsing functions.
 """
 
-from __future__ import print_function
+
 
 import logging
 import sys

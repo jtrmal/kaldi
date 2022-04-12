@@ -3,7 +3,7 @@
 # Copyright 2018  Xiaohui Zhang
 # Apache 2.0.
 
-from __future__ import print_function
+
 from collections import defaultdict
 import argparse
 import sys
@@ -108,7 +108,7 @@ def ReadLexiconp(lexiconp_handle):
 def PruneProns(args, stats, ref_lexicon, lexicon_phonetic_decoding, lexicon_g2p, lexicon_g2p_probs):
     # For those pron candidates from lexicon_phonetic_decoding/g2p which don't
     # have stats, we append them to the "stats" dict, with a zero count.
-    for word, entry in stats.iteritems():
+    for word, entry in stats.items():
         prons_with_stats = set()
         for (pron, count) in entry:
             prons_with_stats.add(pron)
@@ -120,11 +120,11 @@ def PruneProns(args, stats, ref_lexicon, lexicon_phonetic_decoding, lexicon_g2p,
     # Compute the average # pron variants counts per word in the reference lexicon.
     num_words_ref = 0
     num_prons_ref = 0
-    for word, prons in ref_lexicon.iteritems():
+    for word, prons in ref_lexicon.items():
         num_words_ref += 1
         num_prons_ref += len(prons)
     avg_variant_counts_ref = round(float(num_prons_ref) / float(num_words_ref))
-    for word, entry in stats.iteritems():
+    for word, entry in stats.items():
         if word in ref_lexicon:
             variant_counts = args.variant_counts_ratio * len(ref_lexicon[word])
         else:

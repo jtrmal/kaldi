@@ -137,8 +137,8 @@ class LatsDataSet(FairseqDataset):
     def add_data_from_latt(self, lines, recompute_utt2id=True, suff=''):
         utt2lat = parse_lats(lines)
         if suff:
-            utt2lat = {k+suff:v for k,v in utt2lat.items()}
-        id2utt = utt2lat.keys()
+            utt2lat = {k+suff:v for k,v in list(utt2lat.items())}
+        id2utt = list(utt2lat.keys())
         self.id2utt.extend(id2utt)
         converted_comp_lat = [self.compact_lat_to_lat(utt2lat[utt]) for utt in id2utt]
         lats = [topsort_lat(l) for l, _, _ in converted_comp_lat]
@@ -181,7 +181,7 @@ class LatsDataSet(FairseqDataset):
         utts = set(self.id2utt)
         with open(ref_text_fname, 'r', encoding='utf-8') as f:
             utt2ref = {utt_id: self.tokenizer.encode([line], bos=True, eos=True)[0] for utt_id, line in
-                       map(lambda x: x.split(' ', 1) if x.find(' ') != -1 else [x.strip(), ''], f) if utt_id in utts}
+                       [x.split(' ', 1) if x.find(' ') != -1 else [x.strip(), ''] for x in f] if utt_id in utts}
         logger.info(f"LatsDataSet: loaded {len(utt2ref)} ref.")
         assert len(utt2ref) == len(self.id2utt), f'Utterance name {set(self.id2utt) - set(utt2ref.keys())} not found in file {ref_text_fname}'
         return utt2ref
@@ -341,7 +341,7 @@ class LatsDataSet(FairseqDataset):
 
     def print_statistic(self, out=logger.info):
         out("Dataset Statistic")
-        for k, v in self.get_statistic().items():
+        for k, v in list(self.get_statistic().items()):
             out(f"{k} = {v}")
 
     def compare(self, other, normalize=True, progress_bar=True, compare_clipped=False):
@@ -350,9 +350,9 @@ class LatsDataSet(FairseqDataset):
         composition_stat = []
         num_arcs_compare = []
         if compare_clipped:
-            iterator = map(lambda li: li[1] , self.clipid2len_id)
+            iterator = [li[1] for li in self.clipid2len_id]
         else:
-            iterator = range(len(self.id2utt))
+            iterator = list(range(len(self.id2utt)))
         if progress_bar:
             iterator = tqdm.tqdm(iterator, total=len(self.id2utt))
         for i in iterator:
@@ -404,7 +404,7 @@ class LatsDataSet(FairseqDataset):
         with open(ref_text_fname, 'r', encoding='utf-8') as f:
             utt2ref = {utt_id: self.tokenizer.encode([line], bos=True, eos=True)[0]
                        for utt_id, line in
-                       map(lambda x: x.split(' ', 1) if x.find(' ') != -1 else [x.strip(), ''], f.readlines())}
+                       [x.split(' ', 1) if x.find(' ') != -1 else [x.strip(), ''] for x in f.readlines()]}
         total_count = len(utt2ref)
         for i, (utt_id, ref) in enumerate(utt2ref.items()):
             lat = self.id2lat[self.utt2id[utt_id]]

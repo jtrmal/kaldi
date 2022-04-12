@@ -5,7 +5,7 @@
 # Apache 2.0.
 
 # we're using python 3.x style print but want it to work in python 2.x,
-from __future__ import print_function
+
 from collections import defaultdict
 import argparse
 import sys
@@ -118,7 +118,7 @@ def ReadLexicon(lexicon_file_handle):
 
 def ConvertWordCountsToProbs(args, lexicon, word_count):
     word_probs = {}
-    for entry, count in lexicon.iteritems():
+    for entry, count in lexicon.items():
         word = entry[0]
         phones = entry[1]
         prob = float(count) / float(word_count[word])
@@ -131,7 +131,7 @@ def ConvertWordCountsToProbs(args, lexicon, word_count):
 
 def ConvertWordProbsToLexicon(word_probs):
     lexicon = {}
-    for word, entry in word_probs.iteritems():
+    for word, entry in word_probs.items():
         for x in entry:
             lexicon[(word, x[0])] = lexicon.get((word,x[0]), 0) + x[1]
     return lexicon
@@ -139,11 +139,11 @@ def ConvertWordProbsToLexicon(word_probs):
 def NormalizeLexicon(lexicon, set_max_to_one = True,
                      set_sum_to_one = False, min_prob = 0):
     word_probs = {}
-    for entry, prob in lexicon.iteritems():
+    for entry, prob in lexicon.items():
         t = word_probs.get(entry[0], (0,0))
         word_probs[entry[0]] = (t[0] + prob, max(t[1], prob))
 
-    for entry, prob in lexicon.iteritems():
+    for entry, prob in lexicon.items():
         if set_max_to_one:
             prob = prob / word_probs[entry[0]][1]
         elif set_sum_to_one:
@@ -155,7 +155,7 @@ def NormalizeLexicon(lexicon, set_max_to_one = True,
 def TakeTopN(lexicon, top_N):
     lexicon_reshaped = defaultdict(list) 
     lexicon_pruned = {}
-    for entry, prob in lexicon.iteritems():
+    for entry, prob in lexicon.items():
         lexicon_reshaped[entry[0]].append([entry[1], prob])
     for word in lexicon_reshaped:
         prons = lexicon_reshaped[word]
@@ -168,7 +168,7 @@ def WriteLexicon(args, lexicon, filter_lexicon):
     words = set()
     num_removed = 0
     num_filtered = 0
-    for entry, prob in lexicon.iteritems():
+    for entry, prob in lexicon.items():
         if prob == 0:
             num_removed += 1
             continue

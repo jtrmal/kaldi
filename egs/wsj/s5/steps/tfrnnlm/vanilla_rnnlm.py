@@ -21,9 +21,9 @@
 #
 # One example recipe is at egs/ami/s5/local/tfrnnlm/run_vanilla_rnnlm.sh
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import sys
 

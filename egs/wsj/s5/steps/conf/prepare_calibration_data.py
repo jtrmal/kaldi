@@ -3,7 +3,7 @@
 # Copyright 2015  Brno University of Technology (author: Karel Vesely)
 # Apache 2.0
 
-from __future__ import division
+
 import sys, math
 
 from optparse import OptionParser

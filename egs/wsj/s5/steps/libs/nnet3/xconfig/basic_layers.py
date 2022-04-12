@@ -8,8 +8,8 @@
 and some basic layer definitions.
 """
 
-from __future__ import print_function
-from __future__ import division
+
+
 import math
 import re
 import sys
@@ -86,18 +86,18 @@ class XconfigLayerBase(object):
         # First check that there are no keys that don't correspond to any config
         # parameter of this layer, and if so, raise an exception with an
         # informative message saying what configs are allowed.
-        for key, value in key_to_value.items():
+        for key, value in list(key_to_value.items()):
             if key != 'name':
                 if key not in self.config:
                     configs = ' '.join([('{0}->"{1}"'.format(x, y) if isinstance(y, str)
                                          else '{0}->{1}'.format(x, y))
-                                        for x, y in self.config.items()])
+                                        for x, y in list(self.config.items())])
                     raise RuntimeError("Configuration value {0}={1} was not "
                                        "expected in layer of type {2}; allowed "
                                        "configs with their defaults: {3}"
                                        "" .format(key, value, self.layer_type, configs))
 
-        for key, value in key_to_value.items():
+        for key, value in list(key_to_value.items()):
             if key != 'name':
                 assert key in self.config  # we checked above.
                 self.config[key] = xutils.convert_value_to_type(key,
@@ -177,7 +177,7 @@ class XconfigLayerBase(object):
         to the config.
         """
 
-        for key, desc_str_dict in self.descriptors.items():
+        for key, desc_str_dict in list(self.descriptors.items()):
             self.config[key] = desc_str_dict['normalized-string']
 
     def convert_to_descriptor(self, descriptor_string, all_layers):

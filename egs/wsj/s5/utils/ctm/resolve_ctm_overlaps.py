@@ -16,8 +16,8 @@ the last 2.5s of the first utterance i.e. from 27.5s to 30s is truncated
 and the first 2.5s of the second utterance i.e. from 25s to 27.s is truncated.
 """
 
-from __future__ import print_function
-from __future__ import division
+
+
 import argparse
 import collections
 import logging
@@ -279,7 +279,7 @@ def run(args):
     segments, reco2utt = read_segments(args.segments)
     ctms = read_ctm(args.ctm_in, segments)
 
-    for reco, utts in reco2utt.items():
+    for reco, utts in list(reco2utt.items()):
         ctms_for_reco = []
         for utt in sorted(utts, key=lambda x: segments[x][1]):
             if (reco, utt) in ctms:

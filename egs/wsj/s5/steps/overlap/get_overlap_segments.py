@@ -120,12 +120,12 @@ def main():
         {reco_id : list(g) for reco_id, g in groupby(segments, lambda x: x.reco_id)})
 
     overlap_segs = []
-    for reco_id in reco2segs.keys():
+    for reco_id in list(reco2segs.keys()):
         segs = reco2segs[reco_id]
         overlap_segs.extend(find_overlapping_segments(segs, args.label))
 
     single_speaker_segs = []
-    for reco_id in reco2segs.keys():
+    for reco_id in list(reco2segs.keys()):
         segs = reco2segs[reco_id]
         single_speaker_segs.extend(find_single_speaker_segments(segs))
     final_segs = sorted(overlap_segs + single_speaker_segs, key = lambda x: (x.reco_id, x.start_time))

@@ -8,8 +8,8 @@
 """ This script is based on steps/nnet3/tdnn/train.sh
 """
 
-from __future__ import print_function
-from __future__ import division
+
+
 import argparse
 import logging
 import os

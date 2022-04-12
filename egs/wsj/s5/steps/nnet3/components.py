@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Note: this file is part of some nnet3 config-creation tools that are now deprecated.
 
-from __future__ import print_function
+
 import os
 import argparse
 import sys

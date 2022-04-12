@@ -12,9 +12,9 @@ Rico Sennrich, Barry Haddow and Alexandra Birch (2016). Neural Machine Translati
 Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (ACL 2016). Berlin, Germany.
 """
 
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import sys
 import codecs
@@ -159,9 +159,9 @@ def replace_pair(pair, vocab, indices):
     changes = []
     pattern = re.compile(r'(?<!\S)' + re.escape(first + ' ' + second) + r'(?!\S)')
     if sys.version_info < (3, 0):
-        iterator = indices[pair].iteritems()
+        iterator = iter(indices[pair].items())
     else:
-        iterator = indices[pair].items()
+        iterator = list(indices[pair].items())
     for j, freq in iterator:
         if freq < 1:
             continue
@@ -200,8 +200,8 @@ def main(infile, outfile, num_symbols, min_frequency=2, verbose=False, is_dict=F
     outfile.write('#version: 0.2\n')
 
     vocab = get_vocabulary(infile, is_dict)
-    vocab = dict([(tuple(x[:-1])+(x[-1]+'</w>',) ,y) for (x,y) in vocab.items()])
-    sorted_vocab = sorted(vocab.items(), key=lambda x: x[1], reverse=True)
+    vocab = dict([(tuple(x[:-1])+(x[-1]+'</w>',) ,y) for (x,y) in list(vocab.items())])
+    sorted_vocab = sorted(list(vocab.items()), key=lambda x: x[1], reverse=True)
 
     stats, indices = get_pair_statistics(sorted_vocab)
     big_stats = copy.deepcopy(stats)

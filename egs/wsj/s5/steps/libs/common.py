@@ -9,8 +9,8 @@
 commonly used in many kaldi python scripts.
 """
 
-from __future__ import print_function
-from __future__ import division
+
+
 import argparse
 import logging
 import math
@@ -20,7 +20,7 @@ import sys
 import threading
 
 try:
-    import thread as thread_module
+    import _thread as thread_module
 except:
     import _thread as thread_module
 

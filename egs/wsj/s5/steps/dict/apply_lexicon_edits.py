@@ -3,7 +3,7 @@
 # Copyright 2016  Xiaohui Zhang
 # Apache 2.0.
 
-from __future__ import print_function
+
 import argparse
 import sys
 

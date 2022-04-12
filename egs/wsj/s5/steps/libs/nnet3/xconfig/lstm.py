@@ -6,7 +6,7 @@
 
 """ This module has the implementations of different LSTM layers.
 """
-from __future__ import print_function
+
 import math
 import re
 import sys

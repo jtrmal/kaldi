@@ -11,7 +11,7 @@ The input integer vectors are expected to contain '1' for silence frames,
 '2' for speech frames of single speaker, and '3' for overlap frames.
 """
 
-from __future__ import print_function
+
 import argparse
 import logging
 import sys

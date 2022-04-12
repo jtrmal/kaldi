@@ -3,7 +3,7 @@
 # Copyright 2014  Vimal Manohar
 # Apache 2.0
 
-from __future__ import division
+
 import os, glob, argparse, sys, re, time
 from argparse import ArgumentParser
 
@@ -1118,7 +1118,7 @@ class JointResegmenter(object):
     # End for loop over all segments
 
     a = Analysis(self.file_id, None, title)
-    for st, info in D.items():
+    for st, info in list(D.items()):
       en = info[0]
 
       if info[1] > 0 and info[2] == 0 and info[3] == 0:

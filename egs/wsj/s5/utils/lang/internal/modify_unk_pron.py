@@ -3,7 +3,7 @@
 # Copyright 2016  Johns Hopkins University (Author: Daniel Povey)
 # Apache 2.0.
 
-from __future__ import print_function
+
 import sys
 import os
 import argparse

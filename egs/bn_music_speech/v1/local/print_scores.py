@@ -11,7 +11,7 @@
 # those strings to determine if it is a target or nontarget
 # utterance. We arbitrarily pick music to be the target class.
 
-from __future__ import print_function
+
 import sys
 with open(sys.argv[1], 'r') as u2s_fi:
   for line in u2s_fi:

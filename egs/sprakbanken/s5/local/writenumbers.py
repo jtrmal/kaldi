@@ -22,7 +22,7 @@ Currently only has a table for Danish
 
 Changed to write output to file to prevent problems with shell ascii codec.
 '''
-from __future__ import print_function
+
 
 import sys
 import os
@@ -191,7 +191,7 @@ def writeOutSplits(s):
          "/": 'SKRÅSTREG',
          "-": 'STREG'
          }
-    splitchar = d.keys()
+    splitchar = list(d.keys())
     
     if len(s) == 3:
         if s[2].isnumeric():

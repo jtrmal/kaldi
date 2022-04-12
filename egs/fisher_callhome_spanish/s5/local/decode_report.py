@@ -7,7 +7,7 @@
 # This script is specific to my partitions and needs to be made more general
 # or modified
 
-from __future__ import print_function
+
 import subprocess
 import os
 

@@ -5,7 +5,7 @@
 # The list of files in the conversations for which 1 best output has to be extracted
 # words.txt
 
-from __future__ import print_function
+
 import os
 import sys
 import subprocess

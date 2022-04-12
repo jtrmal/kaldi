@@ -6,7 +6,7 @@
 """Prepare NA News Text Corpus (LDC95T21)
 or NA New Text Supplement Corpus (LDC98T30)."""
 
-from __future__ import print_function
+
 import argparse
 import gzip
 import logging

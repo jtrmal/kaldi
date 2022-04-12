@@ -52,12 +52,12 @@ class FstParser:
             # else:
             if len(splited_line) == 5:
                 # classic arc
-                state_from, state_to, tid, word_id = map(int, splited_line[:4])
+                state_from, state_to, tid, word_id = list(map(int, splited_line[:4]))
                 weight = float(splited_line[-1])
                 self.out.append((state_from, state_to, tid, word_id, weight))
             elif len(splited_line) == 4:
                 # classic arc no weight
-                state_from, state_to, tid, word_id = map(int, splited_line)
+                state_from, state_to, tid, word_id = list(map(int, splited_line))
                 self.out.append((state_from, state_to, tid, word_id, 0))
             elif len(splited_line) == 3:
                 raise RuntimeError(f'Unknown line {line}')

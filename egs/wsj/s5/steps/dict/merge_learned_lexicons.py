@@ -3,7 +3,7 @@
 # Copyright 2018  Xiaohui Zhang
 # Apache 2.0.
 
-from __future__ import print_function
+
 from collections import defaultdict
 import argparse
 import sys
@@ -235,7 +235,7 @@ def WriteEditsAndSummary(args, learned_lexicon, ref_lexicon, pd_lexicon, g2p_lex
     print('    {} words\' selected prons came from G2P only.'.format(num_infreq_oovs_from_g2p), file=sys.stderr) 
 
 def WriteLearnedLexiconOov(learned_lexicon, ref_lexicon, file_handle):
-    for word, prons in learned_lexicon.iteritems():
+    for word, prons in learned_lexicon.items():
         if word not in ref_lexicon:
             for pron in prons:
                 print('{0} {1}'.format(word, pron), file=file_handle)

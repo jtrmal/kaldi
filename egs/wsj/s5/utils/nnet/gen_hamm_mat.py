@@ -18,8 +18,8 @@
 # ./gen_hamm_mat.py
 # script generates diagonal matrix with hamming window values
 
-from __future__ import division
-from __future__ import print_function
+
+
 from math import *
 import sys
 

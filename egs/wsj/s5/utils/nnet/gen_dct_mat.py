@@ -20,8 +20,8 @@
 # and takes into account that data-layout is along frequency axis,
 # while DCT is done along temporal axis.
 
-from __future__ import division
-from __future__ import print_function
+
+
 from math import *
 import sys
 

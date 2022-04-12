@@ -3,7 +3,7 @@
 # Copyright 2018  Xiaohui Zhang
 # Apache 2.0.
 
-from __future__ import print_function
+
 from collections import defaultdict
 import argparse
 import sys
@@ -173,7 +173,7 @@ def FilterPhoneticDecodingLexicon(args, pd_lexicon):
     for line in args.silence_phones_file_handle:
         silphones.add(line.strip())
     rejected_candidates = set()
-    for word, prons in pd_lexicon.iteritems():
+    for word, prons in pd_lexicon.items():
         for pron in prons:
             for phone in pron.split():
                 if phone in silphones:
@@ -350,7 +350,7 @@ def SelectPronsGreedy(args, stats, counts, ref_lexicon, g2p_lexicon, pd_lexicon,
     return learned_lexicon
 
 def WriteLearnedLexicon(learned_lexicon, file_handle):
-    for word, prons in learned_lexicon.iteritems():
+    for word, prons in learned_lexicon.items():
         for pron in prons:
             print('{0} {1}'.format(word, pron), file=file_handle)
     file_handle.close()

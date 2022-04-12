@@ -4,8 +4,8 @@
 # Creates the nnet.config and hidde_*.config scripts used in train_pnorm_multisplice.sh
 # Parses the splice string to generate relevant variables for get_egs.sh, get_lda.sh and nnet/hidden.config files
 
-from __future__ import division
-from __future__ import print_function
+
+
 import re, argparse, sys, math, warnings
 
 # returns the set of frame indices required to perform the convolution

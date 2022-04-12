@@ -4,7 +4,7 @@
 # Copyright 2016 Johns Hopkins University (author: Daniel Povey)
 # Apache 2.0.
 
-from __future__ import print_function
+
 import argparse
 import sys, os
 from collections import defaultdict
@@ -82,7 +82,7 @@ except Exception as e:
 phone_lengths = dict()
 for boundary_type in [ 'begin', 'end', 'all' ]:
     phone_lengths[boundary_type] = dict()
-    for p in phone_int2text.keys():
+    for p in list(phone_int2text.keys()):
         phone_lengths[boundary_type][p] = defaultdict(int)
 
 # total_phones is a dict from boundary_type to total count [of phone occurrences]
@@ -121,20 +121,20 @@ try:
     optional_silence_phone_text = phone_int2text[optional_silence_phone]
     f.close()
     if optional_silence_phone in nonsilence:
-        print(u"analyze_phone_length_stats.py: was expecting the optional-silence phone to "
-              u"be a member of the silence phones, it is not.  This script won't work correctly.")
+        print("analyze_phone_length_stats.py: was expecting the optional-silence phone to "
+              "be a member of the silence phones, it is not.  This script won't work correctly.")
 except:
     largest_count = 0
     optional_silence_phone = 1
-    for p in phone_int2text.keys():
+    for p in list(phone_int2text.keys()):
         if p > 0 and not p in nonsilence:
-            this_count = sum([ l * c for l,c in phone_lengths['all'][p].items() ])
+            this_count = sum([ l * c for l,c in list(phone_lengths['all'][p].items()) ])
             if this_count > largest_count:
                 largest_count = this_count
                 optional_silence_phone = p
     optional_silence_phone_text = phone_int2text[optional_silence_phone]
-    print(u"analyze_phone_length_stats.py: could not get optional-silence phone from "
-          u"{0}/phones/optional_silence.int, guessing that it's {1} from the stats. ".format(
+    print("analyze_phone_length_stats.py: could not get optional-silence phone from "
+          "{0}/phones/optional_silence.int, guessing that it's {1} from the stats. ".format(
             args.lang, optional_silence_phone_text))
 
 
@@ -161,7 +161,7 @@ def GetMean(length_to_count):
     total_phones = sum(length_to_count.values())
     if total_phones == 0:
         return 0.0
-    total_frames = sum([ float(l * c) for l,c in length_to_count.items() ])
+    total_frames = sum([ float(l * c) for l,c in list(length_to_count.items()) ])
     return total_frames / total_phones
 
 
@@ -184,8 +184,8 @@ for boundary_type in 'begin', 'end':
     # maybe half a second.  If your database is not like this, you should know;
     # you may want to mess with the segmentation to add more silence.
     if frequency_percentage < 80.0:
-        print(u"analyze_phone_length_stats.py: WARNING: optional-silence {0} is seen only {1}% "
-              u"of the time at utterance {2}.  This may not be optimal.".format(
+        print("analyze_phone_length_stats.py: WARNING: optional-silence {0} is seen only {1}% "
+              "of the time at utterance {2}.  This may not be optimal.".format(
                 optional_silence_phone_text, frequency_percentage, boundary_type))
 
 
@@ -207,7 +207,7 @@ for boundary_type in 'begin', 'end', 'all':
     phone_to_lengths = phone_lengths[boundary_type]
     tot_num_phones = total_phones[boundary_type]
     # sort the phones in decreasing order of count.
-    for phone,lengths in sorted(phone_to_lengths.items(), key = lambda x : -sum(x[1].values())):
+    for phone,lengths in sorted(list(phone_to_lengths.items()), key = lambda x : -sum(x[1].values())):
         frequency_percentage = sum(lengths.values()) * 100.0 / tot_num_phones
         if frequency_percentage < args.frequency_cutoff_percentage:
             continue
@@ -222,8 +222,8 @@ for boundary_type in 'begin', 'end', 'all':
         except:
             sys.exit("analyze_phone_length_stats.py: phone {0} is not covered on phones.txt "
                      "(lang/alignment mismatch?)".format(phone))
-        print(u"{text}, {phone_text} accounts for {percent}% of phone occurrences, with "
-              u"duration (median, mean, 95-percentile) is ({median},{mean},{percentile95}) frames.".format(
+        print("{text}, {phone_text} accounts for {percent}% of phone occurrences, with "
+              "duration (median, mean, 95-percentile) is ({median},{mean},{percentile95}) frames.".format(
                 text = text, phone_text = phone_text,
                 percent = "%.1f" % frequency_percentage,
                 median = duration_median, mean = "%.1f" % duration_mean,
@@ -247,23 +247,23 @@ for length in list(internal_opt_sil_phone_lengths.keys()):
         del internal_opt_sil_phone_lengths[length]
 
 if total_phones['internal'] != 0.0:
-    total_internal_optsil_frames = sum([ float(l * c) for l,c in internal_opt_sil_phone_lengths.items() ])
+    total_internal_optsil_frames = sum([ float(l * c) for l,c in list(internal_opt_sil_phone_lengths.items()) ])
     total_optsil_frames = sum([ float(l * c)
-                                for l,c in phone_lengths['all'][optional_silence_phone].items() ])
+                                for l,c in list(phone_lengths['all'][optional_silence_phone].items()) ])
     opt_sil_internal_frame_percent = total_internal_optsil_frames * 100.0 / total_frames['internal']
     opt_sil_total_frame_percent = total_optsil_frames * 100.0 / total_frames['all']
     internal_frame_percent = total_frames['internal'] * 100.0 / total_frames['all']
 
-    print(u"The optional-silence phone {0} occupies {1}% of frames overall ".format(
+    print("The optional-silence phone {0} occupies {1}% of frames overall ".format(
             optional_silence_phone_text, "%.1f" % opt_sil_total_frame_percent))
     hours_total = total_frames['all'] / 360000.0;
     hours_nonsil = (total_frames['all'] - total_optsil_frames) / 360000.0
-    print(u"Limiting the stats to the {0}% of frames not covered by an utterance-[begin/end] phone, "
-          u"optional-silence {1} occupies {2}% of frames.".format("%.1f" % internal_frame_percent,
+    print("Limiting the stats to the {0}% of frames not covered by an utterance-[begin/end] phone, "
+          "optional-silence {1} occupies {2}% of frames.".format("%.1f" % internal_frame_percent,
                                                                  optional_silence_phone_text,
                                                                  "%.1f" % opt_sil_internal_frame_percent))
-    print(u"Assuming 100 frames per second, the alignments represent {0} hours of data, "
-          u"or {1} hours if {2} frames are excluded.".format(
+    print("Assuming 100 frames per second, the alignments represent {0} hours of data, "
+          "or {1} hours if {2} frames are excluded.".format(
             "%.1f" % hours_total, "%.1f" % hours_nonsil, optional_silence_phone_text))
 
     opt_sil_internal_phone_percent = (sum(internal_opt_sil_phone_lengths.values()) *
@@ -271,7 +271,7 @@ if total_phones['internal'] != 0.0:
     duration_median = GetPercentile(internal_opt_sil_phone_lengths, 0.5)
     duration_mean = GetMean(internal_opt_sil_phone_lengths)
     duration_percentile_95 = GetPercentile(internal_opt_sil_phone_lengths, 0.95)
-    print(u"Utterance-internal optional-silences {0} comprise {1}% of utterance-internal phones, with duration "
-          u"(median, mean, 95-percentile) = ({2},{3},{4})".format(
+    print("Utterance-internal optional-silences {0} comprise {1}% of utterance-internal phones, with duration "
+          "(median, mean, 95-percentile) = ({2},{3},{4})".format(
                 optional_silence_phone_text, "%.1f" % opt_sil_internal_phone_percent,
                 duration_median, "%0.1f" % duration_mean, duration_percentile_95))

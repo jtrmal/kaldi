@@ -5,9 +5,9 @@
     It is called by steps/pytorchnn/lmrescore_{nbest, lattice}_pytorchnn.sh
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import os
 import argparse
@@ -233,7 +233,7 @@ def write_scores(sents_and_scores, path):
     """
 
     with open(path, 'w', encoding='utf-8') as f:
-        for key in sents_and_scores.keys():
+        for key in list(sents_and_scores.keys()):
             for idx, (_, score_list) in enumerate(sents_and_scores[key], 1):
                 current_key = '-'.join([key, str(idx)])
                 f.write('{} '.format(current_key))

@@ -21,7 +21,7 @@ class PerEpochWrapper(FairseqDataset):
         self.dataset_cls = dataset_cls
         for d in self.data_config:
             e = d.get('epoch', 0)
-            if e not in self.epoch2data.keys():
+            if e not in list(self.epoch2data.keys()):
                 self.epoch2data[e] = []
             self.epoch2data[e].append(d)
         logger.info(f"Epoch to data map is {self.epoch2data}")
@@ -29,7 +29,7 @@ class PerEpochWrapper(FairseqDataset):
         self.__ds = self.load_epoch(self.loaded_epoch)
 
     def load_epoch(self, epoch):
-        assert epoch in self.epoch2data.keys(), RuntimeError(f"Cannot find data config for {epoch} epoch")
+        assert epoch in list(self.epoch2data.keys()), RuntimeError(f"Cannot find data config for {epoch} epoch")
         data_conf = self.epoch2data[epoch]
         ds = self.dataset_cls(self.tokenizer)
         ds.get_data_from_disc(data_conf)
@@ -38,8 +38,8 @@ class PerEpochWrapper(FairseqDataset):
 
     def set_epoch(self, epoch):
         data_epoch = epoch - 1
-        if data_epoch not in self.epoch2data.keys():
-            epoch_id = data_epoch % len(self.epoch2data.keys())
+        if data_epoch not in list(self.epoch2data.keys()):
+            epoch_id = data_epoch % len(list(self.epoch2data.keys()))
             logger.info(f"REAL DATA EPOCH IS {data_epoch // len(self.epoch2data.keys())}")
             data_epoch = list(sorted(self.epoch2data.keys()))[epoch_id]
         if self.loaded_epoch == data_epoch:

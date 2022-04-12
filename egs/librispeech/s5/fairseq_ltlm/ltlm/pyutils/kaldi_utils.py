@@ -21,7 +21,7 @@ def compute_wer(orig_fname, utt2hyp, tmp_dir='tmp', keep_tmp=False, hyp_filter='
              "Scored 2703 sentences, 0 not present in hyp."]
     """
     os.makedirs(tmp_dir, exist_ok=True)
-    out_lines = sorted([" ".join([utt_id, *hyp]) for utt_id, hyp in utt2hyp.items()])
+    out_lines = sorted([" ".join([utt_id, *hyp]) for utt_id, hyp in list(utt2hyp.items())])
 
     tmp_fname = os.path.join(tmp_dir, f"hyp_{time.time()}.txt")
     with open(tmp_fname, 'w', encoding='utf-8') as f:

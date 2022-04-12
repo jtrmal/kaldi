@@ -6,7 +6,7 @@
 
 """ This script prepares the training and test data for CIFAR-10 or CIFAR-100.
 """
-from __future__ import division
+
 
 import argparse
 import os

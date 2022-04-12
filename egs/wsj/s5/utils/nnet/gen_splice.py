@@ -18,7 +18,7 @@
 # ./gen_splice.py
 # generates <splice> Component
 
-from __future__ import print_function
+
 from math import *
 import sys
 

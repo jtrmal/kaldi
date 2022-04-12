@@ -8,8 +8,8 @@
 raw neural network instead of an acoustic model.
 """
 
-from __future__ import print_function
-from __future__ import division
+
+
 import argparse
 import logging
 import pprint

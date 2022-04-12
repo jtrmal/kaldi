@@ -7,7 +7,7 @@
 # This script normalizes the given "text" (transcript) file. The normalized result
 # is printed to STDOUT. This normalization should be applied to all corpora.
 
-from __future__ import print_function
+
 import re
 import sys
 

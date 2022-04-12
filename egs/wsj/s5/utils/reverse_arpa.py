@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2012 Mirko Hannemann BUT, mirko.hannemann@gmail.com
 
-from __future__ import print_function
+
 import sys
 import codecs # for UTF-8/unicode
 
@@ -136,7 +136,7 @@ file.close()
 # compute new reversed ARPA model
 print("\\data\\")
 for n in range(1,len(cngrams)+1): # unigrams, bigrams, trigrams
-  print("ngram {0} = {1}".format(n, len(ngrams[n-1].keys())))
+  print("ngram {0} = {1}".format(n, len(list(ngrams[n-1].keys()))))
 offset = 0.0
 for n in range(1,len(cngrams)+1): # unigrams, bigrams, trigrams
   print("\\{}-grams:".format(n))

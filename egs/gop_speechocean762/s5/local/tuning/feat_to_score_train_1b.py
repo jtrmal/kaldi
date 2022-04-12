@@ -89,7 +89,7 @@ def main():
     # Train models
     with ProcessPoolExecutor(args.nj) as ex:
         future_to_model = [(ph, ex.submit(train_model_for_phone, pairs))
-                           for ph, pairs in train_data_of.items()]
+                           for ph, pairs in list(train_data_of.items())]
         model_of = {ph: future.result() for ph, future in future_to_model}
 
     # Write to file

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
-from __future__ import unicode_literals
-from __future__ import print_function
+
+
 
 import glob
 import sys
@@ -16,7 +16,7 @@ def build_reference(wav_scp, ref_path):
                 name, wavpath = line.strip().split(' ', 1)
                 with codecs.open(wavpath + '.trn', 'r', 'utf-8') as trn:
                     trans = trn.read().strip()
-                    w.write(u'%s %s\n' % (name, trans))
+                    w.write('%s %s\n' % (name, trans))
 
 
 if __name__ == '__main__':

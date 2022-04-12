@@ -43,12 +43,12 @@ if __name__ == "__main__":
         os.makedirs(args.hist_dir, exist_ok=True)
 
     report = d1.compare(d2, progress_bar=(not args.no_progress_bar), normalize=False, compare_clipped=args.compare_clipped)
-    for k, v in report.items():
+    for k, v in list(report.items()):
         if k == 'utts' or len(v) == 0 :
             continue
         if args.hist_dir is not None:
             plot_hist(v, os.path.join(args.hist_dir, k.replace(' ', '_') + ".png"), bins=args.hist_bins, title=k)
-        v_np = np.fromiter(map(abs,v), dtype=np.float)
+        v_np = np.fromiter(list(map(abs,v)), dtype=np.float)
         min_i = np.argmin(v_np)
         max_i = np.argmax(v_np)
         print(f"{k} = {round(sum(v)/len(v), args.round)}. abs min = {v[min_i]} ({report['utts'][min_i]}). abs max = {v[max_i]} ({report['utts'][max_i]}).")

@@ -105,8 +105,8 @@
 
 # Import Statements
 
-from __future__ import print_function
-from __future__ import division
+
+
 import codecs
 import argparse
 import unicodedata
@@ -337,9 +337,9 @@ def encode(unicode_transcription, tag_percentage, log=False):
                 graph_list.append(graph["SYMBOL"].lower())
 
     graph2int = {v: k for k, v in enumerate(set(graph_list))}
-    int2graph = {v: k for k, v in graph2int.items()}
+    int2graph = {v: k for k, v in list(graph2int.items())}
     graph_list_int = [graph2int[g] for g in graph_list]
-    bin_edges = list(range(0, len(int2graph.keys()) + 1))
+    bin_edges = list(range(0, len(list(int2graph.keys())) + 1))
     graph_counts = np.histogram(graph_list_int, bins=bin_edges)[0]/ float(len(graph_list_int))
     # Set count threshold to frequency that tags the bottom 10% of graphemes
     bottom_idx = int(np.floor(tag_percentage * len(graph_counts)))
@@ -372,7 +372,7 @@ def encode(unicode_transcription, tag_percentage, log=False):
         for graph in w:
             # Case 1: Check that the grapheme has a unicode description type
             # ---------------------------------------------------------------
-            if("CHAR_TYPE" not in [k.strip() for k in graph.keys()]):
+            if("CHAR_TYPE" not in [k.strip() for k in list(graph.keys())]):
                 if(graph["SYMBOL"] == "."):        
                     try:
                         graph["MAP0"] = "\t"
@@ -423,13 +423,13 @@ def encode(unicode_transcription, tag_percentage, log=False):
                     graph_dict = parsed_graph.groupdict()
           
                     # Get consonant if it exists
-                    if("CONSONANT" in graph_dict.keys() and
+                    if("CONSONANT" in list(graph_dict.keys()) and
                             graph_dict["CONSONANT"]):
                         graph["MAP0"] = graph_dict["CONSONANT"].lower()
                         word_transcription += graph["MAP0"] + " "
           
                     # Get vowel if it exists
-                    if("VOWEL" in graph_dict.keys() and graph_dict["VOWEL"]):
+                    if("VOWEL" in list(graph_dict.keys()) and graph_dict["VOWEL"]):
                         graph["MAP1"] = graph_dict["VOWEL"].lower() + "\t"
                         word_transcription += graph["MAP1"]
 
@@ -561,7 +561,7 @@ def write_table(table, outfile):
     # Start writing to output
     with codecs.open(outfile, "w", "utf-8") as fo:
         # Get header names
-        header_names = sorted(set().union(*[d.keys() for d in table]))
+        header_names = sorted(set().union(*[list(d.keys()) for d in table]))
         # Write headers
         for h in header_names[:-1]:
             fo.write("%s\t" % h)
@@ -571,11 +571,11 @@ def write_table(table, outfile):
         # Write values if present
         for t in table_sorted:
             for h in header_names[:-1]:
-                if(h in t.keys() and t[h]):
+                if(h in list(t.keys()) and t[h]):
                     fo.write("%s\t" % t[h])
                 else:
                     fo.write("''\t")
-            if(header_names[-1] in t.keys() and t[header_names[-1]]):
+            if(header_names[-1] in list(t.keys()) and t[header_names[-1]]):
                 fo.write("%s\n" % t[header_names[-1]])
             else:
                 fo.write("''\n")
@@ -595,7 +595,7 @@ def write_map(grapheme_map, mapfile):
 
     '''
     with codecs.open(mapfile, 'w', encoding='utf-8') as f:
-        for g, g_map in grapheme_map.items():
+        for g, g_map in list(grapheme_map.items()):
             print(g, g_map, file=f)
 
 
@@ -613,14 +613,14 @@ def write_lexicon(baseforms, encoded_transcription, outfile, sil_lex=None,
     with codecs.open(outfile, "w", "utf-8") as f:
         # First write the non-speech words
         try:
-            for w in sil_lex.keys():
+            for w in list(sil_lex.keys()):
                 f.write("%s\t%s\n" % (w, sil_lex[w]))
         except AttributeError:
             pass
         
         # Then write extra-speech words 
         try:
-            for w in extra_lex.keys():
+            for w in list(extra_lex.keys()):
                 f.write("%s\t%s\n" % (w, extra_lex[w]))
         except AttributeError:
             pass

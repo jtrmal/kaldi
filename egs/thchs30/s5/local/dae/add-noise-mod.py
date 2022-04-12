@@ -2,8 +2,8 @@
 # Copyright 2016  Tsinghua University (Author: Chao Liu, Dong Wang).  Apache 2.0.
 
 
-from __future__ import print_function
-from __future__ import division
+
+
 import optparse
 import random
 import bisect

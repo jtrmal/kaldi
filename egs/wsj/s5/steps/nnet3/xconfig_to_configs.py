@@ -6,7 +6,7 @@
 # Apache 2.0.
 
 # we're using python 3.x style print but want it to work in python 2.x,
-from __future__ import print_function
+
 import argparse
 import os
 import sys
@@ -201,7 +201,7 @@ def write_config_files(config_dir, all_layers):
     except OSError:
         pass
 
-    for basename, lines in config_basename_to_lines.items():
+    for basename, lines in list(config_basename_to_lines.items()):
         # check the lines num start with 'output-node':
         num_output_node_lines = sum( [ 1 if line.startswith('output-node' ) else 0
                                        for line in lines ] )

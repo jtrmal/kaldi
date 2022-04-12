@@ -10,7 +10,7 @@
 # en_4156 B 414.58 0.16 l
 # en_4156 B 414.74 0.17 a
 
-from __future__ import division
+
 import argparse,re
 __author__ = 'Minhua Wu'
  
@@ -37,7 +37,7 @@ fout = open(args.output, "w")
 for line in fin:
     items = line.split()
     
-    if items[4] in dict_acronym_back.keys():
+    if items[4] in list(dict_acronym_back.keys()):
         letters = dict_acronym_back[items[4]].split()
         acronym_period = round(float(items[3]), 2)
         letter_slot = round(acronym_period / len(letters), 2)

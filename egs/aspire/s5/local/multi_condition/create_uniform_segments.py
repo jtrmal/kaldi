@@ -4,7 +4,7 @@
 # creates a segments file in the provided data directory
 # into uniform segments with specified window and overlap
 
-from __future__ import division
+
 import imp, sys, argparse, os, math, subprocess
 
 min_segment_length = 10 # in seconds

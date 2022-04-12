@@ -16,9 +16,9 @@
 
 
 """Utilities for parsing RNNLM text files."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import collections
 import os
@@ -76,7 +76,7 @@ def rnnlm_gen_data(*files):
       text = fp.read()
 
     word_list = re.split("[^A-Za-z]", text)
-    word_list = list(filter(None, word_list))
+    word_list = list([_f for _f in word_list if _f])
     all_words.update(word_list)
     all_word_lists.append(word_list)
 

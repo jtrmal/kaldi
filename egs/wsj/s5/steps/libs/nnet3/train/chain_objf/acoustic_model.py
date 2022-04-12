@@ -7,8 +7,8 @@
 """ This is a module with methods which will be used by scripts for training of
 deep neural network acoustic model with chain objective.
 """
-from __future__ import division
-from __future__ import print_function
+
+
 
 import logging
 import math

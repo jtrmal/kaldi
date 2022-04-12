@@ -5,7 +5,7 @@
 
 """Prepare CSR-IV 1996 Language model text corpus (LDC98T31)."""
 
-from __future__ import print_function
+
 import argparse
 import gzip
 import logging

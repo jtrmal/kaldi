@@ -4,8 +4,8 @@
 # This script truncates the rttm file using UEM file and writes it to a new rttm file.
 # We use some utility functions from the dscore toolkit.
 
-from __future__ import print_function
-from __future__ import unicode_literals
+
+
 
 import argparse
 import sys

@@ -8,8 +8,8 @@
 # the non-silence HMMs. The number of states for punctuations is different than
 # the number of states for other characters.
 
-from __future__ import print_function
-from __future__ import division
+
+
 import argparse
 import string
 

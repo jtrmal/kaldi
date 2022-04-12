@@ -3,8 +3,8 @@
 # This script is deprecated, please use ../xconfig_to_configs.py
 
 # we're using python 3.x style print but want it to work in python 2.x,
-from __future__ import print_function
-from __future__ import division
+
+
 import os
 import argparse
 import shlex
@@ -531,7 +531,7 @@ def MakeConfigs(config_dir, splice_indexes_string,
 
     # printing out the configs
     # init.config used to train lda-mllt train
-    for key in config_files.keys():
+    for key in list(config_files.keys()):
         PrintConfig(key, config_files[key])
 
 def Main():

@@ -4,10 +4,11 @@
 #           2018 Beijing Shell Shell Tech. Co. Ltd. (Author: Hui BU)
 # Apache 2.0
 
-from __future__ import print_function
+
 import sys
 import jieba
-reload(sys)
+import importlib
+importlib.reload(sys)
 sys.setdefaultencoding('utf-8')
 
 if len(sys.argv) < 3:

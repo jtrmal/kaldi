@@ -6,7 +6,7 @@
 
 """ This script prepares the training and test data for SVHN.
 """
-from __future__ import division
+
 
 import argparse
 import os

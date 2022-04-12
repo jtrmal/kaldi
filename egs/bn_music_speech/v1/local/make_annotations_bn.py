@@ -9,7 +9,7 @@
 #
 # This file is meant to be invoked by make_bn.sh.
 
-from __future__ import print_function
+
 import sys, re, os
 
 def is_speech(line):

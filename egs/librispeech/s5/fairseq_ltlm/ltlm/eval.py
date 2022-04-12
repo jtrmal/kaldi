@@ -98,7 +98,7 @@ def get_rescoring_hyps(model, dataset,  acwt=1, lmwt=1, model_weight=1.3, strate
     else:
         utt2score = get_scores(model, dataset, **kwargs)
 
-    for utt, lt_probs in utt2score.items():
+    for utt, lt_probs in list(utt2score.items()):
         item = dataset[utt]
         # 'net_input': {'src_tokens': lat, },
         #                 'weights': weights, # L x 2

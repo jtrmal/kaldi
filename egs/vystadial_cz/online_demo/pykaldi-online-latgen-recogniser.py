@@ -13,9 +13,9 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 from kaldi.utils import load_wav, wst2dict, lattice_to_nbest
 from kaldi.decoders import PyOnlineLatgenRecogniser
@@ -34,7 +34,7 @@ def write_decoded(f, wav_name, word_ids, wst):
         decoded = [wst[w] for w in best_path]
     else:
         decoded = [str(w) for w in best_path]
-    line = u' '.join([wav_name] + decoded + ['\n'])
+    line = ' '.join([wav_name] + decoded + ['\n'])
     if DEBUG:
         print('%s best path %s' % (wav_name, decoded.encode('UTF-8')))
         for i, s in enumerate(word_ids):

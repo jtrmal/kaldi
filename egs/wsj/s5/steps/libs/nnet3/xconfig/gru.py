@@ -7,7 +7,7 @@
 
 """ This module has the implementations of different GRU layers.
 """
-from __future__ import print_function
+
 import math
 import re
 import sys

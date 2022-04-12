@@ -21,7 +21,7 @@ class BCECriterion(FairseqCriterion):
         logits, _ = model(**sample['net_input'])
         targets = model.get_targets(sample, logits)
         loss = self.compute_loss(logits, targets)
-        if 'target_mask' in sample.keys():
+        if 'target_mask' in list(sample.keys()):
             loss = loss * sample['target_mask'].view(loss.shape)
         loss = loss.sum()
 

@@ -12,7 +12,7 @@ e.g.: align_ctm_ref.py --hyp-format=CTM --ref=data/train/text --hyp=foo/ctm
         --output=foo/ctm_edits
 """
 
-from __future__ import print_function
+
 import argparse
 import logging
 import sys

@@ -4,9 +4,9 @@
     egs/swbd/s5c/local/pytorchnn/run_nnlm.sh
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import argparse
 import time
@@ -80,7 +80,7 @@ if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
 
 print('Configurations')
-for arg, p in params.items():
+for arg, p in list(params.items()):
     print(arg, p)
 
 device = torch.device("cuda" if args.cuda else "cpu")

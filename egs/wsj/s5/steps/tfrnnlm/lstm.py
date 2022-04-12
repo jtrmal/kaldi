@@ -21,9 +21,9 @@
 #
 # One example recipe is at egs/ami/s5/local/tfrnnlm/run_lstm.sh
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import absl
 import absl.flags as flags
@@ -177,7 +177,7 @@ class RNNLMModelTrainer(tf.Module):
     tvars = self.model.trainable_variables
     grads = tape.gradient(loss, tvars)
     clipped_grads, _ = tf.clip_by_global_norm(grads, self.max_grad_norm)
-    self.optimizer.apply_gradients(zip(clipped_grads, tvars))
+    self.optimizer.apply_gradients(list(zip(clipped_grads, tvars)))
     return loss
 
 

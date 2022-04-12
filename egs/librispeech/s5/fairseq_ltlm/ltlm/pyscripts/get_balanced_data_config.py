@@ -24,7 +24,7 @@ def get_file2size(dirs):
 
 def balance_decode_gen_egs(decode_dirs, decode_suffs, gen_dirs, gen_suffs, epoch_max_MB=4000, reuse_data=True):
     # Generate list [epoch] -> [(egs, suf), (egs,suff), ...]
-    d2suff = {d: s for d, s in (*zip(decode_dirs, decode_suffs), *zip(gen_dirs, gen_suffs))}
+    d2suff = {d: s for d, s in (*list(zip(decode_dirs, decode_suffs)), *list(zip(gen_dirs, gen_suffs)))}
     decode_f2s = get_file2size(decode_dirs)
     gen_f2s = get_file2size(gen_dirs)
     if len(decode_f2s) > 0:
@@ -38,8 +38,8 @@ def balance_decode_gen_egs(decode_dirs, decode_suffs, gen_dirs, gen_suffs, epoch
     else:
         logger.info(f"Generated lats is empty")
 
-    sorted_dec_f = [k for k, _ in sorted(decode_f2s.items(), key=lambda x: x[1], reverse=True)]
-    sorted_gen_f = [k for k, _ in sorted(gen_f2s.items(), key=lambda x: x[1], reverse=True)]
+    sorted_dec_f = [k for k, _ in sorted(list(decode_f2s.items()), key=lambda x: x[1], reverse=True)]
+    sorted_gen_f = [k for k, _ in sorted(list(gen_f2s.items()), key=lambda x: x[1], reverse=True)]
     #sorted_dec_id = np.arange(len(sorted_dec_f), dtype=int)
     dec_not_used = np.ones(len(sorted_dec_f), dtype=bool)
     reused_dec = False
@@ -103,14 +103,14 @@ def balance_decode_gen_egs(decode_dirs, decode_suffs, gen_dirs, gen_suffs, epoch
             elif dec_not_used.any() or gen_not_used.any():
                 # Something gone wrong
                 bad_dec = {f: decode_f2s[f] for f in map(sorted_dec_f.__getitem__, np.where(dec_not_used)[0])}
-                bad_dec_str = '\n'.join((f'{f} {s}' for f, s in bad_dec.items()))
+                bad_dec_str = '\n'.join((f'{f} {s}' for f, s in list(bad_dec.items())))
                 bad_gen = {f: gen_f2s[f] for f in map(sorted_gen_f.__getitem__, np.where(gen_not_used)[0])}
-                bad_gen_str = '\n'.join((f'{f} {s}' for f, s in bad_gen.items()))
+                bad_gen_str = '\n'.join((f'{f} {s}' for f, s in list(bad_gen.items())))
                 logger.warning(f"This files is too big.\n DECODED LATS:\n"
                                f"{bad_dec_str}.\n "
                                f"GENERATE:\n {bad_gen_str}.")
                 logger.warning("Careful!!! These files are inserted into training as 1 dump per data-epoch")
-                out.extend([[(f, d2suff[os.path.dirname(f)])] for f in (*bad_dec.keys(), *bad_gen.keys())])
+                out.extend([[(f, d2suff[os.path.dirname(f)])] for f in (*list(bad_dec.keys()), *list(bad_gen.keys()))])
                 break
 
     if len(curr_files) > 0:

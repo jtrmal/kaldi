@@ -17,7 +17,7 @@
 
 # Generated Nnet prototype, to be initialized by 'nnet-initialize'.
 
-from __future__ import print_function
+
 import sys
 
 ###

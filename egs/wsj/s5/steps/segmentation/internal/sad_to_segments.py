@@ -11,7 +11,7 @@ The input integer vectors are expected to contain '1' for silence frames
 and '2' for speech frames.
 """
 
-from __future__ import print_function
+
 import argparse
 import logging
 import sys

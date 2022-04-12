@@ -4,7 +4,7 @@
 # Copyright 2014  Gaurav Kumar.   Apache 2.0
 #    2018  Nagendra Kumar Goel, Saikiran Valluri, GoVivace inc., Avaaya
 # Merges unique words from Spanish Fisher, Gigaword and the LDC spanish lexicon
-from __future__ import print_function
+
 import sys, re
 import json
 import codecs
@@ -17,7 +17,7 @@ uw_fisher = tmpdir + "/uniquewords"
 uw_gigaword = tmpdir + "/es_wordlist.json"
 uw_LDC = ldc_lexicon + "/callhome_spanish_lexicon_970908/preferences"
 
-filtered_letters = re.compile(u'[¡¥ª°º¿àçèëìîôö0123456789]')
+filtered_letters = re.compile('[¡¥ª°º¿àçèëìîôö0123456789]')
 merged_lexicon = []
 # All three lexicons are in different formats
 # First add the data from lexicon_fisher (A) into the dictionary
@@ -39,7 +39,7 @@ print("After adding the LDC data, the lexicon contains {} entries".format(len(me
 
 # Finally add the gigaword data
 gigaword = json.load(open(uw_gigaword))
-gigaword = reversed(sorted(gigaword.items(), key=operator.itemgetter(1)))
+gigaword = reversed(sorted(list(gigaword.items()), key=operator.itemgetter(1)))
 
 for item in gigaword:
     # We need a maximum of wordlimit words in the lexicon
@@ -56,7 +56,7 @@ lf = codecs.open(tmpdir + '/uniquewords64k', encoding='utf-8', mode='w+')
 ltuples = sorted(merged_lexicon)
 
 for item in ltuples:
-    if not item==u'ñ' and not re.search(filtered_letters, item):
+    if not item=='ñ' and not re.search(filtered_letters, item):
         lf.write(item + "\n")
 
 lf.close()

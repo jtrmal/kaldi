@@ -14,8 +14,8 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-from __future__ import division
-from __future__ import print_function
+
+
 import argparse
 import glob
 import sys
@@ -107,7 +107,7 @@ def Table2LatexTable(table):
 
 def createSmallTable(r):
     d = []
-    for k, v in r.items():
+    for k, v in list(r.items()):
         w, s, r = v
         if w == []:
             minw = None

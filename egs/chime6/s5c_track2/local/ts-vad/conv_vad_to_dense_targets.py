@@ -293,17 +293,17 @@ if __name__ == '__main__':
             seg_by_sess[sess].append((utt_id_, spk, '', '', '', '', start, end, vad_info, device))
 
     skip=0
-    for uid in n_speakers.keys():
+    for uid in list(n_speakers.keys()):
         n_spk = n_speakers[uid].split('_')[0]
-        if uid not in n_speakers2.keys():
+        if uid not in list(n_speakers2.keys()):
             skip+=1
             continue
         n_spk2 = n_speakers2[uid].split('_')[0]
-        if uid not in n_speakers3.keys():
+        if uid not in list(n_speakers3.keys()):
             skip+=1
             continue
         n_spk3 = n_speakers3[uid].split('_')[0]
-        if uid not in n_speakers4.keys():
+        if uid not in list(n_speakers4.keys()):
             skip+=1
             continue
         n_spk4 = n_speakers4[uid].split('_')[0]
@@ -314,11 +314,11 @@ if __name__ == '__main__':
         if len(spk_parts)>1 and spk_parts[1][:3]=='rev':
             del spk_parts[1]
         spk = '-'.join(spk_parts)
-        if uid not in seg_by_uid.keys():
+        if uid not in list(seg_by_uid.keys()):
             skip+=1
             continue
         start, end = seg_by_uid[uid]
-        if uid not in len_by_uid.keys():
+        if uid not in list(len_by_uid.keys()):
             skip+=1
             continue
         vad_info = len_by_uid[uid]

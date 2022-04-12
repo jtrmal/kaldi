@@ -3,8 +3,8 @@
 # Copyright 2016  Johns Hopkins University (Author: Daniel Povey)
 # Apache 2.0.
 
-from __future__ import print_function
-from __future__ import division
+
+
 import sys
 import argparse
 import math
@@ -85,7 +85,7 @@ class CountsForHistory(object):
         return ' total={0} {1}'.format(
             str(self.total_count),
             ' '.join(['{0} -> {1}'.format(word, count)
-                      for word, count in self.word_to_count.items()]))
+                      for word, count in list(self.word_to_count.items())]))
 
 
     ## Adds a certain count (expected to be integer, but might be negative).  If
@@ -190,7 +190,7 @@ class NgramCounts(object):
             initial_num_ngrams = self.GetNumNgrams()
         for n in reversed(list(range(args.no_backoff_ngram_order, args.ngram_order))):
             this_order_counts = self.counts[n]
-            for hist, counts_for_hist in this_order_counts.items():
+            for hist, counts_for_hist in list(this_order_counts.items()):
                 backoff_hist = hist[1:]
                 backoff_counts_for_hist = self.counts[n-1][backoff_hist]
                 this_discount_total = 0
@@ -221,7 +221,7 @@ class NgramCounts(object):
         total = 0.0
         total_excluding_backoff = 0.0
         for this_order_counts in self.counts:
-            for hist, counts_for_hist in this_order_counts.items():
+            for hist, counts_for_hist in list(this_order_counts.items()):
                 print(str(hist) + str(counts_for_hist), file = sys.stderr)
                 total += counts_for_hist.total_count
                 total_excluding_backoff += counts_for_hist.total_count
@@ -236,7 +236,7 @@ class NgramCounts(object):
         hist_to_state = dict()
         fst_state_counter = 0
         for n in range(0, args.ngram_order):
-            for hist in self.counts[n].keys():
+            for hist in list(self.counts[n].keys()):
                 hist_to_state[hist] = fst_state_counter
                 fst_state_counter += 1
         return hist_to_state
@@ -280,7 +280,7 @@ class NgramCounts(object):
         for n in reversed(list(range(args.no_backoff_ngram_order,
                                 args.ngram_order))):
             num_states_removed = 0
-            for hist, counts_for_hist in self.counts[n].items():
+            for hist, counts_for_hist in list(self.counts[n].items()):
                 l = len(counts_for_hist.word_to_count)
                 assert l > 0 and self.backoff_symbol in counts_for_hist.word_to_count
                 if l == 1 and not hist in protected_histories:  # only the backoff symbol has a count.
@@ -308,7 +308,7 @@ class NgramCounts(object):
         for n in reversed(list(range(args.no_backoff_ngram_order,
                                 args.ngram_order))):
 
-            for hist, counts_for_hist in self.counts[n].items():
+            for hist, counts_for_hist in list(self.counts[n].items()):
                 # This loop ensures that if we have an n-gram like (6, 7, 8) -> 9,
                 # then, say, (7, 8) -> 9 and (8) -> 9 exist.
                 reduced_hist = hist
@@ -316,7 +316,7 @@ class NgramCounts(object):
                     reduced_hist = reduced_hist[1:]  # shift an element off
                                                      # the history.
                     counts_for_backoff_hist = self.counts[m][reduced_hist]
-                    for word in counts_for_hist.word_to_count.keys():
+                    for word in list(counts_for_hist.word_to_count.keys()):
                         counts_for_backoff_hist.word_to_count[word] += 0
                 # This loop ensures that if we have an n-gram like (6, 7, 8) -> 9,
                 # then, say, (6, 7) -> 8 and (6) -> 7 exist.  This will be needed
@@ -350,12 +350,12 @@ class NgramCounts(object):
         for n in [ 1, 0 ] + list(range(2, args.ngram_order)):
             this_order_counts = self.counts[n]
             # For order 1, make sure the keys are sorted.
-            keys = this_order_counts.keys() if n != 1 else sorted(this_order_counts.keys())
+            keys = list(this_order_counts.keys()) if n != 1 else sorted(this_order_counts.keys())
             for hist in keys:
                 word_to_count = this_order_counts[hist].word_to_count
                 this_fst_state = hist_to_state[hist]
 
-                for word in word_to_count.keys():
+                for word in list(word_to_count.keys()):
                     # work out this_cost.  Costs in OpenFst are negative logs.
                     this_cost = -math.log(self.GetProb(hist, word))
 
@@ -384,7 +384,7 @@ class NgramCounts(object):
     def GetProtectedNgrams(self):
         ans = set()
         for n in range(args.no_backoff_ngram_order + 1, args.ngram_order):
-            for hist, counts_for_hist in self.counts[n].items():
+            for hist, counts_for_hist in list(self.counts[n].items()):
                 # If we have an n-gram (6, 7, 8) -> 9, the following loop will
                 # add the backed-off n-grams (7, 8) -> 9 and (8) -> 9 to
                 # 'protected-ngrams'.
@@ -393,7 +393,7 @@ class NgramCounts(object):
                     reduced_hist = reduced_hist[1:]  # shift an element off
                                                      # the history.
 
-                    for word in counts_for_hist.word_to_count.keys():
+                    for word in list(counts_for_hist.word_to_count.keys()):
                         if word != self.backoff_symbol:
                             ans.add(reduced_hist + (word,))
                 # The following statement ensures that if we are in a
@@ -585,8 +585,8 @@ class NgramCounts(object):
         # likelihood change.
         like_change_and_ngrams = []
         for n in range(args.no_backoff_ngram_order, args.ngram_order):
-            for hist, counts_for_hist in self.counts[n].items():
-                for word, count in counts_for_hist.word_to_count.items():
+            for hist, counts_for_hist in list(self.counts[n].items()):
+                for word, count in list(counts_for_hist.word_to_count.items()):
                     if word != self.backoff_symbol:
                         if not hist + (word,) in protected_ngrams:
                             like_change = self.GetLikeChangeFromPruningNgram(hist, word)
@@ -707,7 +707,7 @@ class NgramCounts(object):
                 ans += self.GetNumNgrams(hist_len)
             return ans
         else:
-            for counts_for_hist in self.counts[hist_len].values():
+            for counts_for_hist in list(self.counts[hist_len].values()):
                 ans += len(counts_for_hist.word_to_count)
                 if self.backoff_symbol in counts_for_hist.word_to_count:
                     ans -= 1  # don't count the backoff symbol, it doesn't produce
@@ -754,8 +754,8 @@ class NgramCounts(object):
                 if backoff_prob != None:
                     print('-99\t<s>\t{0}'.format('%.5f' % math.log10(backoff_prob)))
 
-            for hist in self.counts[hist_len].keys():
-                for word in self.counts[hist_len][hist].word_to_count.keys():
+            for hist in list(self.counts[hist_len].keys()):
+                for word in list(self.counts[hist_len][hist].word_to_count.keys()):
                     if word != self.backoff_symbol:
                         prob = self.GetProb(hist, word)
                         assert prob != None and prob > 0

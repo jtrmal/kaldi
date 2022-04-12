@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Copyright 2014  Gaurav Kumar.   Apache 2.0
 
-from __future__ import print_function
+
 import os
 import sys
 import subprocess
@@ -19,7 +19,7 @@ latticeLocation = {1:"/export/a04/gkumar/kaldi-trunk/egs/fishcall_es/j-1/latjosh
 
 latticeDict = {}
 
-for key,location in latticeLocation.items():
+for key,location in list(latticeLocation.items()):
     for root, dirs, filenames in os.walk(location):
         for f in filenames:
             latticeDict[f] = str(key)

@@ -15,7 +15,7 @@
 # intention is that you write different versions of this script, or add options,
 # if you experiment with it.
 
-from __future__ import print_function
+
 import argparse
 
 

@@ -26,7 +26,7 @@ imgid=0001_010006;
 copy-feats --binary=false $(grep $imgid data/train/feats.scp | cut -d' ' -f2) - | \
            image/matrix_to_image.py --color=1 > $imgid.bmp
 """
-from __future__ import division
+
 
 import argparse
 import sys

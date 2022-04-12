@@ -81,7 +81,7 @@ class RescoringTask(FairseqTask):
     def load_dataset(self, split, combine=False, epoch=0, **kwargs):
         if self.data_config is None:
             self.load_data_config()
-        if split in self.datasets.keys():
+        if split in list(self.datasets.keys()):
             logger.warning(f"load_dataset {split} already loaded")
             return
         if split == 'train':
@@ -118,7 +118,7 @@ class RescoringTask(FairseqTask):
         self.criterion.epoch = epoch
 
     def begin_valid_epoch(self, epoch, model):
-        if 'valid' not in self.datasets.keys():
+        if 'valid' not in list(self.datasets.keys()):
             logger.info("Valid is empty. Skip compute wer")
             return
         for ds in [self.datasets['valid'], *self.datasets_extras.get('valid', [])]:

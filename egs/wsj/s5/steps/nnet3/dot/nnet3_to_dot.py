@@ -7,7 +7,7 @@
 
 
 # we're using python 3.x style print but want it to work in python 2.x,
-from __future__ import print_function
+
 import re
 import os
 import argparse
@@ -322,7 +322,7 @@ def ParseNnet3String(string):
 def Nnet3ComponentToDot(component_config, component_attributes = None):
     label = ''
     if component_attributes is None:
-        component_attributes = component_config.keys()
+        component_attributes = list(component_config.keys())
     attributes_to_print = set(component_attributes).intersection(list(component_config.keys()))
     # process the known fields
     for key in attributes_to_print:
@@ -332,7 +332,7 @@ def Nnet3ComponentToDot(component_config, component_attributes = None):
     attr_string = ''
     try:
         attributes = node_attributes[component_config['type']]
-        for key in attributes.keys():
+        for key in list(attributes.keys()):
             attr_string += ' {0}={1} '.format(key, attributes[key])
     except KeyError:
         pass
@@ -405,7 +405,7 @@ def ParseConfigLines(lines, node_prefixes = None, component_attributes = None ):
 
     # process the config lines
     grouped_configs = GroupConfigs(configs, node_prefixes)
-    for group in grouped_configs.keys():
+    for group in list(grouped_configs.keys()):
         configs = grouped_configs[group]
         if not configs:
             continue

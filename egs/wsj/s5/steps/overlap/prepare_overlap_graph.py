@@ -9,7 +9,7 @@ duration constraint. The graph is written to the 'output_graph', which
 can be file or "-" for stdout.
 """
 
-from __future__ import print_function
+
 import argparse
 import logging
 import math

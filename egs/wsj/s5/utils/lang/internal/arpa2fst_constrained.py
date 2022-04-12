@@ -3,8 +3,8 @@
 # Copyright 2016  Johns Hopkins University (Author: Daniel Povey)
 # Apache 2.0.
 
-from __future__ import print_function
-from __future__ import division
+
+
 import sys
 import argparse
 import math
@@ -226,7 +226,7 @@ class ArpaModel(object):
         # we don't iterate over bigram histories because we covered them all above;
         # that's why we start 'n' from 2 below instead of from 0.
         for n in range(2, len(self.orders)):
-            for hist in self.orders[n].keys():
+            for hist in list(self.orders[n].keys()):
                 # note: hist is a tuple of strings.
                 assert not hist in hist_to_state
                 hist_to_state[hist] = len(state_to_hist)
@@ -290,7 +290,7 @@ class ArpaModel(object):
                 normalization_stats[hist_len][1] += \
                   sum([ self.GetProb(hist, word) for word in bigram_map[most_recent_word]])
 
-                for word, prob in hist_state.word_to_prob.items():
+                for word, prob in list(hist_state.word_to_prob.items()):
                     cost = -math.log(prob)
                     if word in bigram_map[most_recent_word]:
                         num_ngrams_allowed += 1

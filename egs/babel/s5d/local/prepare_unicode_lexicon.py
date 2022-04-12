@@ -62,7 +62,7 @@
 #
 # # ============================================================================
 
-from __future__ import print_function
+
 import codecs
 import sys
 import os
@@ -89,7 +89,7 @@ def extract_phonemes(lexicon):
     # Read all baseform units into dictionary with {a: [a, a_1, a_2],
     #                                               b: [b_1, b_3], ...}
     phonemes_dict = {}
-    for word, pron in lexicon.items():
+    for word, pron in list(lexicon.items()):
         for p in pron.split():
             try:
                 base = p.split("_",1)[0]
@@ -98,11 +98,11 @@ def extract_phonemes(lexicon):
                 phonemes_dict[base] = [p]
 
     # Makes sure there are no repeats in the list
-    phonemes_dict = {k: set(v) for k, v in phonemes_dict.items()}
+    phonemes_dict = {k: set(v) for k, v in list(phonemes_dict.items())}
 
     # Get all unique phonemes
     phonemes = []
-    for v in phonemes_dict.values():
+    for v in list(phonemes_dict.values()):
         for p in v:
             phonemes.append(p)
 
@@ -137,11 +137,11 @@ def write_extra_questions(nonsil_phonemes, nonsil_phonemes_dict,
 
         # Write all possible phone_tag combinations that occur in the lexicon
         for tag in tags:
-            for p in nonsil_phonemes_dict.keys():
+            for p in list(nonsil_phonemes_dict.keys()):
                 tagged_phoneme = "_".join([p, tag])
                 if(tagged_phoneme in nonsil_phonemes_dict[p]):
                     fp.write("%s " % tagged_phoneme)
-            for p in sil_phonemes_dict.keys():
+            for p in list(sil_phonemes_dict.keys()):
                 tagged_phoneme = "_".join([p, tag])
                 if(tagged_phoneme in sil_phonemes_dict[p]):
                     fp.write("%s " % tagged_phoneme)

@@ -46,7 +46,7 @@ def topsort_lat(lat, random_shift=False, max_state=None):
         A[arc[STATE_TO]].add(arc[STATE_FROM])
     newid2oldid = [0]
     while len(newid2oldid) <= len(V):
-        vs = [i for i, v in A.items() if len(v) == 0]
+        vs = [i for i, v in list(A.items()) if len(v) == 0]
         if len(vs) == 0:
             print(f"Lat: {lat}")
             print(f"V: {V}")
@@ -56,14 +56,14 @@ def topsort_lat(lat, random_shift=False, max_state=None):
         i = np.random.choice(vs)
         A.pop(i)
         newid2oldid.append(i)
-        for a in A.values():
+        for a in list(A.values()):
             a.discard(i)
     old2new = {i_old: i_new for i_new, i_old in enumerate(newid2oldid)}
     if random_shift:
         shift=0
         max_shift = max_state - len(old2new)
         max_step = max_state // len(old2new)
-        for k,v in old2new.items():
+        for k,v in list(old2new.items()):
             if v == 0 or v == 1:
                 continue
             new_shift = random.randint(0, min(max_step, max_shift))
@@ -225,7 +225,7 @@ def oracle_path(lat_tensor, ref, final_word_id, skip_words=None, keep_all_oracle
             return True
         if err > final_path[0]:
             return True
-        if ref_id in state_pruning[lat_id].keys():
+        if ref_id in list(state_pruning[lat_id].keys()):
             if state_pruning[lat_id][ref_id] < err:
                 return True
             if state_pruning[lat_id][ref_id] == err:
@@ -367,12 +367,12 @@ def parse_lats(lines):
                 # else:
                 if len(splited_line) == 4:
                     # classic arc
-                    state_from, state_to, word_id = map(int, splited_line[:3])
+                    state_from, state_to, word_id = list(map(int, splited_line[:3]))
                     weight_hclg, weight_am, ali = splited_line[3].split(',')
                     weight_hclg, weight_am = float(weight_hclg), float(weight_am)
                     self.out[self.utt_id].append((state_from, state_to, word_id, weight_hclg, weight_am, ali))
                 elif len(splited_line) == 3:
-                    state_from, state_to, word_id = map(int, splited_line[:3])
+                    state_from, state_to, word_id = list(map(int, splited_line[:3]))
                     weight_hclg, weight_am, ali = 0.0, 0.0, ''
                     self.out[self.utt_id].append((state_from, state_to, word_id, weight_hclg, weight_am, ali))
                 elif len(splited_line) == 2:

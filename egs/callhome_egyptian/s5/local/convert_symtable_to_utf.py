@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 #!/usr/bin/env py
 
 # Converts a romanized ECA word list (symbol table) to

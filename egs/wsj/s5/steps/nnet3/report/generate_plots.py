@@ -4,7 +4,7 @@
 #           2016    Vimal Manohar
 # Apache 2.0.
 
-from __future__ import division
+
 import argparse
 import errno
 import logging
@@ -372,7 +372,7 @@ def generate_nonlin_stats_plots(exp_dir, output_dir, plot, comparison_dir=None,
 
     for dir in dirs:
         stats_per_component_per_iter = stats_per_dir[dir]
-        component_names = stats_per_component_per_iter.keys()
+        component_names = list(stats_per_component_per_iter.keys())
         stat_tables_per_component = {}
         for component_name in component_names:
             comp_data = stats_per_component_per_iter[component_name]
@@ -388,7 +388,7 @@ def generate_nonlin_stats_plots(exp_dir, output_dir, plot, comparison_dir=None,
         with_oderiv = 1
     main_stat_tables = stat_tables_per_component_per_dir[exp_dir]
 
-    for component_name in main_stat_tables.keys():
+    for component_name in list(main_stat_tables.keys()):
         # this is the main experiment directory
         with open("{dir}/nonlinstats_{comp_name}.log".format(
                     dir=output_dir, comp_name=component_name), "w") as f:

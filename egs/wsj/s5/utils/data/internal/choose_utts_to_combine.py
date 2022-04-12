@@ -4,7 +4,7 @@
 #           2016  Johns Hopkins University (author: Daniel Povey)
 # Apache 2.0
 
-from __future__ import print_function
+
 import argparse
 from random import randint
 import sys

@@ -7,7 +7,7 @@
 """ This module contains layers that just map to a single component.
 """
 
-from __future__ import print_function
+
 import math
 import re
 import sys

@@ -49,7 +49,7 @@ class LatsOracleAlignDataSet(LatsDataSet):
            :param clip: clip data.
            :return: cls object
            """
-        if 'all_oracle_targets' not in kwargs.keys():
+        if 'all_oracle_targets' not in list(kwargs.keys()):
             kwargs['all_oracle_targets'] = False
         obj = cls(tokenizer=kwargs['tokenizer'],  ref_text_fname=kwargs['ref_text_fname'],
                   all_oracle_targets=kwargs['all_oracle_targets'])
@@ -89,13 +89,13 @@ class LatsOracleAlignDataSet(LatsDataSet):
 
         logger.info(f"utt2ref")
         self.utt2ref = {k+suff: v for data_dict, suff in zip([{'utt2ref': self.utt2ref}] + data_dicts, [''] + suffs) \
-                                                             for k, v in data_dict['utt2ref'].items() }
+                                                             for k, v in list(data_dict['utt2ref'].items()) }
         logger.info(f"utt2ohyp")
         self.utt2ohyp = {k+suff: v for data_dict, suff in zip([{'utt2ohyp': self.utt2ohyp}] + data_dicts, [''] + suffs) \
-                                                             for k, v in data_dict['utt2ohyp'].items() }
+                                                             for k, v in list(data_dict['utt2ohyp'].items()) }
         logger.info(f"utt2ali")
         self.utt2ali = {k+suff: v for data_dict, suff in zip([{'utt2ali': self.utt2ali}] + data_dicts, [''] + suffs) \
-                                                             for k,v in data_dict['utt2ali'].items() }
+                                                             for k,v in list(data_dict['utt2ali'].items()) }
         self.oracle_err_sum += sum(d['oracle_err_sum'] for d in data_dicts)
         self.num_ref_words += sum(d['num_ref_words'] for d in data_dicts)
         logger.info(f"done")
@@ -195,7 +195,7 @@ class LatsOracleAlignDataSet(LatsDataSet):
 
     def get_statistic(self):
         stats = super().get_statistic()
-        stats['Target arcs'] = sum([len(a) for a in self.utt2ali.values()]) / len(self.id2utt)
+        stats['Target arcs'] = sum([len(a) for a in list(self.utt2ali.values())]) / len(self.id2utt)
         stats['Non-target arcs'] = sum([len(self.id2lat[i]) - len(self.utt2ali[utt]) \
                                         for i, utt in enumerate(self.id2utt)]) / len(self.id2utt)
         return stats

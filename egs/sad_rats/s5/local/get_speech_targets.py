@@ -12,7 +12,7 @@
 # It uses these segments to obtain per-frame targets for the recordings in the format:
 # [ silence speech ]
 
-from __future__ import division
+
 
 import argparse
 import logging

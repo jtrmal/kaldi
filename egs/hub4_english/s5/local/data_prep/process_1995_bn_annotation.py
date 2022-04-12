@@ -7,7 +7,7 @@
 utt2spk, segments and text files.
 """
 
-from __future__ import print_function
+
 import argparse
 import os
 import logging

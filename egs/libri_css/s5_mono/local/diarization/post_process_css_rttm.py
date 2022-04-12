@@ -55,7 +55,7 @@ def main():
         {uid : list(g) for uid, g in itertools.groupby(segments, groupfn)})
 
     reco_and_spk_to_final_segs = {}
-    for uid in reco_and_spk_to_segs.keys():
+    for uid in list(reco_and_spk_to_segs.keys()):
         reco_id, spk_id = uid
         segs = reco_and_spk_to_segs[uid]
         tokens = []
@@ -84,7 +84,7 @@ def main():
                 
                 # if any running segment started before this one, it means, this
                 # segment is totally enclosed within the other, so we don't add it
-                if not any(i < new_seg[0] for i in running_segs.values()):
+                if not any(i < new_seg[0] for i in list(running_segs.values())):
                     new_segs.append(new_seg)
         
         new_segs.sort(key=lambda x: x[0])

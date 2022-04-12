@@ -10,7 +10,7 @@
 # designated length are created.
 #
 # This file is meant to be invoked from make_bn.sh.
-from __future__ import division
+
 import sys, os
 
 def seg_to_string(seg):

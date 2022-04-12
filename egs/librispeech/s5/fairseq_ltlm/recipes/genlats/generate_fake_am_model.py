@@ -245,7 +245,7 @@ if __name__ == "__main__":
     logger.info(f"Loading {args.ali_dir}/ali.*.gz")
     utt2ali = {key: ali for key, ali in tqdm(kaldi_io.read_vec_int_ark(f'ark: gunzip -c {args.ali_dir}/ali_pdf.1.gz|'))}
     i = 0
-    for key, ali in tqdm(utt2ali.items()):
+    for key, ali in tqdm(list(utt2ali.items())):
         i += 1
         ali_stretch_model.add_utts(ali)
     logger.info(f"AliStretchModel processed {i} utterances")
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     i = 0
     for k, m in tqdm(kaldi_io.read_mat_ark(f'ark: cat {args.ali_dir}/output.1.ark |'), total=len(utt2ali)):
         i += 1
-        if k not in utt2ali.keys():
+        if k not in list(utt2ali.keys()):
             logger.warning(f"Ali for {k} does not exist")
             continue
         ali = utt2ali[k]

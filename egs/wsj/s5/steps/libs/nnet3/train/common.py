@@ -7,7 +7,7 @@
 """This module contains classes and methods common to training of
 nnet3 neural networks.
 """
-from __future__ import division
+
 
 import argparse
 import glob
