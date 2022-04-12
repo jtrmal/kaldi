@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from typing import Optional, Tuple
 
 import torch
@@ -70,38 +71,40 @@ class LatticeTransformerSentenceEncoder(nn.Module):
     """
 
     def __init__(
-            self,
-            padding_idx: int,
-            vocab_size: int,
-            num_encoder_layers: int = 6,
-            arc_embedding_dim: int = 400,
-            embedding_dim: int = 768,
-            ffn_embedding_dim: int = 3072,
-            num_attention_heads: int = 8,
-            dropout: float = 0.1,
-            attention_dropout: float = 0.1,
-            activation_dropout: float = 0.1,
-            layerdrop: float = 0.0,
-            max_seq_len: int = 256,
-            num_segments: int = 2,
-            offset_positions_by_padding: bool = True,
-            encoder_normalize_before: bool = False,
-            apply_bert_init: bool = False,
-            activation_fn: str = "relu",
-            embed_scale: float = None,
-            freeze_embeddings: bool = False,
-            n_trans_layers_to_freeze: int = 0,
-            export: bool = False,
-            traceable: bool = False,
-            q_noise: float = 0.0,
-            qn_block_size: int = 8,
-            grad_checkpointing: bool = False,
+        self,
+        padding_idx: int,
+        vocab_size: int,
+        num_encoder_layers: int = 6,
+        arc_embedding_dim: int = 400,
+        embedding_dim: int = 768,
+        ffn_embedding_dim: int = 3072,
+        num_attention_heads: int = 8,
+        dropout: float = 0.1,
+        attention_dropout: float = 0.1,
+        activation_dropout: float = 0.1,
+        layerdrop: float = 0.0,
+        max_seq_len: int = 256,
+        num_segments: int = 2,
+        offset_positions_by_padding: bool = True,
+        encoder_normalize_before: bool = False,
+        apply_bert_init: bool = False,
+        activation_fn: str = "relu",
+        embed_scale: float = None,
+        freeze_embeddings: bool = False,
+        n_trans_layers_to_freeze: int = 0,
+        export: bool = False,
+        traceable: bool = False,
+        q_noise: float = 0.0,
+        qn_block_size: int = 8,
+        grad_checkpointing: bool = False,
     ) -> None:
 
         super().__init__()
         self.padding_idx = padding_idx
         self.vocab_size = vocab_size
-        self.dropout_module = FairseqDropout(dropout, module_name=self.__class__.__name__)
+        self.dropout_module = FairseqDropout(
+            dropout, module_name=self.__class__.__name__
+        )
         self.layerdrop = layerdrop
         self.max_seq_len = max_seq_len
         self.arc_embedding_dim = arc_embedding_dim
@@ -132,11 +135,15 @@ class LatticeTransformerSentenceEncoder(nn.Module):
             else None
         )
 
-        self.embed_positions = LatticePositionalEmbedding(self.max_seq_len, 
-                                                          self.arc_embedding_dim, 
-                                                          self.padding_idx if offset_positions_by_padding else None) 
+        self.embed_positions = LatticePositionalEmbedding(
+            self.max_seq_len,
+            self.arc_embedding_dim,
+            self.padding_idx if offset_positions_by_padding else None,
+        )
         if self.arc_embedding_dim != self.embedding_dim:
-            self.arc_emb2emb = nn.Sequential(nn.Linear(self.arc_embedding_dim, self.embedding_dim), nn.GELU())
+            self.arc_emb2emb = nn.Sequential(
+                nn.Linear(self.arc_embedding_dim, self.embedding_dim), nn.GELU()
+            )
         else:
             self.arc_emb2emb = None
 
@@ -144,21 +151,23 @@ class LatticeTransformerSentenceEncoder(nn.Module):
             self.layers = LayerDropModuleList(p=self.layerdrop)
         else:
             self.layers = nn.ModuleList([])
-        self.layers.extend([
-            self.build_transformer_sentence_encoder_layer(
-                embedding_dim=self.embedding_dim,
-                ffn_embedding_dim=ffn_embedding_dim,
-                num_attention_heads=num_attention_heads,
-                dropout=self.dropout_module.p,
-                attention_dropout=attention_dropout,
-                activation_dropout=activation_dropout,
-                activation_fn=activation_fn,
-                export=export,
-                q_noise=q_noise,
-                qn_block_size=qn_block_size,
-            )
-            for _ in range(num_encoder_layers)
-        ])
+        self.layers.extend(
+            [
+                self.build_transformer_sentence_encoder_layer(
+                    embedding_dim=self.embedding_dim,
+                    ffn_embedding_dim=ffn_embedding_dim,
+                    num_attention_heads=num_attention_heads,
+                    dropout=self.dropout_module.p,
+                    attention_dropout=attention_dropout,
+                    activation_dropout=activation_dropout,
+                    activation_fn=activation_fn,
+                    export=export,
+                    q_noise=q_noise,
+                    qn_block_size=qn_block_size,
+                )
+                for _ in range(num_encoder_layers)
+            ]
+        )
 
         if encoder_normalize_before:
             self.emb_layer_norm = LayerNorm(self.embedding_dim, export=export)
@@ -263,8 +272,10 @@ class LatticeTransformerSentenceEncoder(nn.Module):
 
         for layer in self.layers:
             if self.grad_checkpointing and self.training:
-                f=lambda kwargs: layer(**kwargs) 
-                x, _ = torch.utils.checkpoint.checkpoint(f, {'x':x, 'self_attn_padding_mask': padding_mask})
+                f = lambda kwargs: layer(**kwargs)
+                x, _ = torch.utils.checkpoint.checkpoint(
+                    f, {"x": x, "self_attn_padding_mask": padding_mask}
+                )
             else:
                 x, _ = layer(x, self_attn_padding_mask=padding_mask)
 

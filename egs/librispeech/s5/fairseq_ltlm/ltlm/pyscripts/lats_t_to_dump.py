@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov)
 import os
 import pickle
@@ -22,14 +23,14 @@ def main():
     data_cls = get_data_cls(type_args)
     WordTokenizer.add_args(parser)
     data_cls.add_args(parser, add_scale_opts=True)
-    parser.add_argument('dump', type=str, help="Path for saving lat-dict dump.")
+    parser.add_argument("dump", type=str, help="Path for saving lat-dict dump.")
     args = parser.parse_args()
 
     tokenizer = WordTokenizer.build_from_args(args)
     ds = data_cls.build_from_args(args, tokenizer, clip=False)
     out_dict = ds.data_to_dict()
     os.makedirs(os.path.dirname(args.dump), exist_ok=True)
-    with open(args.dump, 'wb') as f:
+    with open(args.dump, "wb") as f:
         pickle.dump(out_dict, f)
     logger.info(f"Lat-dict dump {args.dump} saved.")
 

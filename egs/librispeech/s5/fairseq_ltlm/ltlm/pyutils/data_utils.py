@@ -1,15 +1,16 @@
+#!/usr/bin/env python3
 # Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov)
 import json
 
 
 def parse_lats_data_str(lats_data):
     out = []
-    for curr_data in lats_data.split(','):
+    for curr_data in lats_data.split(","):
         d_mb_s = curr_data.split(":")
         assert len(d_mb_s) <= 2, RuntimeError(f"Wrong data {curr_data}")
         curr_data = d_mb_s[0]
-        suff = d_mb_s[1] if len(d_mb_s) == 2 else ''
-        data = {'lats': curr_data, 'utt_suff': suff, 'epoch': 0}
+        suff = d_mb_s[1] if len(d_mb_s) == 2 else ""
+        data = {"lats": curr_data, "utt_suff": suff, "epoch": 0}
         out.append(data)
     return out
 
@@ -26,7 +27,7 @@ def parse_lats_json(fname):
     #            {"lats": "exp/model/decode_test2/lt_egs", "ref": "data/test2/text"} ]
     # }
 
-    with open(fname, 'r', encoding='utf-8') as f_in:
+    with open(fname, "r", encoding="utf-8") as f_in:
         data_json_str = f_in.read()
     out = json.loads(data_json_str)
     return out
