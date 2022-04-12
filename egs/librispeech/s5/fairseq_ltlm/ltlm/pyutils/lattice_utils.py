@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 WORD_ID = 0
 STATE_FROM = 1
 STATE_TO = 2
-assert WORD_ID==0 and STATE_FROM == 1, STATE_TO == 2
+assert WORD_ID == 0 and STATE_FROM == 1, STATE_TO == 2
 
 
 def collate_lats(elements_list):
-    """ Stacking DataSets items into a batch 
+    """Stacking DataSets items into a batch
     :param elements_list: [(lat, targets, utt_id), ...]
     :return:  batch[btz, sl, 3]
     """
@@ -33,7 +33,7 @@ def padding(*sequences):
 
 
 def topsort_lat(lat, random_shift=False, max_state=None):
-    """ Topsorting a lattice. Kahn's algorithm
+    """Topsorting a lattice. Kahn's algorithm
     This function contains random, so topsort_lat(lat) can be != topsort_lat(lat)
     :param lat: - [(word_id, state_from, state_to), ...]
     :param random_shift: - randomly increases the distance between consecutive states. False
@@ -60,10 +60,10 @@ def topsort_lat(lat, random_shift=False, max_state=None):
             a.discard(i)
     old2new = {i_old: i_new for i_new, i_old in enumerate(newid2oldid)}
     if random_shift:
-        shift=0
+        shift = 0
         max_shift = max_state - len(old2new)
         max_step = max_state // len(old2new)
-        for k,v in list(old2new.items()):
+        for k, v in list(old2new.items()):
             if v == 0 or v == 1:
                 continue
             new_shift = random.randint(0, min(max_step, max_shift))
@@ -76,16 +76,19 @@ def topsort_lat(lat, random_shift=False, max_state=None):
 
 
 def lat_tensor_to_graph(lat_tensor):
-    """ Converting a tensor lattice representation to a graph format
+    """Converting a tensor lattice representation to a graph format
     :param lat_tensor: torch.Tensor. shape=[num_arcs, 3] - array of its arcs
-    :return: graph. graph[state_id] = list of arcs ids from this state. 
+    :return: graph. graph[state_id] = list of arcs ids from this state.
     """
     max_state_id = lat_tensor[:, STATE_TO].max()
     graph = [[] for i in range(max_state_id + 1)]
     for i, (word_id, topo_from, topo_to) in enumerate(lat_tensor):
         graph[topo_from].append(i)
-    assert len(graph[1]) > 0, RuntimeError(f"Bad graph {graph}. From tensor {lat_tensor}")
+    assert len(graph[1]) > 0, RuntimeError(
+        f"Bad graph {graph}. From tensor {lat_tensor}"
+    )
     return graph
+
 
 def forward(lat_tensor, nloglike):
     """Forward algorithm
@@ -109,13 +112,15 @@ def forward(lat_tensor, nloglike):
             if logalpha[arc[STATE_TO]] == 0:
                 logalpha[arc[STATE_TO]] = next_state_alpha
             else:
-                logalpha[arc[STATE_TO]] = (logalpha[arc[STATE_TO]].exp() + next_state_alpha.exp()).log()
+                logalpha[arc[STATE_TO]] = (
+                    logalpha[arc[STATE_TO]].exp() + next_state_alpha.exp()
+                ).log()
 
     return logalpha[-1]
 
 
 def best_path_nloglike(lat_tensor, nloglike, final_word_id):
-    """ Finding a path in a lattice with minimum negative log likelihood
+    """Finding a path in a lattice with minimum negative log likelihood
     Lattice must be Topsorted
 
     :param lat_tensor: Lattice. [ (word_id, state_from, state_to), ...]
@@ -132,18 +137,22 @@ def best_path_nloglike(lat_tensor, nloglike, final_word_id):
         if word_id == final_word_id:
             final_states.add(topo_to)
 
-    assert len(graph[1]) > 0 and len(final_states) > 0, RuntimeError(f"Bad graph {graph}. Lattice {lat_tensor}")
+    assert len(graph[1]) > 0 and len(final_states) > 0, RuntimeError(
+        f"Bad graph {graph}. Lattice {lat_tensor}"
+    )
     best_hyps = [() for i in range(len(graph))]
-    tropic_alpha = [float('inf') for i in range(len(graph))]
+    tropic_alpha = [float("inf") for i in range(len(graph))]
 
-    tropic_alpha[1] = 0 
+    tropic_alpha[1] = 0
     for state_from, arcs in enumerate(graph[1:], 1):
         if len(arcs) == 0:
             continue
         curr_state_alpha = tropic_alpha[state_from]
         for arc_id in arcs:
             arc = lat_tensor[arc_id]
-            assert arc[STATE_FROM] == state_from, RuntimeError("WTF graph. Need to debug")
+            assert arc[STATE_FROM] == state_from, RuntimeError(
+                "WTF graph. Need to debug"
+            )
             state_to = arc[STATE_TO]
             arc_nloglike = nloglike[arc_id]
 
@@ -151,18 +160,22 @@ def best_path_nloglike(lat_tensor, nloglike, final_word_id):
             if next_state_alpha < tropic_alpha[state_to]:
                 tropic_alpha[state_to] = next_state_alpha
                 best_hyps[state_to] = (*best_hyps[state_from], arc)
-    final_score = float('inf')
+    final_score = float("inf")
     final_hyp = None
     for state_id in final_states:
         if final_score > tropic_alpha[state_id]:
             final_score = tropic_alpha[state_id]
             final_hyp = best_hyps[state_id]
-    assert final_hyp, f"{lat_tensor} {nloglike} {final_states} {best_hyps} {tropic_alpha}"
+    assert (
+        final_hyp
+    ), f"{lat_tensor} {nloglike} {final_states} {best_hyps} {tropic_alpha}"
     return final_score, final_hyp
 
 
-def oracle_path(lat_tensor, ref, final_word_id, skip_words=None, keep_all_oracle_paths=False):
-    """ Finding oracle path in Lattice.
+def oracle_path(
+    lat_tensor, ref, final_word_id, skip_words=None, keep_all_oracle_paths=False
+):
+    """Finding oracle path in Lattice.
     Oracle path - path with minimum WER to reference text.
 
     :param lat_tensor: Lattice. == [ (word_id, state_from, state_to), ...]
@@ -178,19 +191,19 @@ def oracle_path(lat_tensor, ref, final_word_id, skip_words=None, keep_all_oracle
     lat_tensor = topsort_lat(lat_tensor)
 
     # ### Convert latTensor to graph ###
-    #max_state_id = np.max(lat_tensor[:, 2])
-    #graph = [[] for i in range(max_state_id + 1)]
-    #for i, (word_id, topo_from, topo_to) in enumerate(lat_tensor):
+    # max_state_id = np.max(lat_tensor[:, 2])
+    # graph = [[] for i in range(max_state_id + 1)]
+    # for i, (word_id, topo_from, topo_to) in enumerate(lat_tensor):
     #    graph[topo_from].append(i)
-    #assert len(graph[1]) > 0, RuntimeError(f"Bad graph {graph}")
+    # assert len(graph[1]) > 0, RuntimeError(f"Bad graph {graph}")
     graph = lat_tensor_to_graph(lat_tensor)
 
     invers_graph = [[] for i in range(len(graph))]
     for i, (word_id, topo_from, topo_to) in enumerate(lat_tensor):
         invers_graph[topo_to].append(i)
 
-    # ### Distance between state and closest final state 
-    ideal_paths_len = [float('inf') for i in range(len(graph))]
+    # ### Distance between state and closest final state
+    ideal_paths_len = [float("inf") for i in range(len(graph))]
     ideal_paths_len[-1] = 0
     for topo_to in range(len(invers_graph) - 1, 0, -1):
         for arc_id in invers_graph[topo_to]:
@@ -205,20 +218,17 @@ def oracle_path(lat_tensor, ref, final_word_id, skip_words=None, keep_all_oracle
     state_prunned_hyps = [defaultdict(set) for i in range(len(graph))]
 
     # ### Queue: ###
-    # score 
-    # error 
-    # time  
+    # score
+    # error
+    # time
     # ref_id - position in reference
     # lat_id - position in lat_tensor
     # hyp - 2 tuples: arcs sequences and ref sequences
     process_queue = PriorityQueue()
-    final_path = (float('inf'), ())
-    process_queue.put((0,
-                       0,
-                       time.time(),
-                       0,  # ref_id
-                       1,  # lat_id
-                       ((), ())))  # ((lattice_tensor_id, ), (ref_id,))
+    final_path = (float("inf"), ())
+    process_queue.put(
+        (0, 0, time.time(), 0, 1, ((), ()))  # ref_id  # lat_id
+    )  # ((lattice_tensor_id, ), (ref_id,))
 
     def prunning(err, ref_id, lat_id, hyp, add_to_state=True):
         if ref_id > len(ref):
@@ -247,12 +257,9 @@ def oracle_path(lat_tensor, ref, final_word_id, skip_words=None, keep_all_oracle
     def put_element(err, ref_id, lat_id, hyp):
         if prunning(err, ref_id, lat_id, hyp, add_to_state=False):
             return
-        process_queue.put((get_score(ref_id, lat_id) + err,
-                           err,
-                           time.time(),
-                           ref_id,
-                           lat_id,
-                           hyp))
+        process_queue.put(
+            (get_score(ref_id, lat_id) + err, err, time.time(), ref_id, lat_id, hyp)
+        )
 
     while not process_queue.empty():
         _, err, _, ref_id, lat_id, hyp = process_queue.get()
@@ -293,53 +300,73 @@ def oracle_path(lat_tensor, ref, final_word_id, skip_words=None, keep_all_oracle
     if not keep_all_oracle_paths:
         return oracle_err, single_oracle_ali
 
-    same_err_arcs = list(set(single_oracle_ali) |
-                         set.union(*(state_prunned_hyps[lat_tensor[arc_id][1]][ref_id] for arc_id, ref_id in
-                                     zip(*final_path[1]))))
+    same_err_arcs = list(
+        set(single_oracle_ali)
+        | set.union(
+            *(
+                state_prunned_hyps[lat_tensor[arc_id][1]][ref_id]
+                for arc_id, ref_id in zip(*final_path[1])
+            )
+        )
+    )
 
     num_bad_arcs = len(lat_tensor) - len(same_err_arcs)
     logger.debug(
         f"Ali len is {len(same_err_arcs)}. "
-        f"Bad arcs {num_bad_arcs} ({round(num_bad_arcs / len(lat_tensor) * 100, 2)} % )")
+        f"Bad arcs {num_bad_arcs} ({round(num_bad_arcs / len(lat_tensor) * 100, 2)} % )"
+    )
 
     logger.debug(f"Oracle ali is {single_oracle_ali}")
     return oracle_err, same_err_arcs
 
 
-def graphviz_lattice(lat, tokenizer, *weights,
-                     green_arcs=frozenset(), blue_arcs=frozenset(), red_arcs=frozenset(), utt_id='lat'):
+def graphviz_lattice(
+    lat,
+    tokenizer,
+    *weights,
+    green_arcs=frozenset(),
+    blue_arcs=frozenset(),
+    red_arcs=frozenset(),
+    utt_id="lat",
+):
     import graphviz
+
     dot = graphviz.Digraph(name=utt_id)
 
     states = {int(arc[STATE_FROM]) for arc in lat} | {int(arc[STATE_TO]) for arc in lat}
     for s in states:
         dot.node(str(s))
     for i, arc in enumerate(lat):
-        word_id, state_from, state_to = arc[WORD_ID], int(arc[STATE_FROM]), int(arc[STATE_TO])
+        word_id, state_from, state_to = (
+            arc[WORD_ID],
+            int(arc[STATE_FROM]),
+            int(arc[STATE_TO]),
+        )
         state_from, state_to = str(state_from), str(state_to)
         word = tokenizer.id2word[word_id]
         arc_w = ":".join([str(float(w[i])) for w in weights])
         arc_label = word + ":" + arc_w
         if i in green_arcs:
-            dot.edge(state_from, state_to, label=arc_label, color='green')
+            dot.edge(state_from, state_to, label=arc_label, color="green")
         elif i in blue_arcs:
-            dot.edge(state_from, state_to, label=arc_label, color='blue')
+            dot.edge(state_from, state_to, label=arc_label, color="blue")
         elif i in red_arcs:
-            dot.edge(state_from, state_to, label=arc_label, color='red')
+            dot.edge(state_from, state_to, label=arc_label, color="red")
         else:
             dot.edge(state_from, state_to, label=arc_label)
     return dot
 
 
 def parse_lats(lines):
-    """ parce kaldi lattice text format.
+    """parce kaldi lattice text format.
     :param lines: iterable collection with kaldi lats.
     :return: utt2lat - map utterance id -> lattice
     """
+
     class Parser:
         def __init__(self):
-            self.state = 'get_utt_id'
-            self.utt_id = ''
+            self.state = "get_utt_id"
+            self.utt_id = ""
             self.out = {}
 
         def is_line_utt_id(self, splited_line):
@@ -348,46 +375,56 @@ def parse_lats(lines):
         def new_utt(self, splited_line):
             self.utt_id = splited_line[0]
             self.out[self.utt_id] = []
-            self.state = 'get_arc'
+            self.state = "get_arc"
 
         def start(self):
-            self.state = 'get_utt_id'
-            self.utt_id = ''
+            self.state = "get_utt_id"
+            self.utt_id = ""
             self.out = {}
 
         def add(self, line):
             splited_line = line.split()
-            if self.state == 'get_utt_id':
-                assert self.is_line_utt_id(splited_line), RuntimeError("parse_lats init error.")
+            if self.state == "get_utt_id":
+                assert self.is_line_utt_id(splited_line), RuntimeError(
+                    "parse_lats init error."
+                )
                 self.new_utt(splited_line)
                 return
-            if self.state == 'get_arc':
+            if self.state == "get_arc":
                 # if self.is_line_utt_id(splited_line):
                 #     self.new_utt(splited_line)
                 # else:
                 if len(splited_line) == 4:
                     # classic arc
                     state_from, state_to, word_id = list(map(int, splited_line[:3]))
-                    weight_hclg, weight_am, ali = splited_line[3].split(',')
+                    weight_hclg, weight_am, ali = splited_line[3].split(",")
                     weight_hclg, weight_am = float(weight_hclg), float(weight_am)
-                    self.out[self.utt_id].append((state_from, state_to, word_id, weight_hclg, weight_am, ali))
+                    self.out[self.utt_id].append(
+                        (state_from, state_to, word_id, weight_hclg, weight_am, ali)
+                    )
                 elif len(splited_line) == 3:
                     state_from, state_to, word_id = list(map(int, splited_line[:3]))
-                    weight_hclg, weight_am, ali = 0.0, 0.0, ''
-                    self.out[self.utt_id].append((state_from, state_to, word_id, weight_hclg, weight_am, ali))
+                    weight_hclg, weight_am, ali = 0.0, 0.0, ""
+                    self.out[self.utt_id].append(
+                        (state_from, state_to, word_id, weight_hclg, weight_am, ali)
+                    )
                 elif len(splited_line) == 2:
                     # eos arc
                     state_from = int(splited_line[0])
-                    weight_hclg, weight_am, ali = splited_line[1].split(',')
+                    weight_hclg, weight_am, ali = splited_line[1].split(",")
                     weight_hclg, weight_am = float(weight_hclg), float(weight_am)
-                    self.out[self.utt_id].append((state_from, weight_hclg, weight_am, ali))
+                    self.out[self.utt_id].append(
+                        (state_from, weight_hclg, weight_am, ali)
+                    )
                 elif len(splited_line) == 1:
                     state_from = int(splited_line[0])
-                    self.out[self.utt_id].append((state_from, 0, 0, ''))
+                    self.out[self.utt_id].append((state_from, 0, 0, ""))
                 elif len(splited_line) == 0:
-                    self.state = 'get_utt_id'
+                    self.state = "get_utt_id"
                 else:
-                    raise RuntimeError(f"parse_lats Wrong line in  {self.utt_id}: {line}")
+                    raise RuntimeError(
+                        f"parse_lats Wrong line in  {self.utt_id}: {line}"
+                    )
                 return
 
         def get_out(self):

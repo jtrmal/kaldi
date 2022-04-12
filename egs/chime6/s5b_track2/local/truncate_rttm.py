@@ -5,40 +5,47 @@
 # We use some utility functions from the dscore toolkit.
 
 
-
-
 import argparse
 import sys
 from dscore.scorelib.turn import Turn, trim_turns
 from dscore.scorelib.uem import load_uem
 from dscore.scorelib.utils import format_float
 
-sys.path.insert(0, 'steps')
+sys.path.insert(0, "steps")
 import libs.common as common_lib
 
 
 def get_args():
     parser = argparse.ArgumentParser(
         description="""This script truncates the rttm file
-                       using UEM file""")
-    parser.add_argument("rttm_file", type=str,
-                        help="""Input RTTM file.
+                       using UEM file"""
+    )
+    parser.add_argument(
+        "rttm_file",
+        type=str,
+        help="""Input RTTM file.
                         The format of the RTTM file is
                         <type> <file-id> <channel-id> <begin-time> """
-                        """<end-time> <NA> <NA> <speaker> <conf>""")
-    parser.add_argument("uem_file", type=str,
-                        help="""Input UEM file.
+        """<end-time> <NA> <NA> <speaker> <conf>""",
+    )
+    parser.add_argument(
+        "uem_file",
+        type=str,
+        help="""Input UEM file.
                         The format of the UEM file is
-                        <file-id> <channel-id> <begin-time> <end-time>""")
-    parser.add_argument("rttm_file_write", type=str,
-                        help="""output RTTM file.""")
-    parser.add_argument("--min-segment-length", type=float,
-                        help="""Minimum segment length to keep""")
+                        <file-id> <channel-id> <begin-time> <end-time>""",
+    )
+    parser.add_argument("rttm_file_write", type=str, help="""output RTTM file.""")
+    parser.add_argument(
+        "--min-segment-length", type=float, help="""Minimum segment length to keep"""
+    )
     args = parser.parse_args()
     return args
 
+
 # The following load_rttm and write_rttm are modified from dscore to also
 # work with pipe input and output.
+
 
 def _parse_rttm_line(line):
     line = line.strip()
@@ -66,13 +73,14 @@ def _parse_rttm_line(line):
 
     return Turn(onset, dur=dur, speaker_id=speaker_id, file_id=file_id)
 
+
 def load_rttm(rttmf):
-    with common_lib.smart_open(rttmf, 'r') as f:
+    with common_lib.smart_open(rttmf, "r") as f:
         turns = []
         speaker_ids = set()
         file_ids = set()
         for line in f:
-            if line.startswith('SPKR-INFO'):
+            if line.startswith("SPKR-INFO"):
                 continue
             turn = _parse_rttm_line(line)
             turns.append(turn)
@@ -80,27 +88,32 @@ def load_rttm(rttmf):
             file_ids.add(turn.file_id)
     return turns, speaker_ids, file_ids
 
-def write_rttm(rttmf, turns, n_digits=3):
-    with common_lib.smart_open(rttmf, 'w') as f:
-        for turn in sorted(turns, key=lambda x:x.onset):
-            fields = ['SPEAKER',
-                      turn.file_id,
-                      '1',
-                      format_float(turn.onset, n_digits),
-                      format_float(turn.dur, n_digits),
-                      '<NA>',
-                      '<NA>',
-                      turn.speaker_id,
-                      '<NA>',
-                      '<NA>']
-            line = ' '.join(fields)
-            f.write(line + '\n')
 
-if __name__ == '__main__':
+def write_rttm(rttmf, turns, n_digits=3):
+    with common_lib.smart_open(rttmf, "w") as f:
+        for turn in sorted(turns, key=lambda x: x.onset):
+            fields = [
+                "SPEAKER",
+                turn.file_id,
+                "1",
+                format_float(turn.onset, n_digits),
+                format_float(turn.dur, n_digits),
+                "<NA>",
+                "<NA>",
+                turn.speaker_id,
+                "<NA>",
+                "<NA>",
+            ]
+            line = " ".join(fields)
+            f.write(line + "\n")
+
+
+if __name__ == "__main__":
     args = get_args()
     turns, speaker_ids, file_ids = load_rttm(args.rttm_file)
     loaded_uem = load_uem(args.uem_file)
     truncated_turns = trim_turns(turns, loaded_uem)
-    truncated_turns = [turn for turn in truncated_turns 
-                       if turn.dur >= args.min_segment_length]
+    truncated_turns = [
+        turn for turn in truncated_turns if turn.dur >= args.min_segment_length
+    ]
     write_rttm(args.rttm_file_write, truncated_turns)

@@ -13,7 +13,8 @@
 
 
 import sys
-with open(sys.argv[1], 'r') as u2s_fi:
-  for line in u2s_fi:
-    utt, score = line.rstrip().split()
-    print(score, "target" if "music" in utt else "nontarget")
+
+with open(sys.argv[1], "r") as u2s_fi:
+    for line in u2s_fi:
+        utt, score = line.rstrip().split()
+        print(score, "target" if "music" in utt else "nontarget")

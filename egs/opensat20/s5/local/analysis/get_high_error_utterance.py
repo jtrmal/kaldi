@@ -5,8 +5,9 @@
 from collections import OrderedDict
 import sys, io
 import string
-infile = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
-output = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+infile = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
+output = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 total_words = 0
 total_error = 0

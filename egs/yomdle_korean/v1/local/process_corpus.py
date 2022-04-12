@@ -7,16 +7,16 @@
 import os
 import sys, io
 
-phone_file = os.path.join('data/local/text/cleaned/phones.txt')
-infile = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
-output = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+phone_file = os.path.join("data/local/text/cleaned/phones.txt")
+infile = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
+output = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 phone_dict = dict()
-with open(phone_file, 'r', encoding='utf-8') as phone_fh:
+with open(phone_file, "r", encoding="utf-8") as phone_fh:
     for line in phone_fh:
         line = line.strip().split()[0]
         phone_dict[line] = line
 
-phone_dict[' '] = ' '
+phone_dict[" "] = " "
 corpus_text = list()
 for line in infile:
     text = line.strip()
@@ -26,5 +26,4 @@ for line in infile:
             skip_text = True
             break
     if not skip_text:
-        output.write(text+ '\n')
-
+        output.write(text + "\n")

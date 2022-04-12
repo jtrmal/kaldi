@@ -16,8 +16,11 @@ if len(sys.argv) != 3:
 input_file = sys.argv[1]
 output_file = sys.argv[2]
 
+
 def main():
-    with open(input_file, 'r', encoding='utf-8') as fh, open(output_file, 'w', encoding='utf-8') as fh_out:
+    with open(input_file, "r", encoding="utf-8") as fh, open(
+        output_file, "w", encoding="utf-8"
+    ) as fh_out:
         for utt, uttid in SnorIter(fh):
             for char in utt:
                 if char == " ":

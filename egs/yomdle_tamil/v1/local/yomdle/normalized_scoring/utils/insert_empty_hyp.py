@@ -16,9 +16,12 @@ ids_file = sys.argv[1]
 hyp_in_file = sys.argv[2]
 hyp_out_file = sys.argv[3]
 
+
 def main():
 
-    with open(hyp_in_file, 'r', encoding='utf-8') as hyp_in_fh, open(hyp_out_file, 'w', encoding='utf-8') as hyp_out_fh, open(ids_file, 'r') as ids_fh:
+    with open(hyp_in_file, "r", encoding="utf-8") as hyp_in_fh, open(
+        hyp_out_file, "w", encoding="utf-8"
+    ) as hyp_out_fh, open(ids_file, "r") as ids_fh:
         # First just copy input hyp file over
         for line in hyp_in_fh:
             hyp_out_fh.write(line)
@@ -28,6 +31,7 @@ def main():
         for line in ids_fh:
             uttid = line.strip()
             hyp_out_fh.write("(%s)\n" % uttid)
+
 
 if __name__ == "__main__":
     main()

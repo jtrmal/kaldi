@@ -13,19 +13,25 @@ import re
 import sys
 import string
 
-roman_number = [re.compile('^\s*[_LXVI]+(\.)?\s*$'), ]
+roman_number = [
+    re.compile("^\s*[_LXVI]+(\.)?\s*$"),
+]
 
-sq_brackets = [re.compile('(.*)(\[.+\])(.*)', re.IGNORECASE)]
+sq_brackets = [re.compile("(.*)(\[.+\])(.*)", re.IGNORECASE)]
 
-pipes = [re.compile('^\s*\|.*\|\s*$')]
+pipes = [re.compile("^\s*\|.*\|\s*$")]
 
-non_word = [re.compile('^\W+$')]
+non_word = [re.compile("^\W+$")]
 
-chapter = [re.compile('^\s*((Chapter)|(Volume)|(Canto)).*[LXIV0-9]+.*$', re.IGNORECASE), ]
+chapter = [
+    re.compile("^\s*((Chapter)|(Volume)|(Canto)).*[LXIV0-9]+.*$", re.IGNORECASE),
+]
 
-contents = [re.compile('CONTENTS'),
-            re.compile('^.*((\s{2,50})|([\t]+))[0-9]+\s*$'),
-            re.compile('^\s*((I+[:.]+)|(I?[LXV]+I*([\.:])?))\s+.*')]
+contents = [
+    re.compile("CONTENTS"),
+    re.compile("^.*((\s{2,50})|([\t]+))[0-9]+\s*$"),
+    re.compile("^\s*((I+[:.]+)|(I?[LXV]+I*([\.:])?))\s+.*"),
+]
 
 debug = None
 
@@ -37,13 +43,18 @@ punctuation = r"(^|\s+)([" + re.escape(string.punctuation) + r"]+)(?=(\s+|$))"
 
 def parse_opts():
     parser = argparse.ArgumentParser(
-        description='Strips unhelpful, from LM viewpoint, strings from PG texts',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--debug', default=False, action='store_true',
-                        help='Debug info - e.g. showing the lines that were stripped')
+        description="Strips unhelpful, from LM viewpoint, strings from PG texts",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--debug",
+        default=False,
+        action="store_true",
+        help="Debug info - e.g. showing the lines that were stripped",
+    )
 
-    parser.add_argument('in_text', type=str, help='Input text file')
-    parser.add_argument('out_text', type=str, help='Filtered output text file')
+    parser.add_argument("in_text", type=str, help="Input text file")
+    parser.add_argument("out_text", type=str, help="Filtered output text file")
     opts = parser.parse_args()
     global debug
     debug = opts.debug
@@ -54,7 +65,7 @@ def debug_log(lines, idx, context=2):
     if debug:
         start = max(0, idx - context)
         end = min(len(lines), idx + context + 1)
-        sys.stderr.write('\n'.join('> %s' % l for l in lines[start:end]) + '\n\n')
+        sys.stderr.write("\n".join("> %s" % l for l in lines[start:end]) + "\n\n")
 
 
 def match(regexes, line):
@@ -80,25 +91,31 @@ def empty_lines(lines, index, extent):
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     opts = parse_opts()
 
-    with open(opts.in_text, 'r', encoding="utf-8") as in_text:
+    with open(opts.in_text, "r", encoding="utf-8") as in_text:
         in_lines = [l.strip() for l in in_text.readlines()]
 
-    out_text = open(opts.out_text, 'w', encoding="utf-8")
+    out_text = open(opts.out_text, "w", encoding="utf-8")
 
     for i, l in enumerate(in_lines):
         if len(l) == 0:
             continue
 
         # Roman numeral alone in a line, surrounded by empty lines
-        if match(roman_number, l) and empty_lines(in_lines, i, -1) and empty_lines(in_lines, i, 1):
+        if (
+            match(roman_number, l)
+            and empty_lines(in_lines, i, -1)
+            and empty_lines(in_lines, i, 1)
+        ):
             # print 'matched roman'
             debug_log(in_lines, i)
             continue
 
-        if match(chapter, l) and (empty_lines(in_lines, i, -1) or empty_lines(in_lines, i, 1)):
+        if match(chapter, l) and (
+            empty_lines(in_lines, i, -1) or empty_lines(in_lines, i, 1)
+        ):
             # print 'matched chapter'
             debug_log(in_lines, i)
             continue
@@ -118,7 +135,7 @@ if __name__ == '__main__':
 
         if match(sq_brackets, l):
             debug_log(in_lines, i)
-            l = sq_brackets[0].sub(r'\1\3', l)
+            l = sq_brackets[0].sub(r"\1\3", l)
 
         # test nsw_expand by an example
         # echo "Additional information about Purdue can be found at www.purduepharma.com. " | \
@@ -144,11 +161,12 @@ if __name__ == '__main__':
         # it seems pounds is not recognized if used in this way: £ 12.5m => 12.5 million pounds
 
         # remove punctuation
-        l = re.sub(punctuation, r"\1\3", l)  # remove real punctuations, which are surrounded by spaces
+        l = re.sub(
+            punctuation, r"\1\3", l
+        )  # remove real punctuations, which are surrounded by spaces
         l = re.sub("\s+", " ", l)  # remove multiple spaces
         l = l.strip(strip_chars)
 
-        out_text.write(l + '\n')
+        out_text.write(l + "\n")
 
     out_text.close()
-

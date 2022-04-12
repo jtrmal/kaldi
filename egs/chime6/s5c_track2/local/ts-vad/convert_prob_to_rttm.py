@@ -52,16 +52,20 @@ class VadProbSet:
         with ReadHelper(vad_rspec) as reader:
             for utid, prob in reader:
                 result = reg_exp.match(utid)
-                assert result is not None, 'Wrong utterance ID format: \"{}\"'.format(utid)
+                assert result is not None, 'Wrong utterance ID format: "{}"'.format(
+                    utid
+                )
                 sess_indx = result.group(1)
                 spkr = result.group(2)
 
                 result = reg_exp.match(sess_indx)
-                assert result is not None, 'Wrong utterance ID format: \"{}\"'.format(sess_indx)
+                assert result is not None, 'Wrong utterance ID format: "{}"'.format(
+                    sess_indx
+                )
                 sess = result.group(1)
                 indx = int(result.group(2))
 
-                sess = sess + '-' + spkr
+                sess = sess + "-" + spkr
 
                 if sess not in data.keys():
                     assert indx == 1
@@ -71,8 +75,8 @@ class VadProbSet:
                 data[sess].append(prob)
                 prev = indx
             reader.close()
-        print('  loaded {} sessions'.format(len(data)))
-        print('  combining fragments')
+        print("  loaded {} sessions".format(len(data)))
+        print("  combining fragments")
         self.data = dict()
         for sess, items in data.items():
             self.data[sess] = np.hstack(items)
@@ -80,20 +84,30 @@ class VadProbSet:
     def apply_filter(self, window, threshold, threshold_first):
         for sess in self.data.keys():
             if threshold_first:
-                self.data[sess] = np.vectorize(lambda value: 1.0 if value > threshold else 0.0)(self.data[sess]).astype(dtype=np.int32)
+                self.data[sess] = np.vectorize(
+                    lambda value: 1.0 if value > threshold else 0.0
+                )(self.data[sess]).astype(dtype=np.int32)
                 if window > 1:
-                    self.data[sess] = signal.medfilt(self.data[sess], window).astype(dtype=np.int32)
+                    self.data[sess] = signal.medfilt(self.data[sess], window).astype(
+                        dtype=np.int32
+                    )
             else:
                 if window > 1:
                     self.data[sess] = signal.medfilt(self.data[sess], window)
-                self.data[sess] = np.vectorize(lambda value: 1.0 if value > threshold else 0.0)(self.data[sess]).astype(dtype=np.int32)
+                self.data[sess] = np.vectorize(
+                    lambda value: 1.0 if value > threshold else 0.0
+                )(self.data[sess]).astype(dtype=np.int32)
 
-    def convert(self, frame_shift,  min_silence, min_speech, out_rttm):
+    def convert(self, frame_shift, min_silence, min_speech, out_rttm):
         min_silence = int(round(min_silence / frame_shift))
         min_speech = int(round(min_speech / frame_shift))
-        with open(out_rttm, 'wt', encoding='utf-8') as wstream:
+        with open(out_rttm, "wt", encoding="utf-8") as wstream:
             for sess, prob in self.data.items():
-                print('  session: {}  num_frames: {}  duration: {:.2f} hrs'.format(sess, len(prob), len(prob) * frame_shift / 60 / 60))
+                print(
+                    "  session: {}  num_frames: {}  duration: {:.2f} hrs".format(
+                        sess, len(prob), len(prob) * frame_shift / 60 / 60
+                    )
+                )
                 segments = list()
                 for i, label in enumerate(prob):
                     if (len(segments) == 0) or (segments[-1].label != label):
@@ -119,35 +133,42 @@ class VadProbSet:
                         begin = frame_shift * segm.begin
                         length = frame_shift * segm.length()
                         result = reg_exp.match(sess)
-                        assert result is not None, 'Wrong format: \"{}\"'.format(sess)
+                        assert result is not None, 'Wrong format: "{}"'.format(sess)
                         utid = result.group(1)
                         spk = result.group(2)
-                        wstream.write('SPEAKER {} 1 {:7.3f} {:7.3f} <NA> <NA> {} <NA> <NA>\n'.format(utid, begin, length, spk))
+                        wstream.write(
+                            "SPEAKER {} 1 {:7.3f} {:7.3f} <NA> <NA> {} <NA> <NA>\n".format(
+                                utid, begin, length, spk
+                            )
+                        )
         wstream.close()
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Usage: convert_prob_to_wa.py <vad-rspec> <rttm>')
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Usage: convert_prob_to_wa.py <vad-rspec> <rttm>"
+    )
     parser.add_argument("--frame_shift", "-s", type=float, default=0.010)
-    parser.add_argument("--reg_exp", "-x", type=str, default=r'^(\S+)-(\d+)$')
+    parser.add_argument("--reg_exp", "-x", type=str, default=r"^(\S+)-(\d+)$")
     parser.add_argument("--window", "-w", type=int, default=1)
     parser.add_argument("--threshold", "-t", type=float, default=0.5)
     parser.add_argument("--threshold_first", "-r", action="store_true")
     parser.add_argument("--min_silence", "-k", type=float, default=0.0)
     parser.add_argument("--min_speech", "-m", type=float, default=0.0)
-    parser.add_argument('vad_rspec', type=str)
-    parser.add_argument('out_rttm', type=str)
+    parser.add_argument("vad_rspec", type=str)
+    parser.add_argument("out_rttm", type=str)
     args = parser.parse_args()
 
-    print('Options:')
-    print('  Frame shift in sec:  {}'.format(args.frame_shift))
-    print('  Utterance ID regexp: {}'.format(args.reg_exp))
-    print('  Med. filter window:  {}'.format(args.window))
-    print('  Prob. threshold:     {}'.format(args.threshold))
-    print('  Apply thresh. first: {}'.format(args.threshold_first))
-    print('  Min silence length:  {}'.format(args.min_silence))
-    print('  Min speech length:   {}'.format(args.min_speech))
-    print('  VAD rspec:           {}'.format(args.vad_rspec))
-    print('  Output rttm file:    {}'.format(args.out_rttm))
+    print("Options:")
+    print("  Frame shift in sec:  {}".format(args.frame_shift))
+    print("  Utterance ID regexp: {}".format(args.reg_exp))
+    print("  Med. filter window:  {}".format(args.window))
+    print("  Prob. threshold:     {}".format(args.threshold))
+    print("  Apply thresh. first: {}".format(args.threshold_first))
+    print("  Min silence length:  {}".format(args.min_silence))
+    print("  Min speech length:   {}".format(args.min_speech))
+    print("  VAD rspec:           {}".format(args.vad_rspec))
+    print("  Output rttm file:    {}".format(args.out_rttm))
 
     reg_exp = re.compile(args.reg_exp)
 
@@ -155,11 +176,11 @@ if __name__ == '__main__':
     if not os.path.exists(parent):
         os.makedirs(parent)
 
-    print('Loading VAD probabilities')
+    print("Loading VAD probabilities")
     vad_prob = VadProbSet(args.vad_rspec, reg_exp)
 
-    print('Applying filtering')
+    print("Applying filtering")
     vad_prob.apply_filter(args.window, args.threshold, args.threshold_first)
 
-    print('Writing rttm')
+    print("Writing rttm")
     vad_prob.convert(args.frame_shift, args.min_silence, args.min_speech, args.out_rttm)

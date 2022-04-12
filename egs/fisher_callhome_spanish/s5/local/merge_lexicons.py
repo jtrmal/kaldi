@@ -17,25 +17,33 @@ uw_fisher = tmpdir + "/uniquewords"
 uw_gigaword = tmpdir + "/es_wordlist.json"
 uw_LDC = ldc_lexicon + "/callhome_spanish_lexicon_970908/preferences"
 
-filtered_letters = re.compile('[¡¥ª°º¿àçèëìîôö0123456789]')
+filtered_letters = re.compile("[¡¥ª°º¿àçèëìîôö0123456789]")
 merged_lexicon = []
 # All three lexicons are in different formats
 # First add the data from lexicon_fisher (A) into the dictionary
-fisher = codecs.open(uw_fisher, encoding='utf-8')
+fisher = codecs.open(uw_fisher, encoding="utf-8")
 for line in fisher:
     merged_lexicon.append(line.strip())
 fisher.close()
 
-print("After adding the fisher data, the lexicon contains {} entries".format(len(merged_lexicon)))
+print(
+    "After adding the fisher data, the lexicon contains {} entries".format(
+        len(merged_lexicon)
+    )
+)
 
 # Now add data from the LDC lexicon
-ldc = codecs.open(uw_LDC, encoding='iso-8859-1')
+ldc = codecs.open(uw_LDC, encoding="iso-8859-1")
 for line in ldc:
-    entries = line.strip().split('\t')
+    entries = line.strip().split("\t")
     if entries[0].lower() not in merged_lexicon:
         merged_lexicon.append(entries[0].lower())
 
-print("After adding the LDC data, the lexicon contains {} entries".format(len(merged_lexicon)))
+print(
+    "After adding the LDC data, the lexicon contains {} entries".format(
+        len(merged_lexicon)
+    )
+)
 
 # Finally add the gigaword data
 gigaword = json.load(open(uw_gigaword))
@@ -49,14 +57,18 @@ for item in gigaword:
     if item[0].lower() not in merged_lexicon:
         merged_lexicon.append(item[0].lower())
 
-print("After adding the Gigaword data, the lexicon contains {} entries".format(len(merged_lexicon)))
+print(
+    "After adding the Gigaword data, the lexicon contains {} entries".format(
+        len(merged_lexicon)
+    )
+)
 
 # Now write the uniquewords to a file
-lf = codecs.open(tmpdir + '/uniquewords64k', encoding='utf-8', mode='w+')
+lf = codecs.open(tmpdir + "/uniquewords64k", encoding="utf-8", mode="w+")
 ltuples = sorted(merged_lexicon)
 
 for item in ltuples:
-    if not item=='ñ' and not re.search(filtered_letters, item):
+    if not item == "ñ" and not re.search(filtered_letters, item):
         lf.write(item + "\n")
 
 lf.close()

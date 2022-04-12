@@ -10,39 +10,53 @@ import collections, sys, os, argparse, contextlib
 import wave
 import webrtcvad
 
+
 def get_args():
-	parser = argparse.ArgumentParser(description="Obtain speech segments for all wav files in a dir."
-        " Writes the output to the stdout." 
-		"Usage: apply_webrtcvad.py [options...] <data-dir>"
-		"E.g.: apply_webrtcvad.py --aggressiveness 2 --reco2channels data/reco2channels data",
-		formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description="Obtain speech segments for all wav files in a dir."
+        " Writes the output to the stdout."
+        "Usage: apply_webrtcvad.py [options...] <data-dir>"
+        "E.g.: apply_webrtcvad.py --aggressiveness 2 --reco2channels data/reco2channels data",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
-	parser.add_argument("--mode", type=int, dest = "mode", default=1,
-		help="Integer in {0,1,2,3} specifying the VAD aggressiveness. 0 is the least aggressive"
-        " about filtering out non-speech, 3 is the most aggressive.")
+    parser.add_argument(
+        "--mode",
+        type=int,
+        dest="mode",
+        default=1,
+        help="Integer in {0,1,2,3} specifying the VAD aggressiveness. 0 is the least aggressive"
+        " about filtering out non-speech, 3 is the most aggressive.",
+    )
 
-	parser.add_argument("--reco2channels", type=str, dest="reco2ch_file",
-		help="In multi-channel setting, specifying this would avoid computing VAD for each channel"
-        " separately. Only first channel will be used to compute VAD and all channels will share.")
+    parser.add_argument(
+        "--reco2channels",
+        type=str,
+        dest="reco2ch_file",
+        help="In multi-channel setting, specifying this would avoid computing VAD for each channel"
+        " separately. Only first channel will be used to compute VAD and all channels will share.",
+    )
 
-	parser.add_argument("data_dir", help="Data directory containing wav.scp")
+    parser.add_argument("data_dir", help="Data directory containing wav.scp")
 
-	args = parser.parse_args()
+    args = parser.parse_args()
 
-	return args
+    return args
+
 
 def check_args(args):
-    if (args.mode not in [0,1,2,3]):
+    if args.mode not in [0, 1, 2, 3]:
         raise Exception("Aggressiveness mode must be in {0,1,2,3}")
-    if (not os.path.exists(os.path.join(args.data_dir,'wav.scp'))):
+    if not os.path.exists(os.path.join(args.data_dir, "wav.scp")):
         raise Exception("No wav.scp file exists")
     return
+
 
 def read_wave(path):
     """Reads a .wav file.
     Takes the path, and returns (PCM audio data, sample rate).
     """
-    with contextlib.closing(wave.open(path, 'rb')) as wf:
+    with contextlib.closing(wave.open(path, "rb")) as wf:
         num_channels = wf.getnchannels()
         assert num_channels == 1
         sample_width = wf.getsampwidth()
@@ -55,6 +69,7 @@ def read_wave(path):
 
 class Frame(object):
     """Represents a "frame" of audio data."""
+
     def __init__(self, bytes, timestamp, duration):
         self.bytes = bytes
         self.timestamp = timestamp
@@ -72,13 +87,12 @@ def frame_generator(frame_duration_ms, audio, sample_rate):
     timestamp = 0.0
     duration = (float(n) / sample_rate) / 2.0
     while offset + n < len(audio):
-        yield Frame(audio[offset:offset + n], timestamp, duration)
+        yield Frame(audio[offset : offset + n], timestamp, duration)
         timestamp += duration
         offset += n
 
 
-def vad_segments(sample_rate, frame_duration_ms,
-                  padding_duration_ms, vad, frames):
+def vad_segments(sample_rate, frame_duration_ms, padding_duration_ms, vad, frames):
     """Filters out non-voiced audio frames.
     Given a webrtcvad.Vad and a source of audio frames, yields only
     the voiced audio.
@@ -151,12 +165,13 @@ def get_reco2channels(reco2ch_file):
     the corresponding dictionary.
     """
     reco2channels = {}
-    with open(reco2ch_file, 'r') as f:
+    with open(reco2ch_file, "r") as f:
         for line in f.readlines():
             reco, channels = line.strip.split(maxsplit=1)
             channels = channels.split()
             reco2channels[reco] = channels
     return reco2channels
+
 
 def get_wav_list(data_dir, reco2channels=None):
     """
@@ -164,9 +179,11 @@ def get_wav_list(data_dir, reco2channels=None):
     if provided, the uttid is actually the recoid.
     """
     if reco2channels is not None:
-        keep_wavs = {reco2channels[reco][0]:reco for reco in list(reco2channels.keys())}
+        keep_wavs = {
+            reco2channels[reco][0]: reco for reco in list(reco2channels.keys())
+        }
     wav_list = {}
-    with open(os.path.join(data_dir,'wav.scp'),'r') as f:
+    with open(os.path.join(data_dir, "wav.scp"), "r") as f:
         for line in f.readlines():
             utt, wav = line.strip().split()
             if reco2channels is not None:
@@ -175,6 +192,7 @@ def get_wav_list(data_dir, reco2channels=None):
             else:
                 wav_list[utt] = wav
     return wav_list
+
 
 def get_speech_segments(uttid, wav, vad):
     """
@@ -188,16 +206,21 @@ def get_speech_segments(uttid, wav, vad):
     for segment in segments:
         start = float("{:.2f}".format(segment[0]))
         end = float("{:.2f}".format(segment[1]))
-        segment_id = '{}_{}_{}'.format(uttid,'{:.0f}'.format(100*start).zfill(6), '{:.0f}'.format(100*end).zfill(6))
-        print ("{} {} {} {}".format(segment_id, uttid, start, end))
+        segment_id = "{}_{}_{}".format(
+            uttid,
+            "{:.0f}".format(100 * start).zfill(6),
+            "{:.0f}".format(100 * end).zfill(6),
+        )
+        print("{} {} {} {}".format(segment_id, uttid, start, end))
     return
+
 
 def main():
     # First we read and check the arguments
     args = get_args()
     check_args(args)
-    
-    if (args.reco2ch_file is not None):
+
+    if args.reco2ch_file is not None:
         reco2channels = get_reco2channels(args.reco2ch_file)
         wav_list = get_wav_list(args.data_dir, reco2channels)
     else:
@@ -208,5 +231,5 @@ def main():
         get_speech_segments(utt, wav_list[utt], vad)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

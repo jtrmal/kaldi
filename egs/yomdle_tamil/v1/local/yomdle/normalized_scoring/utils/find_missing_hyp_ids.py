@@ -15,9 +15,12 @@ if len(sys.argv) != 3:
 hyp_file = sys.argv[1]
 ref_file = sys.argv[2]
 
+
 def main():
 
-    with open(hyp_file, 'r', encoding='utf-8') as hyp_fh, open(ref_file, 'r', encoding='utf-8') as ref_fh:
+    with open(hyp_file, "r", encoding="utf-8") as hyp_fh, open(
+        ref_file, "r", encoding="utf-8"
+    ) as ref_fh:
         ref_ids = set()
         for utt, uttid in SnorIter(ref_fh):
             ref_ids.add(uttid)
@@ -25,6 +28,7 @@ def main():
         for utt, uttid in SnorIter(hyp_fh):
             if uttid not in ref_ids:
                 print(uttid)
+
 
 if __name__ == "__main__":
     main()

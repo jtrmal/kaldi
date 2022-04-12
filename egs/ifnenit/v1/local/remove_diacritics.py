@@ -8,11 +8,15 @@
 
 import unicodedata
 import sys, io
-def strip_accents(s):
-    return ''.join(c for c in unicodedata.normalize('NFD', s)
-        if unicodedata.category(c) != 'Mn')
 
-in_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
-out_stream = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+def strip_accents(s):
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn"
+    )
+
+
+in_stream = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
+out_stream = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 for line in in_stream:
     out_stream.write(strip_accents(line))
