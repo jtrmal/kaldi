@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import codecs
 import sys
@@ -8,19 +8,12 @@ from string import maketrans
 
 ## Global vars
 
-normdict = {".": "",
-            ",": "",
-            ":": "",
-            ";": "",
-            "?": "",
-            "\\": " ",
-            "\t": " "
-            }
+normdict = {".": "", ",": "", ":": "", ";": "", "?": "", "\\": " ", "\t": " "}
 
-from_chars = ''.join(list(normdict.keys()))
-to_chars = ''.join(list(normdict.values()))
+from_chars = "".join(list(normdict.keys()))
+to_chars = "".join(list(normdict.values()))
 
-#t_table = maketrans(from_chars, to_chars)
+# t_table = maketrans(from_chars, to_chars)
 
 
 ## Main
@@ -31,9 +24,9 @@ outtext = codecs.open(sys.argv[3], "w", "utf8")
 
 
 for line in transcript:
-    normtext1 = re.sub(r'[\.,:;\?]', '', line)
-    normtext2 = re.sub(r'[\t\\]', ' ', normtext1)
-    normtext3 = re.sub(r'  +', ' ', normtext2.strip())
+    normtext1 = re.sub(r"[\.,:;\?]", "", line)
+    normtext2 = re.sub(r"[\t\\]", " ", normtext1)
+    normtext3 = re.sub(r"  +", " ", normtext2.strip())
     normtext4 = writenumbers.normNumber(normtext3, numtable)
     outtext.write(normtext4)
 
