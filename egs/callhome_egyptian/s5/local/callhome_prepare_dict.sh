@@ -29,7 +29,7 @@ fi
 cat $lexicon/callhome_arabic_lexicon_991012/ar_lex.v07 | awk 'BEGIN {OFS="\t"} {print $1,$3};' \
     > $tmpdir/lexicon.1
 
-python local/split_alt_punc.py
+python3 local/split_alt_punc.py
 
 cat $tmpdir/lexicon.2 | awk '{print $1}' > $tmpdir/uniquewords
 cat $tmpdir/lexicon.2 | awk '{print $2}' > $tmpdir/lexicon_raw
@@ -41,11 +41,11 @@ cat $tmpdir/phones_extended | sort | awk '{if ($1 != "") {print;}}' > $tmpdir/ph
 mv $tmpdir/phones $tmpdir/phones.small
 mv $tmpdir/phones_extended.1 $tmpdir/phones
 sort $tmpdir/phones -o $tmpdir/phones
-paste -d ' ' $tmpdir/uniquewords $tmpdir/lexicon_one_column > $tmpdir/lexicon.3 
+paste -d ' ' $tmpdir/uniquewords $tmpdir/lexicon_one_column > $tmpdir/lexicon.3
 
 cp $tmpdir/phones $dir/nonsilence_phones.txt
 
-# silence phones, one per line. 
+# silence phones, one per line.
 for w in sil laughter noise oov hes; do echo $w; done > $dir/silence_phones.txt
 echo sil > $dir/optional_silence.txt
 
@@ -73,16 +73,16 @@ sort -nr > $tmpdir/word_counts
 
 awk '{print $1}' $dir/lexicon.txt | \
 perl -e '($word_counts)=@ARGV;
-open(W, "<$word_counts")||die "opening word-counts $word_counts";             
+open(W, "<$word_counts")||die "opening word-counts $word_counts";
 while(<STDIN>) { chop; $seen{$_}=1; }
 while(<W>) {
  ($c,$w) = split;
- if (!defined $seen{$w}) { print; }                                          
-} ' $tmpdir/word_counts > $tmpdir/oov_counts.txt                                    
-                                                                             
-echo "*Highest-count OOVs are:"                                                  
-head -n 20 $tmpdir/oov_counts.txt 
+ if (!defined $seen{$w}) { print; }
+} ' $tmpdir/word_counts > $tmpdir/oov_counts.txt
 
-$utils/validate_dict_dir.pl $dir                                                  
+echo "*Highest-count OOVs are:"
+head -n 20 $tmpdir/oov_counts.txt
+
+$utils/validate_dict_dir.pl $dir
 exit 0;
 

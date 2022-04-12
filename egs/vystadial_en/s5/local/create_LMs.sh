@@ -30,7 +30,7 @@ function build_0gram {
     cut -d' ' -f2- $transcr | tr ' ' '\n' | sort -u > $lm
     echo "<s>" >> $lm
     echo "</s>" >> $lm
-    python -c """
+    python3 -c """
 import math
 with open('$lm', 'r+') as f:
     lines = f.readlines()

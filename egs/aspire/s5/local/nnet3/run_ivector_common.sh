@@ -44,7 +44,7 @@ if [ $stage -le 1 ]; then
     else
       num_reps=1
     fi
-    python steps/data/reverberate_data_dir.py \
+    python3 steps/data/reverberate_data_dir.py \
       "${rvb_opts[@]}" \
       --prefix "rev" \
       --foreground-snrs $foreground_snrs \

@@ -8,7 +8,7 @@
 #    predict - Directory of input predict csv files
 #        formt: ID,name,col1,row1,col2,row2,col3,row3,col4,row4,box_conf
 #    iou - intersection over union
-#    
+#
 # OUTPUT:
 #    output - output directory of results (plot)
 #    log - log output
@@ -30,7 +30,7 @@ echo "Predict ${PREDICT_CSV}"
 echo "Results ${RESULTS}"
 
 echo "\n...evalulate text detection"
-python /exp/detter/scale18/ocr/cv_scale/eval/eval_detect_lines.py \
+python3 /exp/detter/scale18/ocr/cv_scale/eval/eval_detect_lines.py \
 --truth=${TRUTH_CSV} \
 --predict=${PREDICT_CSV} \
 --iou=${IOU} \

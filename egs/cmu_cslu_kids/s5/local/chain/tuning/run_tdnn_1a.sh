@@ -17,7 +17,7 @@
 #   tdnn_1a     tg_small    CSLU_Kids   12.50
 
 # steps/info/chain_dir_info.pl exp/chain/tdnn1a_sp
-# exp/chain/tdnn1a_sp/: num-iters=342 nj=2..5 num-params=17.9M dim=40+100->3192 combine=-0.042->-0.041 (over 8) xent:train/valid[227,341,final]=(-0.451,-0.363,-0.346/-0.524,-0.466,-0.434) logprob:train/valid[227,341,final]=(-0.047,-0.043,-0.042/-0.058,-0.056,-0.054) 
+# exp/chain/tdnn1a_sp/: num-iters=342 nj=2..5 num-params=17.9M dim=40+100->3192 combine=-0.042->-0.041 (over 8) xent:train/valid[227,341,final]=(-0.451,-0.363,-0.346/-0.524,-0.466,-0.434) logprob:train/valid[227,341,final]=(-0.047,-0.043,-0.042/-0.058,-0.056,-0.054)
 
 set -euo pipefail
 
@@ -27,12 +27,12 @@ stage=0
 nj=10
 train_set=train
 test_sets="test"
-gmm=tri3       
+gmm=tri3
 nnet3_affix=
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-affix=1a  
+affix=1a
 tree_affix=
 train_stage=-10
 get_egs_stage=-10
@@ -141,24 +141,24 @@ fi
 if [ $stage -le 11 ]; then
     mkdir -p $dir
     echo "$0: creating neural net configs using the xconfig parser";
-    
+
     num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-    learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+    learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
     opts="l2-regularize=0.004 dropout-proportion=0.0 dropout-per-dim=true dropout-per-dim-continuous=true"
     linear_opts="orthonormal-constraint=-1.0 l2-regularize=0.004"
     output_opts="l2-regularize=0.002"
-    
+
     mkdir -p $dir/configs
-    
+
     cat <<EOF > $dir/configs/network.xconfig
     input dim=100 name=ivector
     input dim=40 name=input
-    
+
     # please note that it is important to have input layer with the name=input
     # as the layer immediately preceding the fixed-affine-layer to enable
     # the use of short notation for the descriptor
     fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
-    
+
     # the first splicing is moved before the lda layer, so no splicing here
     relu-batchnorm-dropout-layer name=tdnn1 $opts dim=1024
     linear-component name=tdnn2l0 dim=256 $linear_opts input=Append(-1,0)
@@ -190,21 +190,21 @@ if [ $stage -le 11 ]; then
     linear-component name=tdnn11l dim=256 $linear_opts input=Append(-3,0)
     relu-batchnorm-dropout-layer name=tdnn11 $opts input=Append(0,3,tdnn10l,tdnn9l,tdnn7l) dim=1024
     linear-component name=prefinal-l dim=256 $linear_opts
-    
+
     relu-batchnorm-layer name=prefinal-chain input=prefinal-l $opts dim=1280
     linear-component name=prefinal-chain-l dim=256 $linear_opts
     batchnorm-component name=prefinal-chain-batchnorm
     output-layer name=output include-log-softmax=false dim=$num_targets $output_opts
-    
+
     relu-batchnorm-layer name=prefinal-xent input=prefinal-l $opts dim=1280
     linear-component name=prefinal-xent-l dim=256 $linear_opts
     batchnorm-component name=prefinal-xent-batchnorm
     output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor $output_opts
-    
+
 EOF
 
     steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
-    
+
 fi
 
 
@@ -213,7 +213,7 @@ if [ $stage -le 12 ]; then
       utils/create_split_dir.pl \
        /export/b0{3,4,5,6}/$USER/kaldi-data/egs/mini_librispeech-$(date +'%m_%d_%H_%M')/s5/$dir/egs/storage $dir/egs/storage
     fi
-    
+
     steps/nnet3/chain/train.py --stage=$train_stage \
       --cmd="$decode_cmd" \
       --feat.online-ivector-dir=$train_ivector_dir \

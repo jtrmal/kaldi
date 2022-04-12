@@ -6,7 +6,7 @@
 # "These IRs are released under the Creative Commons Attribution-Noncommercial-Share-Alike license with attribution to the Centre for Digital Music, Queen Mary, University of London."
 # http://isophonics.net/content/room-impulse-response-data-set
 
-download=true 
+download=true
 sampling_rate=8k
 output_bit=16
 DBname=C4DM
@@ -91,11 +91,11 @@ tmpdir=`mktemp -d $log_dir/c4dm_XXXXXX`
 tmpdir=`utils/make_absolute.sh $tmpdir`
 file_count=1
 for data_file in ${data_files[@]}; do
-  # c4dm has incompatible format of wav audio, which are not compatible with python's wav.read() function
+  # c4dm has incompatible format of wav audio, which are not compatible with python3's wav.read() function
  # output_file_name=${DBname}_type${type_num}_${file_count}_`basename $data_file| tr '[:upper:]' '[:lower:]'`
   output_file_name=${DBname}_type${type_num}_`basename $data_file| tr '[:upper:]' '[:lower:]'`
   echo "sox -t wav $data_file -t wav -r $sampling_rate -e signed-integer -b $output_bit ${output_dir}/${output_file_name}" >> $command_file
-  #echo "python local/multi_condition/read_rir.py --output-sampling-rate $sampling_rate wav ${tmpdir}/${file_count}.wav ${output_dir}/${output_file_name} || exit -1;" >> $command_file
+  #echo "python3 local/multi_condition/read_rir.py --output-sampling-rate $sampling_rate wav ${tmpdir}/${file_count}.wav ${output_dir}/${output_file_name} || exit -1;" >> $command_file
   echo ${output_dir}/${output_file_name} >>  $log_dir/${DBname}_type${type_num}.rir.list
   file_count=$((file_count + 1))
 done

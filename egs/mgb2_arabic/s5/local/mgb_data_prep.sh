@@ -33,11 +33,11 @@ head -500 $train_dir/wav_list > $train_dir/wav_list.short
 set -e -o pipefail
 
 xmldir=$db_dir/train/xml/bw
-if [ $process_xml == "python" ]; then
-  echo "using python to process xml file"
-  # check if bs4 and lxml are installin in python
+if [ $process_xml == "python3" ]; then
+  echo "using python3 to process xml file"
+  # check if bs4 and lxml are installin in python3
   local/check_tools.sh
-  # process xml file using python
+  # process xml file using python3
   cat $train_dir/wav_list | while read basename; do
     [ ! -e $xmldir/$basename.xml ] && echo "Missing $xmldir/$basename.xml" && exit 1
     local/process_xml.py $xmldir/$basename.xml - | local/add_to_datadir.py $basename $train_dir $mer
@@ -52,12 +52,12 @@ elif [ $process_xml == 'xml' ]; then
       echo $basename $wavDir/$basename.wav >> $train_dir/wav.scp
     done
   else
-    echo "xml not found, you may use python by '--process-xml python'"
+    echo "xml not found, you may use python3 by '--process-xml python3'"
     exit 1;
   fi
 else
   # invalid option
-  echo "$0: invalid option for --process-xml, choose from 'xml' or 'python'"
+  echo "$0: invalid option for --process-xml, choose from 'xml' or 'python3'"
   exit 1;
 fi
 
@@ -69,7 +69,7 @@ find $db_dir/dev/wav -type f -name "*.wav" | \
   awk -F/ '{print $NF}' | perl -pe 's/\.wav//g' > \
   $dev_dir/wav_list
 
-for x in $(cat $dev_dir/wav_list); do 
+for x in $(cat $dev_dir/wav_list); do
   echo $x $db_dir/dev/wav/$x.wav >> $dev_dir/wav.scp
 done
 

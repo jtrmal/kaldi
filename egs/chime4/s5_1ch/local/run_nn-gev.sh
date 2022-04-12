@@ -19,11 +19,11 @@ track=$4
 gpu_id=1
 case $(hostname -f) in
   *.clsp.jhu.edu) gpu_id=`free-gpu` ;; # JHU,
-esac 
+esac
 
 if [ ! -f local/nn-gev/data/BLSTM_model/mlp.tr ]; then
     echo "training a BLSTM mask network"
-    $HOME/miniconda3/bin/python local/nn-gev/train.py --chime_dir=$sdir/data --gpu $gpu_id local/nn-gev/data BLSTM
+    $HOME/miniconda3/bin/python3 local/nn-gev/train.py --chime_dir=$sdir/data --gpu $gpu_id local/nn-gev/data BLSTM
 else
     echo "Not training a BLSTM mask network. Using existing model in local/nn-gev/data/BLSTM_model/"
 fi

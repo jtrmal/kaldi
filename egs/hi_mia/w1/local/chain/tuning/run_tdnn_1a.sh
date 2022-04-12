@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Copyright 2020 Audio, Speech and Language Processing Group (ASLP@NPU), Northwestern Polytechnical University (Authors: Zhuoyuan Yao, Xiong Wang, Jingyong Hou, Lei Xie)
-#           2020 AIShell-Foundation (Author: Bengu WU) 
-#           2020 Beijing Shell Shell Tech. Co. Ltd. (Author: Hui BU) 
+#           2020 AIShell-Foundation (Author: Bengu WU)
+#           2020 Beijing Shell Shell Tech. Co. Ltd. (Author: Hui BU)
 # Apache 2.0
 
 
@@ -13,7 +13,7 @@ affix=kws
 stage=0
 train_stage=-10
 get_egs_stage=-10
-dir=exp/chain/tdnn_1b  
+dir=exp/chain/tdnn_1b
 decode_iter=
 
 # training options
@@ -80,7 +80,7 @@ if [ $stage -le 10 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
   feat_dim=$(feat-to-dim scp:data/${train_set}/feats.scp -)
   num_targets=$(tree-info $treedir/tree | grep num-pdfs | awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   opts="l2-regularize=0.002"
   linear_opts="orthonormal-constraint=1.0"
   output_opts="l2-regularize=0.0005 bottleneck-dim=8"
@@ -94,7 +94,7 @@ if [ $stage -le 10 ]; then
   # the use of short notation for the descriptor
   conv-relu-batchnorm-layer name=cnn1 height-in=71 height-out=71 time-offsets=-1,0,1 height-offsets=-1,0,1 num-filters-out=32
   linear-component name=cnnl1 dim=284 $linear_opts
-  
+
   # the first splicing is moved before the lda layer, so no splicing here
   relu-batchnorm-layer name=tdnn1 dim=850
   relu-batchnorm-layer name=tdnn2 dim=850 input=Append(-1,0,2)
@@ -102,7 +102,7 @@ if [ $stage -le 10 ]; then
   relu-batchnorm-layer name=tdnn4 dim=850 input=Append(-7,0,2)
   relu-batchnorm-layer name=tdnn5 dim=850 input=Append(-3,0,3)
   relu-batchnorm-layer name=tdnn6 dim=850
-  linear-component name=prefinal-l dim=256 $linear_opts 
+  linear-component name=prefinal-l dim=256 $linear_opts
   relu-batchnorm-layer name=prefinal-chain input=prefinal-l $opts dim=850 target-rms=0.5
   output-layer name=output include-log-softmax=false dim=$num_targets $output_opts max-change=1.5
 
@@ -154,7 +154,7 @@ if [ $stage -le 12 ]; then
   utils/mkgraph.sh --self-loop-scale 1.0 data/lang_test $dir $dir/graph
 fi
 
-graph_dir=$dir/graph 
+graph_dir=$dir/graph
 if [ $stage -le 13 ]; then
   for test_set in $test_sets; do
     nj=40

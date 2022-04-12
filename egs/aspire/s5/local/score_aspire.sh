@@ -45,9 +45,9 @@ out_file=$5
 model=$decode_dir/../$iter.mdl # assume model one level up from decoding dir.
 
 mkdir -p $decode_dir/scoring
-# create a python script to filter the ctm, for labels which are mapped
+# create a python3 script to filter the ctm, for labels which are mapped
 # to null strings in the glm or which are not accepted by the scoring server
-python -c "
+python3 -c "
 import sys, re
 lines = map(lambda x: x.strip(), open('data/${act_data_set}/glm').readlines())
 patterns = []
@@ -80,7 +80,7 @@ for line in file:
 out_file.close()
 EOF
 
-filter_ctm_command="python $decode_dir/scoring/filter_ctm.py "
+filter_ctm_command="python3 $decode_dir/scoring/filter_ctm.py "
 
 if  $tune_hyper ; then
   # find the best lmwt and word_insertion_penalty based on the transcripts
@@ -104,7 +104,7 @@ if  $tune_hyper ; then
 
       eval "grep Sum $decode_dir/score_{${min_lmwt}..${max_lmwt}}/penalty_{$word_ins_penalties}/*.sys"|utils/best_wer.sh 2>/dev/null
       eval "grep Sum $decode_dir/score_{${min_lmwt}..${max_lmwt}}/penalty_{$word_ins_penalties}/*.sys" | \
-       utils/best_wer.sh 2>/dev/null | python -c "import sys, re
+       utils/best_wer.sh 2>/dev/null | python3 -c "import sys, re
 line = sys.stdin.readline()
 file_name=line.split()[-1]
 parts=file_name.split('/')

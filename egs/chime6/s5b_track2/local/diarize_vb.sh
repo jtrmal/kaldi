@@ -5,7 +5,7 @@
 # Apache 2.0.
 #
 # This is an example of overlap-aware VB resegmentation. We use the pretrained
-# Pyannote DIHARD model for overlap detection. We process each array 
+# Pyannote DIHARD model for overlap detection. We process each array
 # independently and then combine all the RTTMs using DOVER-Lap.
 
 stage=0
@@ -102,7 +102,7 @@ if [ $stage -le 6 ]; then
   utils/data/convert_data_dir_to_whole.sh data/${name} data/${name}_whole
   steps/make_mfcc.sh --nj $nj --cmd "$cmd" --write-utt2num-frames true \
     --mfcc-config conf/mfcc_hires.conf data/${name}_whole
-fi 
+fi
 
 if [ $stage -le 7 ]; then
   echo "$0: VB-based overlap assignment"
@@ -111,7 +111,7 @@ if [ $stage -le 7 ]; then
     --max-speakers 4 --max-iters 1 --loopProb 0.9 \
     data/${name}_whole ${out_dir}/rttm exp/${name}_vb \
     ${nnet_dir}/final.dubm ${nnet_dir}/final.ie || exit 1;
-fi 
+fi
 
 hyp_rttm=exp/${name}_vb/VB_rttm_ol
 # For scoring the diarization system, we use the same tool that was
@@ -131,7 +131,7 @@ if [ $stage -le 8 ]; then
   if ! [ -d dscore ]; then
     git clone https://github.com/nryant/dscore.git || exit 1;
     cd dscore
-    python -m pip install --user -r requirements.txt
+    python3 -m pip install --user -r requirements.txt
     cd ..
   fi
   sed 's/_U0[1-6]\.ENH//g' $ref_rttm > $ref_rttm.scoring
@@ -139,7 +139,7 @@ if [ $stage -le 8 ]; then
   ref_rttm_path=$(readlink -f ${ref_rttm}.scoring)
   hyp_rttm_path=$(readlink -f ${hyp_rttm}.scoring)
   cat ./local/uem_file | grep 'U06' | sed 's/_U0[1-6]//g' > ./local/uem_file.scoring
-  cd dscore && python score.py -u ../local/uem_file.scoring -r $ref_rttm_path \
+  cd dscore && python3 score.py -u ../local/uem_file.scoring -r $ref_rttm_path \
     -s $hyp_rttm_path && cd .. || exit 1;
 fi
 exit 0

@@ -133,7 +133,7 @@ if [ $stage -le 10 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
   opts="l2-regularize=0.004 dropout-proportion=0.0 dropout-per-dim=true dropout-per-dim-continuous=true"
   linear_opts="orthonormal-constraint=-1.0 l2-regularize=0.004"
   output_opts="l2-regularize=0.002"
@@ -190,7 +190,7 @@ if [ $stage -le 10 ]; then
   linear-component name=prefinal-xent-l dim=256 $linear_opts
   batchnorm-component name=prefinal-xent-batchnorm
   output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor $output_opts
-  
+
 EOF
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
 fi

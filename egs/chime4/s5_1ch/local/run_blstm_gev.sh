@@ -38,7 +38,7 @@ if [ ! -d $miniconda_dir ]; then
 fi
 
 # check if chainer is installed
-result=`$HOME/miniconda3/bin/python -c "\
+result=`$HOME/miniconda3/bin/python3 -c "\
 try:
     import chainer
     print('1')

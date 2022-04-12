@@ -13,7 +13,7 @@ generate_alignments=true # false if doing ctc training
 . ./path.sh
 . ./utils/parse_options.sh
 
-mkdir -p exp/nnet3 
+mkdir -p exp/nnet3
 # perturb the data
 train_set=train
 if [ $stage -le 1 ]; then
@@ -30,7 +30,7 @@ if [ $stage -le 1 ]; then
     data/${train_set}_tmp exp/make_mfcc/${train_set}_tmp $mfccdir || exit 1;
   steps/compute_cmvn_stats.sh data/${train_set}_tmp exp/make_mfcc/${train_set}_tmp $mfccdir || exit1;
   utils/fix_data_dir.sh data/${train_set}_tmp
-    
+
   utils/copy_data_dir.sh --spk-prefix sp1.0- --utt-prefix sp1.0- data/${train_set} data/temp0
   utils/combine_data.sh data/${train_set}_sp data/${train_set}_tmp data/temp0
   utils/fix_data_dir.sh data/${train_set}_sp
@@ -46,7 +46,7 @@ if [ $stage -le 2 ] && [ "$generate_alignments" == "true" ]; then
 fi
 
 if [ $stage -le 3 ]; then
-  
+
   mfccdir=mfcc_hires
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $mfccdir/storage ]; then
     date=$(date +'%m_%d_%H_%M')
@@ -58,7 +58,7 @@ if [ $stage -le 3 ]; then
     utils/copy_data_dir.sh data/$dataset $data_dir
 
       # this next section does volume perturbation on the data.
-    cat $data_dir/wav.scp | python -c "
+    cat $data_dir/wav.scp | python3 -c "
 import sys, os, subprocess, re, random
 random.seed(0)
 scale_low = 1.0/8
@@ -111,7 +111,7 @@ if [ $stage -le 7 ]; then
 fi
 
 if [ $stage -le 8 ]; then
-  
+
     steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 data/${train_set_sp}_hires \
         data/${train_set_sp}_hires_max2
 

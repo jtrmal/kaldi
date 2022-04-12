@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# this is a replica of_6h script, but makes use of the python trainer
+# this is a replica of_6h script, but makes use of the python3 trainer
 set -e
 
 # configs for 'chain'

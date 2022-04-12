@@ -48,7 +48,7 @@ train_stage=-100
 nj=80
 test_nj=50
 
-# The following 3 options decide the output directory for semi-supervised 
+# The following 3 options decide the output directory for semi-supervised
 # chain system
 # dir=${exp_root}/chain${chain_affix}/tdnn${tdnn_affix}
 
@@ -231,7 +231,7 @@ if [ $stage -le 11 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $sup_tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig

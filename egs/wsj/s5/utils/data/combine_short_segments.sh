@@ -66,7 +66,7 @@ if ! utils/validate_data_dir.sh --no-text $srcdir; then
   exit 1
 fi
 
-if ! python -c "x=float('$min_seg_len'); assert(x>0.0 and x<100.0);" 2>/dev/null; then
+if ! python3 -c "x=float('$min_seg_len'); assert(x>0.0 and x<100.0);" 2>/dev/null; then
   echo "$0: bad <min-segment-length-in-seconds>: got '$min_seg_len'"
   exit 1
 fi
@@ -171,7 +171,7 @@ for uniq in sorted(uniq2orig_uniq.keys()):
   # orig_uniq value.]
   # the first apply_map.pl command maps the 'utt1' to the 'uniq' value it mapped to
   # in $srcdir, and the second apply_map.pl command maps it to the grouped 'uniq'
-  # value obtained by the inline python script above.
+  # value obtained by the inline python3 script above.
   awk '{print $1, $2}' < $dir/utt2utts | utils/apply_map.pl -f 2 $srcdir/utt2uniq | \
     utils/apply_map.pl -f 2 $dir/uniq_to_orig_uniq > $dir/utt2uniq
   rm $dir/uniq_to_orig_uniq

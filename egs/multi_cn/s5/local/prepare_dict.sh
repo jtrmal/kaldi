@@ -56,7 +56,7 @@ awk 'NR==FNR{words[$1]; next;} ($1 in words)' \
 
 rm $dict_dir/lexicon-en/words-en-oov.txt
 rm $dict_dir/lexicon-en/words-en-oov-other.txt
-lines=$(python local/extract_ch.py $dict_dir/lexicon-en/words-en-oov-all.txt)
+lines=$(python3 local/extract_ch.py $dict_dir/lexicon-en/words-en-oov-all.txt)
 awk -v arr="${lines}" -v dict_dir="$dict_dir" 'BEGIN{split(arr,line_arr,","); i=1;}{if(NR==line_arr[i]){ if(i < length(line_arr)){i+=1;} print $0 >> dict_dir"/lexicon-en/words-en-oov-other.txt";} else{print $0 >> dict_dir"/lexicon-en/words-en-oov.txt";} }' $dict_dir/lexicon-en/words-en-oov-all.txt
 
 wc -l $dict_dir/lexicon-en/words-en-oov.txt

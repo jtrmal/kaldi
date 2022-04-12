@@ -209,7 +209,7 @@ if [ $stage -le -5 ]; then
 
   if [ ! -z "$jesus_opts" ]; then
     $cmd $dir/log/make_configs.log \
-       python steps/nnet3/make_jesus_configs.py \
+       python3 steps/nnet3/make_jesus_configs.py \
       --xent-regularize=$xent_regularize \
       --include-log-softmax=false \
       --splice-indexes "$splice_indexes"  \
@@ -227,7 +227,7 @@ if [ $stage -le -5 ]; then
       dim_opts="--pnorm-input-dim $pnorm_input_dim --pnorm-output-dim  $pnorm_output_dim"
     fi
 
-    python steps/nnet3/tdnn/make_configs.py $pool_opts \
+    python3 steps/nnet3/tdnn/make_configs.py $pool_opts \
       --include-log-softmax=false \
       --final-layer-normalize-target $final_layer_normalize_target \
       --splice-indexes "$splice_indexes"  \

@@ -180,7 +180,7 @@ if [ $stage -le 15 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
@@ -367,7 +367,7 @@ if [ $stage -le 20 ]; then
   local/chime4_calc_wers.sh exp/chain/tdnn_lstm${affix}_sp $enhan exp/chain/tree_a_sp/graph_tgpr_5k \
     > exp/chain/tdnn_lstm${affix}_sp/best_wer_$enhan.result
   head -n 15 exp/chain/tdnn_lstm${affix}_sp/best_wer_$enhan.result
-  
+
   echo "score looped decoding results"
   local/chime4_calc_wers_looped.sh exp/chain/tdnn_lstm${affix}_sp $enhan exp/chain/tree_a_sp/graph_tgpr_5k \
     > exp/chain/tdnn_lstm${affix}_sp/best_wer_looped_$enhan.result

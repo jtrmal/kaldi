@@ -16,7 +16,7 @@ cat $phone_dir/lexicon1_raw_nosil.txt | \
        > $phone_dir/lexicon2_raw_nosil.txt || exit 1;
 
 
-cat $phone_dir/lexicon2_raw_nosil.txt | python -c 'import sys
+cat $phone_dir/lexicon2_raw_nosil.txt | python3 -c 'import sys
 for l in sys.stdin:
   w = l.strip().split(" ")[0]
   r = w

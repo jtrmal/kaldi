@@ -194,11 +194,11 @@ if [ $stage -le 15 ]; then
   mkdir -p $dir/configs/
   # $dir/init will contain the initial models
   mkdir -p $dir/init/
-  
+
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print(0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print(0.5/$xent_regularize)" | python3)
   tdnn_opts="l2-regularize=0.01 dropout-proportion=0.0 dropout-per-dim-continuous=true"
   tdnnf_opts="l2-regularize=0.01 dropout-proportion=0.0 bypass-scale=0.66"
   linear_opts="l2-regularize=0.01 orthonormal-constraint=-1.0"
@@ -254,7 +254,7 @@ if [ $stage -le 16 ]; then
       exit
   fi
 
-  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info 
+  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info
   model_left_context=$(grep -F 'left-context' $dir/configs/temp.info | awk '{print $2}')
   model_right_context=$(grep -F 'right-context' $dir/configs/temp.info | awk '{print $2}')
   cat >$init_info <<EOF

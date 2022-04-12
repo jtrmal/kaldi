@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copyright Johns Hopkins University (Author: Daniel Povey, Vijayaditya Peddinti) 2015.  Apache 2.0.
-# This script generates the ctm files for dev_aspire, test_aspire and eval_aspire 
+# This script generates the ctm files for dev_aspire, test_aspire and eval_aspire
 # for scoring with ASpIRE scoring server.
 # It also provides the WER for dev_aspire data.
 
@@ -92,7 +92,7 @@ if [ $stage -le 2 ]; then
   rm -rf data/$segmented_data_dir
   copy_data_dir.sh --validate-opts "--no-text" data/$data_dir data/$segmented_data_dir || exit 1;
   cp data/$data_dir/reco2file_and_channel data/$segmented_data_dir/ || exit 1;
-  python local/multi_condition/create_uniform_segments.py --overlap $overlap --window $window data/$segmented_data_dir  || exit 1;
+  python3 local/multi_condition/create_uniform_segments.py --overlap $overlap --window $window data/$segmented_data_dir  || exit 1;
   for file in cmvn.scp feats.scp; do
     rm -f data/$segmented_data_dir/$file
   done
@@ -162,9 +162,9 @@ if [ $stage -le 8 ]; then
       echo "$0: Using provided weights file $weights_file"
       ivector_extractor_input=$weights_file
     else
-      ctm=${decode_dir}_stage1/score_10/${segmented_data_dir}_hires.ctm 
+      ctm=${decode_dir}_stage1/score_10/${segmented_data_dir}_hires.ctm
       echo "$0: generating weights file from stage-1 ctm $ctm"
-      
+
       feat-to-len scp:data/${segmented_data_dir}_hires/feats.scp ark,t:- >${decode_dir}_stage1/utt.lengths.$affix
       if [ ! -f $ctm ]; then  echo "$0: stage 8: expected ctm to exist: $ctm"; exit 1; fi
       cat $ctm | awk '$6 == 1.0 && $4 < 1.0' | \
@@ -186,7 +186,7 @@ if [ $stage -le 8 ]; then
          @A = split(" ", $_);
          @A == 6 || die "bad ctm line $_";
          $utt = $A[0]; $beg = $A[2]; $len = $A[3];
-         $beg_int = int($beg * 100) - $pad_frames; 
+         $beg_int = int($beg * 100) - $pad_frames;
          $len_int = int($len * 100) + 2*$pad_frames;
          $array_ref = $utt2ref{$utt};
          !defined $array_ref  && die "No length info for utterance $utt";
@@ -249,9 +249,9 @@ else
 fi
 
 mkdir -p $decode_dir/scoring
-# create a python script to filter the ctm, for labels which are mapped
+# create a python3 script to filter the ctm, for labels which are mapped
 # to null strings in the glm or which are not accepted by the scoring server
-python -c "
+python3 -c "
 import sys, re
 lines = map(lambda x: x.strip(), open('data/${act_data_dir}/glm').readlines())
 patterns = []
@@ -264,7 +264,7 @@ print '|'.join(patterns)
 " > $decode_dir/scoring/glm_ignore_patterns || exit 1;
 
 ignore_patterns=$(cat $decode_dir/scoring/glm_ignore_patterns)
-echo "$0: Ignoring these patterns from the ctm ", $ignore_patterns 
+echo "$0: Ignoring these patterns from the ctm ", $ignore_patterns
 cat << EOF > $decode_dir/scoring/filter_ctm.py
 import sys
 file = open(sys.argv[1])
@@ -284,7 +284,7 @@ for line in file:
 out_file.close()
 EOF
 
-filter_ctm_command="python $decode_dir/scoring/filter_ctm.py "
+filter_ctm_command="python3 $decode_dir/scoring/filter_ctm.py "
 
 if  $tune_hyper ; then
   if [ $stage -le 11 ]; then
@@ -300,11 +300,11 @@ if  $tune_hyper ; then
             --window $window --overlap $overlap \
             --beam $ctm_beam --decode-mbr $decode_mbr \
             --glm data/${act_data_dir}/glm --stm data/${act_data_dir}/stm \
-          LMWT \$wip $lang data/${segmented_data_dir}_hires $model $decode_dir || exit 1; 
+          LMWT \$wip $lang data/${segmented_data_dir}_hires $model $decode_dir || exit 1;
 
       eval "grep Sum $decode_dir/score_{${min_lmwt}..${max_lmwt}}/penalty_{$word_ins_penalties}/*.sys"|utils/best_wer.sh 2>/dev/null
       eval "grep Sum $decode_dir/score_{${min_lmwt}..${max_lmwt}}/penalty_{$word_ins_penalties}/*.sys" | \
-       utils/best_wer.sh 2>/dev/null | python -c "import sys, re
+       utils/best_wer.sh 2>/dev/null | python3 -c "import sys, re
 line = sys.stdin.readline()
 file_name=line.split()[-1]
 parts=file_name.split('/')
@@ -352,7 +352,7 @@ fi
 
 if [ $stage -le 13 ]; then
   cat $decode_dir/score_$LMWT/penalty_$word_ins_penalty/ctm.filt | awk '{split($1, parts, "-"); printf("%s 1 %s %s %s\n", parts[1], $3, $4, $5)}' > $out_file
-  cat data/${segmented_data_dir}_hires/wav.scp | awk '{split($1, parts, "-"); printf("%s\n", parts[1])}' > $decode_dir/score_$LMWT/penalty_$word_ins_penalty/recording_names 
+  cat data/${segmented_data_dir}_hires/wav.scp | awk '{split($1, parts, "-"); printf("%s\n", parts[1])}' > $decode_dir/score_$LMWT/penalty_$word_ins_penalty/recording_names
   local/multi_condition/fill_missing_recordings.py $out_file $out_file.submission $decode_dir/score_$LMWT/penalty_$word_ins_penalty/recording_names
   echo "Generated the ctm @ $out_file.submission from the ctm file $decode_dir/score_${LMWT}/penalty_$word_ins_penalty/ctm.filt"
 fi

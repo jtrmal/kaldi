@@ -60,11 +60,11 @@ set -e
 
 data_dir=data/pytorchnn
 
-# Check if PyTorch is installed to use with python
+# Check if PyTorch is installed to use with python3
 if python3 steps/pytorchnn/check_py.py 2>/dev/null; then
-  echo PyTorch is ready to use on the python side. This is good.
+  echo PyTorch is ready to use on the python3 side. This is good.
 else
-  echo PyTorch not found on the python side.
+  echo PyTorch not found on the python3 side.
   echo Please install PyTorch first. For example, you can install it with conda:
   echo "conda install pytorch torchvision cudatoolkit=10.2 -c pytorch", or
   echo with pip: "pip install torch torchvision". If you already have PyTorch

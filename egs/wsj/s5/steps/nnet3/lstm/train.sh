@@ -253,7 +253,7 @@ if [ $stage -le -5 ]; then
 
   # create the config files for nnet initialization
   # note an additional space is added to splice_indexes to
-  # avoid issues with the python ArgParser which can have
+  # avoid issues with the python3 ArgParser which can have
   # issues with negative arguments (due to minus sign)
   config_extra_opts=()
   [ ! -z "$lstm_delay" ] && config_extra_opts+=(--lstm-delay "$lstm_delay")
@@ -674,7 +674,7 @@ if [ $stage -le $num_iters ]; then
     nnets_list[$n]="nnet3-am-copy --raw=true $mdl -|";
   done
 
-  combine_num_chunk_per_minibatch=$(python -c "print int(1024.0/($chunk_width))")
+  combine_num_chunk_per_minibatch=$(python3 -c "print int(1024.0/($chunk_width))")
   $cmd $combine_queue_opt $dir/log/combine.log \
     nnet3-combine --num-iters=40 \
        --enforce-sum-to-one=true --enforce-positive-weights=true \

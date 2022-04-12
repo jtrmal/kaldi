@@ -141,7 +141,7 @@ cat exp/scores_gmm_2048_dep_male/plda_scores exp/scores_gmm_2048_dep_female/plda
 echo "GMM-$num_components EER"
 for x in ind dep; do
   for y in female male pooled; do
-    eer=`compute-eer <(python local/prepare_for_eer.py $trials exp/scores_gmm_${num_components}_${x}_${y}/plda_scores) 2> /dev/null`
+    eer=`compute-eer <(python3 local/prepare_for_eer.py $trials exp/scores_gmm_${num_components}_${x}_${y}/plda_scores) 2> /dev/null`
     echo "${x} ${y}: $eer"
   done
 done

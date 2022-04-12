@@ -145,7 +145,7 @@ if [ $stage -le 10 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
   opts="l2-regularize=0.01 dropout-per-dim=true dropout-per-dim-continuous=true"
   linear_opts="orthonormal-constraint=1.0"
   output_opts="l2-regularize=0.005"
@@ -257,7 +257,7 @@ if [ $stage -le 13 ]; then
 
   for data in $test_sets; do
     (
-      nspk=$(wc -l <data/${data}_hires/spk2utt)  
+      nspk=$(wc -l <data/${data}_hires/spk2utt)
       steps/nnet3/decode.sh \
           --acwt 1.0 --post-decode-acwt 10.0 \
           --extra-left-context 0 --extra-right-context 0 \

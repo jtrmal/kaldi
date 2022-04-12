@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov) 
+# Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov)
 
 set -e
 
@@ -43,7 +43,7 @@ exp_dir=
 		--lang \
 		--filter \
 		--graph \
-		--exp_dir 
+		--exp_dir
 
 
 # Checking what decode and generate files exists
@@ -54,7 +54,7 @@ train_decoded=$exp_dir/train.decoded
 train_generated=$exp_dir/train.generated
 out_test_egs=$exp_dir/test.egs
 
-if [ ! -f $test_decoded ] ; then 
+if [ ! -f $test_decoded ] ; then
 	echo "$0: Error: $test_decoded is missing. This file should be generated in stage run_1_decode.sh"
 	exit 1
 fi
@@ -69,7 +69,7 @@ unk=$(cat $lang/oov.txt)
 
 if [ $stage -le 0 ] ; then
 	echo "$0: Stage 0: Get egs for tests"
-	cat $test_decoded | while read -a data_X_lats ; do 
+	cat $test_decoded | while read -a data_X_lats ; do
 		dir=${data_X_lats[0]}
 		lats=${data_X_lats[1]}
 		egs_dir=$lats/$egs_basename
@@ -86,7 +86,7 @@ if [ $stage -le 0 ] ; then
 					--filter $filter \
 					--max_len $max_len \
  					--skip_scoring false \
-					--lang $lang 
+					--lang $lang
 			echo "$dir $egs_dir" >> $out_test_egs
 			touch $egs_dir/.done
 		fi
@@ -95,7 +95,7 @@ fi
 
 if [ $stage -le 1 ] ; then
 	echo "$0: Stage 1: Get egs for train sets"
-		cat $train_decoded $train_generated | while read -a data_X_lats ; do 
+		cat $train_decoded $train_generated | while read -a data_X_lats ; do
 		
 		dir=${data_X_lats[0]}
 		 lats=${data_X_lats[1]}
@@ -114,18 +114,18 @@ if [ $stage -le 1 ] ; then
 					--out_dir $egs_dir \
 					--filter $filter \
 					--skip_scoring true \
-					--lang $lang 
+					--lang $lang
 			touch $egs_dir/.done
 		fi
 	done
 fi
 
-#if [ $stage -le 2 ] ; then 
+#if [ $stage -le 2 ] ; then
 #	echo "$0: Stage 1: Get egs for generated train sets"
 #	run.pl JOB=1:
 
 
-#if [ $stage -le 2 ] ; then 
+#if [ $stage -le 2 ] ; then
 #	echo "$0: Generate $exp_dir/data_config.json"
 #	train_d=$(cat $train_decoded | while read -a data_X_lats ; do echo -n "${data_X_lats[1]}/$egs_basename,$(basename ${data_X_lats[1]})" ; done)
 #	train_g=$(cat $train_generated | while read -a data_X_lats ; do echo -n "${data_X_lats[1]}/$egs_basename,$(basename ${data_X_lats[1]}) " ; done)
@@ -133,7 +133,7 @@ fi
 #	test=$(cat $test_decoded | while read -a data_X_lats ; do echo -n "${data_X_lats[1]}/$egs_basename,${data_X_lats[0]}/text_filtered " ; done )
 #	out=$exp_dir/balanced_data_config.json
 #
-#	python ../../lattice_transformer/pyscripts/get_balanced_data_config.py --epoch_max_MB $epoch_max_MB \
+#	python3 ../../lattice_transformer/pyscripts/get_balanced_data_config.py --epoch_max_MB $epoch_max_MB \
 #			--train_decoded $train_d \
 #			--train_generated $train_g \
 #			--valid $valid \

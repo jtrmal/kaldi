@@ -6,10 +6,10 @@
 # System                tdnn1a_sp tdnn1a_sp_online
 #WER dev     33.29     33.20
 #WER test     32.15     32.04
-# Final train prob        -0.0988          
-# Final valid prob        -0.1913          
-# Final train prob (xent)   -1.6242          
-# Final valid prob (xent)   -1.9833          
+# Final train prob        -0.0988
+# Final valid prob        -0.1913
+# Final train prob (xent)   -1.6242
+# Final valid prob (xent)   -1.9833
 # Num-params                 6117328
 
 # steps/info/chain_dir_info.pl exp/chain/tdnn1a_sp
@@ -148,7 +148,7 @@ if [ $stage -le 13 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   opts="l2-regularize=0.05 dropout-per-dim-continuous=true"
   output_opts="l2-regularize=0.02 bottleneck-dim=192"
 

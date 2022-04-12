@@ -22,11 +22,11 @@
 
 # [for tagalog]
 # exp/chain/tdnn1b_sp/: num-iters=96 nj=2..12 num-params=17.2M dim=40+100->1928 combine=-0.124->-0.123
-# (over 2) xent:train/valid[63,95,final]=(-1.69,-1.43,-1.42/-1.75,-1.62,-1.60) 
+# (over 2) xent:train/valid[63,95,final]=(-1.69,-1.43,-1.42/-1.75,-1.62,-1.60)
 # logprob:train/valid[63,95,final]=(-0.168,-0.128,-0.127/-0.193,-0.187,-0.187)
 
 # [for somali]
-# exp/chain/tdnn1b_sp/: num-iters=84 nj=2..12 num-params=17.9M dim=40+100->3240 combine=-0.162->-0.160 
+# exp/chain/tdnn1b_sp/: num-iters=84 nj=2..12 num-params=17.9M dim=40+100->3240 combine=-0.162->-0.160
 # (over 2) xent:train/valid[55,83,final]=(-2.31,-2.02,-2.00/-2.27,-2.13,-2.10)
 # logprob:train/valid[55,83,final]=(-0.218,-0.157,-0.154/-0.268,-0.263,-0.263)
 
@@ -158,7 +158,7 @@ if [ $stage -le 10 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
   opts="l2-regularize=0.004 dropout-proportion=0.0 dropout-per-dim=true dropout-per-dim-continuous=true"
   linear_opts="orthonormal-constraint=-1.0 l2-regularize=0.004"
   output_opts="l2-regularize=0.002"
@@ -215,7 +215,7 @@ if [ $stage -le 10 ]; then
   linear-component name=prefinal-xent-l dim=256 $linear_opts
   batchnorm-component name=prefinal-xent-batchnorm
   output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor $output_opts
-  
+
 EOF
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
 fi

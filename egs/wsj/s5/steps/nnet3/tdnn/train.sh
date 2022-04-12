@@ -196,7 +196,7 @@ if [ $stage -le -5 ]; then
   fi
 
   # create the config files for nnet initialization
-  python steps/nnet3/tdnn/make_configs.py  \
+  python3 steps/nnet3/tdnn/make_configs.py  \
     --splice-indexes "$splice_indexes"  \
     --subset-dim "$subset_dim" \
     --feat-dim $feat_dim \

@@ -48,7 +48,7 @@ if [ $stage -le 9 ]; then
   echo "$0: creating neural net configs";
 
   # create the config files for nnet initialization
-  python steps/nnet3/tdnn/make_configs.py  \
+  python3 steps/nnet3/tdnn/make_configs.py  \
     --feat-dir data/${train_set}_hires \
     --ivector-dir exp/$multi/nnet3/ivectors_${train_set} \
     --ali-dir $ali_dir \

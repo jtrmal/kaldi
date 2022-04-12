@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Copyright 2020 Audio, Speech and Language Processing Group (ASLP@NPU), Northwestern Polytechnical University (Authors: Zhuoyuan Yao, Xiong Wang, Jingyong Hou, Lei Xie)
-#           2020 AIShell-Foundation (Author: Bengu WU) 
-#           2020 Beijing Shell Shell Tech. Co. Ltd. (Author: Hui BU) 
+#           2020 AIShell-Foundation (Author: Bengu WU)
+#           2020 Beijing Shell Shell Tech. Co. Ltd. (Author: Hui BU)
 # Apache 2.0
 
 # if do_train_aishell is false we should prepare aishell data and tri3a ourselves
@@ -118,7 +118,7 @@ if [ $stage -le 7 ];then
 	for i in train dev test;do
 		echo $kws_word_split
 		awk '{print $1}' $data_kws/$i/wav.scp | while read -r line; do echo $line" "$kws_word_split;done >$data_kws/$i/text
-		#awk -v word=$kws_word_split '{print $1,word}' $data_kws/$i/wav.scp> $data_kws/$i/text 
+		#awk -v word=$kws_word_split '{print $1,word}' $data_kws/$i/wav.scp> $data_kws/$i/text
 	done
 	for i in utt2spk spk2utt feats.scp cmvn.scp text wav.scp;do
 		cat $data_kws/train/$i $data_kws/test/$i $data_kws/dev/$i > $data_kws/$i
@@ -148,7 +148,7 @@ if [ $stage -le 8 ];then
     echo "Prepare keyword phone & id"
 
 	cat <<EOF > $kws_dict/lexicon.txt
-sil sil 
+sil sil
 <SPOKEN_NOISE> sil
 <gbg> <GBG>
 $kws_word $kws_phone
@@ -175,11 +175,11 @@ if [ $stage -le 9 ];then
     awk -v hotword_phone=$kws_dict/phones.txt \
     'BEGIN {
         while (getline < hotword_phone) {
-            map[$1] = $2 
+            map[$1] = $2
         }
     }
     {
-        if(!match($1, "#") && !match($1, "<")) { 
+        if(!match($1, "#") && !match($1, "<")) {
 			if(match($1, "sil"))
 			{
 				printf("%s %s\n", $2, 1)
@@ -194,10 +194,10 @@ if [ $stage -le 9 ];then
 	mkdir -p exp/kws_ali_test
 	cur=$(cat $ali/num_jobs)
 	for x in $(seq 1 $cur);do
-		gunzip -c $ali/ali.$x.gz | 
-		ali-to-phones --per-frame=true exp/tri3a/final.mdl ark:- t,ark:- | 
+		gunzip -c $ali/ali.$x.gz |
+		ali-to-phones --per-frame=true exp/tri3a/final.mdl ark:- t,ark:- |
 		utils/apply_map.pl -f 2- data/phone.map |
-		copy-int-vector t,ark:- ark,scp:exp/kws_ali_test/ali.$x.ark,exp/kws_ali_test/ali.$x.scp 
+		copy-int-vector t,ark:- ark,scp:exp/kws_ali_test/ali.$x.ark,exp/kws_ali_test/ali.$x.scp
 	done
 	cat exp/kws_ali_test/ali.*.scp | sort -k 1 > exp/kws_ali_test/ali.scp
 	cp $ali/final.mdl exp/kws_ali_test || exit 1;
@@ -208,8 +208,8 @@ if [ $stage -le 9 ];then
 fi
 
 if [ $stage -le 10 ]; then
-	    echo "python local/gen_text_fst.py data/dict/hotword.lexicon data/dict/hotword.text.fst"
-		python local/gen_text_fst.py data/dict/hotword.lexicon data/dict/fst.txt 
+	    echo "python3 local/gen_text_fst.py data/dict/hotword.lexicon data/dict/hotword.text.fst"
+		python3 local/gen_text_fst.py data/dict/hotword.lexicon data/dict/fst.txt
 		fstcompile \
 			--isymbols=data/dict/phones.txt \
 			--osymbols=data/dict/words.txt  \
@@ -250,9 +250,9 @@ fi
 if [ $stage -le 14 ];then
 	copy-matrix ark:exp/bnf/raw_bnfeat_test.1.ark t,ark:exp/bnf/ark.txt
 	if [ $use_fst ];then
-		python local/run_fst.py data/dict/hotword.fst.txt exp/bnf/ark.txt > result.txt
+		python3 local/run_fst.py data/dict/hotword.fst.txt exp/bnf/ark.txt > result.txt
 	else
-		python local/kws_posterior_handling.py exp/bnf/ark.txt
+		python3 local/kws_posterior_handling.py exp/bnf/ark.txt
 	fi
-	python local/kws_draw_roc.py --roc result.txt data/merge/label data/fbank/test/utt2dur
+	python3 local/kws_draw_roc.py --roc result.txt data/merge/label data/fbank/test/utt2dur
 fi

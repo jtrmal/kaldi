@@ -233,7 +233,7 @@ if [ $stage -le 8 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $sup_tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
   opts="l2-regularize=0.004 dropout-proportion=0.0 dropout-per-dim=true dropout-per-dim-continuous=true"
   linear_opts="orthonormal-constraint=-1.0 l2-regularize=0.004"
   output_opts="l2-regularize=0.002"
@@ -290,7 +290,7 @@ if [ $stage -le 8 ]; then
   linear-component name=prefinal-xent-l dim=256 $linear_opts
   batchnorm-component name=prefinal-xent-batchnorm
   output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor $output_opts
- 
+
   # We use separate outputs for supervised and unsupervised data
   # so we can properly track the train and valid objectives.
 

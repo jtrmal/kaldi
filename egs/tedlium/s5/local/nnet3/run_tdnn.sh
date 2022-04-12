@@ -43,7 +43,7 @@ fi
 
 dir=exp/nnet3/tdnn
 dir=$dir${affix:+_$affix}
-train_set=train_sp #_sp stands for speed-perturbed. This is hard-coded to speed 
+train_set=train_sp #_sp stands for speed-perturbed. This is hard-coded to speed
                    # pertub data.
 ali_dir=exp/tri3_ali_sp
 
@@ -53,7 +53,7 @@ if [ $stage -le 9 ]; then
   echo "$0: creating neural net configs";
 
   # create the config files for nnet initialization
-  python steps/nnet3/tdnn/make_configs.py  \
+  python3 steps/nnet3/tdnn/make_configs.py  \
     --feat-dir data/${train_set}_hires \
     --ivector-dir exp/nnet3/ivectors_${train_set} \
     --ali-dir $ali_dir \

@@ -2,8 +2,8 @@
 
 set -e -o pipefail
 
-# This is recipe using TDNN+Norm-OPGRU. 
-# The recipe is based on AMI example.(egs/ami/s5b/local/chain/tuning/run_tdnn_opgru_1c.sh) 
+# This is recipe using TDNN+Norm-OPGRU.
+# The recipe is based on AMI example.(egs/ami/s5b/local/chain/tuning/run_tdnn_opgru_1c.sh)
 
 # steps/info/chain_dir_info.pl exp/chain/tdnn_opgru1a_sp
 # exp/chain/tdnn_opgru1a_sp: num-iters=99 nj=2..12 num-params=38.0M dim=40+100->3040 combine=-0.045->-0.045 (over 1) xent:train/valid[65,98,final]=(-1.19,-0.661,-0.647/-1.21,-0.696,-0.680) logprob:train/valid[65,98,final]=(-0.080,-0.039,-0.038/-0.076,-0.039,-0.038)
@@ -95,7 +95,7 @@ tree_dir=exp/chain/tree_a
 # you should probably name it differently.
 lang=data/lang_chain
 
-if [ -d exp/${gmm}_ali_${train_set} ]; then 
+if [ -d exp/${gmm}_ali_${train_set} ]; then
     ali_dir=exp/${gmm}_ali_${train_set}
 else
     echo "$0: Using Alignment from GMM dir at ${gmm}..."
@@ -142,7 +142,7 @@ if [ $stage -le 9 ]; then
 fi
 
 if [ $stage -le 10 ]; then
-  # Build a tree using our new topology.  
+  # Build a tree using our new topology.
    if [ -f $tree_dir/final.mdl ]; then
      echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
      exit 1;
@@ -158,7 +158,7 @@ if [ $stage -le 11 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   gru_opts="dropout-per-frame=true dropout-proportion=0.0"
 
   mkdir -p $dir/configs

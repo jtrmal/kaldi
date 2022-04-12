@@ -2,11 +2,11 @@
 
 # same as 1a, but sets frames per eg to 150,110,100 in _b (instead of 150)
 
-# Note: the difference in params between ihm, mdm and sdm models below 
-# is because of different trees between microphone conditions. Otherwise 
+# Note: the difference in params between ihm, mdm and sdm models below
+# is because of different trees between microphone conditions. Otherwise
 # models are the same architecture-wise
 
-# Mic ihm 
+# Mic ihm
 # local/chain/compare_wer.sh exp/ihm/chain_1a/tdnn_sp exp/ihm/chain_1a/tdnn_b_sp
 # System                  tdnn_sp tdnn_b_sp
 #WER dev       19.7      19.6
@@ -191,7 +191,7 @@ if [ $stage -le 15 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig

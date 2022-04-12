@@ -10,10 +10,10 @@
 # This script demonstrates nnet3-based speech activity detection for
 # segmentation.
 # This script:
-# 1) Prepares targets (per-frame labels) for a subset of training data 
+# 1) Prepares targets (per-frame labels) for a subset of training data
 #    using GMM models
 # 2) Augments the training data with reverberation and additive noise
-# 3) Trains TDNN+Stats or TDNN+LSTM neural network using the targets 
+# 3) Trains TDNN+Stats or TDNN+LSTM neural network using the targets
 #    and augmented data
 # 4) Demonstrates using the SAD system to get segments of eval data and decode
 
@@ -25,7 +25,7 @@ data_dir=data/train_nodup
 # SAD. This should typically be a speaker-adapted system.
 sat_model_dir=exp/tri4
 # Model direcotry used to decode the whole-recording version of the $data_dir to
-# get target labels for training SAD. This should typically be a 
+# get target labels for training SAD. This should typically be a
 # speaker-independent system like LDA+MLLT system.
 model_dir=exp/tri3
 graph_dir=    # Graph for decoding whole-recording version of $data_dir.
@@ -52,7 +52,7 @@ test_nj=32
 if [ -f ./path.sh ]; then . ./path.sh; fi
 
 set -e -u -o pipefail
-. utils/parse_options.sh 
+. utils/parse_options.sh
 
 if [ $# -ne 0 ]; then
   exit 1
@@ -65,13 +65,13 @@ mkdir -p $dir
 garbage_phones="lau spn"
 silence_phones="sil"
 
-for p in $garbage_phones; do 
+for p in $garbage_phones; do
   for a in "" "_B" "_E" "_I" "_S"; do
     echo "$p$a"
   done
 done > $dir/garbage_phones.txt
 
-for p in $silence_phones; do 
+for p in $silence_phones; do
   for a in "" "_B" "_E" "_I" "_S"; do
     echo "$p$a"
   done
@@ -135,7 +135,7 @@ if [ $stage -le 4 ]; then
   background_snrs="20:10:15:5:0"
   # corrupt the data to generate multi-condition data
   # for data_dir in train dev test; do
-  python steps/data/reverberate_data_dir.py \
+  python3 steps/data/reverberate_data_dir.py \
     "${rvb_opts[@]}" \
     --prefix "rev" \
     --foreground-snrs $foreground_snrs \
@@ -180,11 +180,11 @@ if [ $stage -le 7 ]; then
 fi
 
 if [ $stage -le 8 ]; then
-  # The options to this script must match the options used in the 
-  # nnet training script. 
-  # e.g. extra-left-context is 79, because the model is an stats pooling network 
-  # trained with a chunk-left-context of 79 and chunk-right-context of 21. 
-  # Note: frames-per-chunk is 150 even though the model was trained with 
+  # The options to this script must match the options used in the
+  # nnet training script.
+  # e.g. extra-left-context is 79, because the model is an stats pooling network
+  # trained with a chunk-left-context of 79 and chunk-right-context of 21.
+  # Note: frames-per-chunk is 150 even though the model was trained with
   # chunk-width of 20. This is just for speed.
   # See the script for details of the options.
   steps/segmentation/detect_speech_activity.sh \
@@ -202,7 +202,7 @@ if [ $stage -le 9 ]; then
   steps/segmentation/evaluate_segmentation.pl data/eval2000/segments \
     exp/segmentation${affix}/tdnn_stats_asr_sad_1a/eval2000_seg/segments &> \
     exp/segmentation${affix}/tdnn_stats_asr_sad_1a/eval2000_seg/evalutate_segmentation.log
-  
+
   steps/segmentation/convert_utt2spk_and_segments_to_rttm.py \
     exp/segmentation${affix}/tdnn_stats_asr_sad_1a/eval2000_seg/utt2spk \
     exp/segmentation${affix}/tdnn_stats_asr_sad_1a/eval2000_seg/segments \

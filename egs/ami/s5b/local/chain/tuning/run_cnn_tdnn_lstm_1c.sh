@@ -4,7 +4,7 @@
 # and larger decay-time option(40).
 
 # After testing different combinations of dropout-schedule('0,0@0.20,0.15@0.50,0',
-# '0,0@0.20,0.3@0.50,0' or without), proportional-shrink(with or without) and 
+# '0,0@0.20,0.3@0.50,0' or without), proportional-shrink(with or without) and
 # decay-time option(20, 40 or without), we found this setup is best.
 
 # SDM
@@ -18,7 +18,7 @@
 # Final train prob (xent)      -1.65059                                  -1.53685
 # Final valid prob (xent)      -2.05148                                  -1.87986
 
-# steps/info/chain_dir_info.pl exp/sdm1/chain_cleaned/cnn_tdnn_lstm1c_sp_bi_ihmali_ld5/ 
+# steps/info/chain_dir_info.pl exp/sdm1/chain_cleaned/cnn_tdnn_lstm1c_sp_bi_ihmali_ld5/
 #exp/sdm1/chain_cleaned/cnn_tdnn_lstm1c_sp_bi_ihmali_ld5: num-iters=87 nj=2..12 num-params=46.7M dim=40+100->3729 combine=-0.171->-0.153 xent:train/valid[57,86,final]=(-5.02,-5.18,-1.54/-5.16,-5.24,-1.88) logprob:train/valid[57,86,final]=(-0.693,-0.730,-0.138/-0.714,-0.733,-0.201)
 
 set -e -o pipefail
@@ -185,10 +185,10 @@ if [ $stage -le 15 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   lstm_opts="decay-time=40"
-  
+
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
   input dim=100 name=ivector
@@ -199,12 +199,12 @@ if [ $stage -le 15 ]; then
   # the use of short notation for the descriptor
   fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
   idct-layer name=idct input=input dim=40 cepstral-lifter=22 affine-transform-file=$dir/configs/idct.mat
-      
+
   conv-relu-batchnorm-layer name=cnn1 input=idct height-in=40 height-out=20 height-subsample-out=2 time-offsets=-1,0,1 height-offsets=-1,0,1 num-filters-out=256 learning-rate-factor=0.333 max-change=0.25
   conv-relu-batchnorm-layer name=cnn2 input=cnn1 height-in=20 height-out=20 time-offsets=-1,0,1 height-offsets=-1,0,1 num-filters-out=128
 
   relu-batchnorm-layer name=affine1 input=lda dim=512
- 
+
   # the first splicing is moved before the lda layer, so no splicing here
   relu-batchnorm-layer name=tdnn1 input=cnn2 dim=1024
   relu-batchnorm-layer name=tdnn2 input=Append(-1,0,1,affine1) dim=1024

@@ -17,8 +17,8 @@
 # num-params=41.3M
 
 # ./steps/info/chain_dir_info.pl exp/chain/blstm_6j_sp
-# exp/chain/blstm_6j_sp: num-iters=2384 nj=3..16 num-params=41.3M dim=40+100->6149 combine=-0.075->-0.074 (over 15) 
-# xent:train/valid[1587,2383,final]=(-0.754,-0.710,-0.698/-0.828,-0.824,-0.811) 
+# exp/chain/blstm_6j_sp: num-iters=2384 nj=3..16 num-params=41.3M dim=40+100->6149 combine=-0.075->-0.074 (over 15)
+# xent:train/valid[1587,2383,final]=(-0.754,-0.710,-0.698/-0.828,-0.824,-0.811)
 # logprob:train/valid[1587,2383,final]=(-0.070,-0.063,-0.061/-0.082,-0.084,-0.082)
 
 # ./local/chain/show_chain_wer.sh blstm_6j_sp
@@ -133,7 +133,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig

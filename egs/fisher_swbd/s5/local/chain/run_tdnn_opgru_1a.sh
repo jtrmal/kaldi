@@ -25,8 +25,8 @@
 # Final valid prob (xent)       -0.9393   -0.9837   -1.0275
 
 #./steps/info/chain_dir_info.pl exp/chain/tdnn_opgru_1a_sp
-#exp/chain/tdnn_opgru_1a_sp: num-iters=2384 nj=3..16 num-params=34.9M dim=40+100->6149 combine=-0.096->-0.095 (over 8) 
-#xent:train/valid[1587,2383,final]=(-1.46,-0.960,-0.972/-1.49,-1.02,-1.03) 
+#exp/chain/tdnn_opgru_1a_sp: num-iters=2384 nj=3..16 num-params=34.9M dim=40+100->6149 combine=-0.096->-0.095 (over 8)
+#xent:train/valid[1587,2383,final]=(-1.46,-0.960,-0.972/-1.49,-1.02,-1.03)
 #logprob:train/valid[1587,2383,final]=(-0.114,-0.086,-0.085/-0.114,-0.094,-0.093)
 
 # online results
@@ -46,7 +46,7 @@
 # %WER 8.6 | 3970 36721 | 92.4 4.9 2.8 1.0 8.6 37.2 | exp/chain/tdnn_opgru_1a_sp_online/decode_rt03_fsh_sw1_fg/score_8_0.0/rt03_hires.ctm.fsh.filt.sys
 # %WER 10.8 | 8420 76157 | 90.4 6.2 3.4 1.2 10.8 40.0 | exp/chain/tdnn_opgru_1a_sp_online/decode_rt03_fsh_sw1_fg/score_8_0.0/rt03_hires.ctm.filt.sys
 # %WER 12.8 | 4450 39436 | 88.6 7.5 4.0 1.4 12.8 42.5 | exp/chain/tdnn_opgru_1a_sp_online/decode_rt03_fsh_sw1_fg/score_8_0.0/rt03_hires.ctm.swbd.filt.sys
- 
+
 
 set -e
 
@@ -148,7 +148,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   gru_opts="dropout-per-frame=true dropout-proportion=0.0 "
 
   mkdir -p $dir/configs

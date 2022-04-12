@@ -16,7 +16,7 @@ use_sat_alignments=true
 
 volume_perturb_datadir()  {
   dir=$1
-  cat $dir/wav.scp | python -c "
+  cat $dir/wav.scp | python3 -c "
 import sys, os, subprocess, re, random
 scale_low = 1.0/8
 scale_high = 2.0

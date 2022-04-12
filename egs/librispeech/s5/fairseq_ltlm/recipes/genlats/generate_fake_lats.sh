@@ -4,7 +4,7 @@
 echo "$0 $@"  # Print the command line for logging
 
 [ -f path.sh ] && . ./path.sh # source the path.
-[ -f fairseq_ltlm/path.sh ] && . ./fairseq_ltlm/path.sh 
+[ -f fairseq_ltlm/path.sh ] && . ./fairseq_ltlm/path.sh
 
 
 cmd=utils/run.pl
@@ -64,7 +64,7 @@ if [ $stage -le 1 ] ; then
 	$cmd JOB=1:$nj $dir/log/random_ali.JOB.log \
 		compile-train-graphs  --read-disambig-syms=$lang/phones/disambig.int \
 			$tree_dir/tree $kaldi_model $lang/L.fst "ark:sym2int.pl --map-oov $oov -f 2- $lang/words.txt $sdata/JOB/text|" ark,t:- \| \
-		python $(dirname $0)/fsts2align.py --seed $seed ark:- \| \
+		python3 $(dirname $0)/fsts2align.py --seed $seed ark:- \| \
 		ali-to-pdf $kaldi_model ark:- ark:"| gzip -c > $dir/ali_pdf.JOB.gz"
 fi
 
@@ -72,12 +72,12 @@ if [ $stage -le 2 ] ; then
 	echo "$0:Stage 2: Get loglikes and decode"
 	lats_wspec="| gzip -c > $dir/lat.JOB.gz"
 	if $prepare_for_lt ; then
-		prune_acwt=$(echo "print(1/$prune_lmscale)" | python)
+		prune_acwt=$(echo "print(1/$prune_lmscale)" | python3)
 		lats_wspec="| lattice-rmali ark:- ark:- | lattice-determinize-pruned --acoustic-scale=$prune_acwt --minimize=true --beam=$prune_beam ark:- ark:- $lats_wspec"
 	fi
 	$cmd JOB=1:$nj $dir/log/decode.JOB.log \
 			gunzip -c $dir/ali_pdf.JOB.gz \| \
-			python $(dirname $0)/straight_ali.py --seed=$seed \
+			python3 $(dirname $0)/straight_ali.py --seed=$seed \
 				--stretch_model_path $stretch_model ark:- ark:- \| \
 			latgen-faster-mapped-fake-am \
 				--seed=$seed \
@@ -93,7 +93,7 @@ if [ $stage -le 2 ] ; then
 				$graph/HCLG.fst \
 				ark:$fam_model \
 				ark:- ark:- \| \
-			lattice-scale --acoustic-scale=$post_decode_acwt ark:- ark:"$lats_wspec" 
+			lattice-scale --acoustic-scale=$post_decode_acwt ark:- ark:"$lats_wspec"
 fi
 
 $skip_scoring && echo "$0: Skip scoring. Exit." && exit 0
@@ -105,7 +105,7 @@ if [ $stage -le 3 ] ; then
 	cat $dir/scoring_kaldi/best_wer
 fi
 
-if [ $stage -le 4 ] ; then 
+if [ $stage -le 4 ] ; then
 	echo "$0:Stage 4: Oracle wer"
 	if $prepare_for_lt ; then
 		# stage 2 for skip lattice-depth ( not working this rmali)

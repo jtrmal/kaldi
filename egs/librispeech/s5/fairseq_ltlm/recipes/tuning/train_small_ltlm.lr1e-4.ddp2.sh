@@ -74,9 +74,9 @@ valid_egs=$model_dir/decode_$(basename $valid_data_dir)_graph_tgsmall_tglarge/lt
 ###
 
 
-if [ $stage -le 0 ] ; then 
+if [ $stage -le 0 ] ; then
 	echo "Generate data_config.json"
-	python fairseq_ltlm/ltlm/pyscripts/get_data_config.py \
+	python3 fairseq_ltlm/ltlm/pyscripts/get_data_config.py \
 			--train $train_decoded_lats/lt_egs_$training_type,'',0 ${train_egs}  \
 			--split_per_epoch ${split_per_epoch} \
 			--valid $valid_egs,$valid_data_dir/text \

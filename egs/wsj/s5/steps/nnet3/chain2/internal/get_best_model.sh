@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright   2019  Idiap Research Institute (Author: Srikanth Madikeri).  Apache 2.0.
-# This script is the equivalent of get_successful_models function in the python library.
+# This script is the equivalent of get_successful_models function in the python3 library.
 # It takes a list of models and returns either the best model (the deafult) or a list of
 # models to average.
 

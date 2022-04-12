@@ -95,12 +95,12 @@ if [ $stage -le 2 ]; then
       sess=$(basename $json | sed s:.json::)
       echo $sess
       $train_cmd $json_ali/${sess}.log \
-        python local/ts-vad/make_json_align.py $json ark,t,scp:$json_ali/$sess.ark,$json_ali/${sess}.scp || exit 1;
+        python3 local/ts-vad/make_json_align.py $json ark,t,scp:$json_ali/$sess.ark,$json_ali/${sess}.scp || exit 1;
       $train_cmd $json_ali/${sess}_sp0.9.log \
-        python local/ts-vad/make_json_align.py --frame_shift 0.009 $json ark,t,scp:$json_ali/${sess}_sp0.9.ark,$json_ali/${sess}_sp0.9.scp || exit 1;
+        python3 local/ts-vad/make_json_align.py --frame_shift 0.009 $json ark,t,scp:$json_ali/${sess}_sp0.9.ark,$json_ali/${sess}_sp0.9.scp || exit 1;
       sed -i s:\ :_sp0.9\ : $json_ali/${sess}_sp0.9.scp
       $train_cmd $json_ali/${sess}_sp1.1.log \
-        python local/ts-vad/make_json_align.py --frame_shift 0.011 $json ark,t,scp:$json_ali/${sess}_sp1.1.ark,$json_ali/${sess}_sp1.1.scp || exit 1;
+        python3 local/ts-vad/make_json_align.py --frame_shift 0.011 $json ark,t,scp:$json_ali/${sess}_sp1.1.ark,$json_ali/${sess}_sp1.1.scp || exit 1;
       sed -i s:\ :_sp1.1\ : $json_ali/${sess}_sp1.1.scp
     done
     cat $json_ali/*.scp > $json_ali/all_sess.scp

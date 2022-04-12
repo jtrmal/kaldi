@@ -20,21 +20,21 @@ dir=$2
 
 mkdir -p $dir
 
-for d in $SOURCE_DIR/dev/devdata $SOURCE_DIR/eval/evaldata; do 
+for d in $SOURCE_DIR/dev/devdata $SOURCE_DIR/eval/evaldata; do
   if [ ! -d $d ]; then
     echo "$0: Invalid SOURCE-DIR $SOURCE_DIR for LDC97S66 corpus"
     exit 1
   fi
 done
 
-for d in dev eval; do 
+for d in dev eval; do
   if [ $d == "dev" ]; then
     suffix=dt
   else
     suffix=ev
   fi
 
-  python -c '
+  python3 -c '
 import sys, os
 sys.path.insert(0, "local/data_prep")
 import hub4_utils
@@ -44,9 +44,9 @@ for line in open(uem).readlines():
   if line is not None:
     print (line)' $SOURCE_DIR/${d}/${d}data/h496${suffix}.uem > $dir/${d}96_uem_segments
   awk '{print $1" "$2}' $dir/${d}96_uem_segments > $dir/${d}96_uem_utt2spk
-done 
+done
 
-for d in dev eval; do 
+for d in dev eval; do
   if [ $d == "dev" ]; then
     suffix=dt
   else
@@ -54,7 +54,7 @@ for d in dev eval; do
   fi
 
   cat $SOURCE_DIR/${d}/${d}data/h496${suffix}.pem | \
-    python -c '
+    python3 -c '
 import sys
 sys.path.insert(0, "local/data_prep")
 import hub4_utils
@@ -67,7 +67,7 @@ with open(sys.argv[1], "w") as s_f, open(sys.argv[2], "w") as u_f:
       u_f.write("{0}\n".format(utt2spk_line))' \
         $dir/${d}96_pem_segments $dir/${d}96_pem_utt2spk
 done
- 
+
 export PATH=$PATH:$KALDI_ROOT/tools/sph2pipe_v2.5
 sph2pipe=`which sph2pipe` || { echo "sph2pipe not found in PATH."; exit 1; }
 

@@ -63,7 +63,7 @@ if [ $stage -le 11 ]; then
   echo "$0: creating neural net configs";
 
   # create the config files for nnet initialization
-  python steps/nnet3/tdnn/make_configs.py  \
+  python3 steps/nnet3/tdnn/make_configs.py  \
     --feat-dir $train_data_dir \
     --ivector-dir $train_ivector_dir \
     --ali-dir $ali_dir \

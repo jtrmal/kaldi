@@ -54,7 +54,7 @@ if [ ! -d $miniconda_dir ]; then
 fi
 
 # check if WPE is installed
-result=`$miniconda_dir/bin/python -c "\
+result=`$miniconda_dir/bin/python3 -c "\
 try:
     import nara_wpe
     print('1')
@@ -69,7 +69,7 @@ fi
 # this is used for the audio synchronization
 sox_conda=`command -v ${miniconda_dir}/bin/sox 2>/dev/null`
 if [ -z "${sox_conda}" ]; then
-  echo "install conda sox (v14.4.2)" 
+  echo "install conda sox (v14.4.2)"
   ${miniconda_dir}/bin/conda install -c conda-forge sox
 fi
 

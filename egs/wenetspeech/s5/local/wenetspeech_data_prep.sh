@@ -111,7 +111,7 @@ if [ $stage -le 1 ]; then
     python3 local/extract_meta.py --pipe-format \
       $wenetspeech_dir/WenetSpeech.json $corpus_dir || exit 1;
     if [ "$do_segmentation" == "true" ]; then
-      python -c '''import jieba''' 2>/dev/null || \
+      python3 -c '''import jieba''' 2>/dev/null || \
         (echo "jieba is not found. Use tools/extra/install_jieba.sh to install it." && exit 1;)
       if [ ! -f data/local/dict/word_seg_lexicon.txt ]; then
         (echo "Run local/wenetspeech_dict_prep.sh in advance." && exit 1;)

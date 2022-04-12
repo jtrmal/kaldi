@@ -40,7 +40,7 @@ session_id=$1
 log_dir=$2
 enhanced_dir=$3
 if [ ! -d pb_chime5/ ]; then
-  echo "Missing pb_chime5, run 'local/install_pb_chime5'" 
+  echo "Missing pb_chime5, run 'local/install_pb_chime5'"
   exit 1
 fi
 
@@ -55,7 +55,7 @@ enhanced_dir=$(utils/make_absolute.sh $enhanced_dir) || \
 
 $cmd JOB=1:$nj $log_dir/log/enhance_${session_id}.JOB.log \
   cd pb_chime5/ '&&' \
-  $miniconda_dir/bin/python -m pb_chime5.scripts.kaldi_run with \
+  $miniconda_dir/bin/python3 -m pb_chime5.scripts.kaldi_run with \
     chime6=True \
     storage_dir=$enhanced_dir \
     session_id=$session_id \

@@ -3,7 +3,7 @@
 # this script creates a new data directory data/$new_mic
 # where the train, dev and eval directories are copied from $original_mic
 # in addition to these a new data directory train_parallel is created which has
-# the segment ids from data/$original_mic but the wav data is copied from 
+# the segment ids from data/$original_mic but the wav data is copied from
 # data/$parallel_mic
 
 original_mic=sdm1
@@ -39,7 +39,7 @@ fi
 cat $tmpdir/dm_utts | sed -e "s/$pattern//g" > $tmpdir/key
 paste -d' ' $tmpdir/key $tmpdir/dm_utts  > $tmpdir/key2dm
 
-python -c "
+python3 -c "
 ihm = dict(map(lambda x: [x.split()[0], ' '.join(x.split()[1:])], open('$tmpdir/key2ihm').readlines()))
 dm = dict(map(lambda x: x.split(), open('$tmpdir/key2dm').readlines()))
 
@@ -52,7 +52,7 @@ for key in keys :
   except KeyError:
     continue
 " > data/$new_mic/${dset}_parallel/segments
-  
+
 cat data/$new_mic/${dset}_parallel/segments | awk '{print $2}' |sort -u > $tmpdir/ids
 utils/filter_scp.pl $tmpdir/ids \
   data/$new_mic/${dset}_parallel/wav.scp_full  > \

@@ -95,7 +95,7 @@ if [ $stage -le 3 ]; then
     rvb_opts+=(--rir-set-parameters "0.5, RIRS_NOISES/simulated_rirs/mediumroom/rir_list")
     rvb_opts+=(--noise-set-parameters RIRS_NOISES/pointsource_noises/noise_list)
 
-    python steps/data/reverberate_data_dir.py \
+    python3 steps/data/reverberate_data_dir.py \
       "${rvb_opts[@]}" \
       --prefix "rev" \
       --foreground-snrs "20:10:15:5:0" \

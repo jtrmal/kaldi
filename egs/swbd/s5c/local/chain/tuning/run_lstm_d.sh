@@ -114,7 +114,7 @@ if [ $stage -le 12 ]; then
 
   # create the config files for nnet initialization
   # note an additional space is added to splice_indexes to
-  # avoid issues with the python ArgParser which can have
+  # avoid issues with the python3 ArgParser which can have
   # issues with negative arguments (due to minus sign)
   config_extra_opts=()
   [ ! -z "$lstm_delay" ] && config_extra_opts+=(--lstm-delay "$lstm_delay")

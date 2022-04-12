@@ -2,7 +2,7 @@
 # Copyright 2015-2016   David Snyder
 #                2015   Johns Hopkins University (Author: Daniel Garcia-Romero)
 #                2015   Johns Hopkins University (Author: Daniel Povey)
-#                2017   Radboud University (Author: Emre Yilmaz)      
+#                2017   Radboud University (Author: Emre Yilmaz)
 # Apache 2.0.
 #
 # See README.txt for more info on data required.
@@ -47,7 +47,7 @@ for task in complete ageing; do
       trials_male=data/fame_${task}_${subtask}_${sets}_male/trials
       trials=data/fame_${task}_${subtask}_${sets}/trials
       local/make_fame_test.pl $famecorpus/SV data $task $subtask $sets
-      local/make_fame_train.pl $famecorpus/SV data $task $subtask $sets 
+      local/make_fame_train.pl $famecorpus/SV data $task $subtask $sets
 
     done
   done
@@ -63,7 +63,7 @@ for task in ageing; do
         trials_male=data/fame_${task}_${subtask}_${sets}${year}_male/trials
         trials=data/fame_${task}_${subtask}_${sets}${year}/trials
         local/make_fame_test_year.pl $famecorpus/SV data $task $subtask $sets $year
-        local/make_fame_train_year.pl $famecorpus/SV data $task $subtask $sets $year 
+        local/make_fame_train_year.pl $famecorpus/SV data $task $subtask $sets $year
 
       done
     done
@@ -176,7 +176,7 @@ for task in complete ageing; do
       sid/compute_vad_decision.sh --nj 100 --cmd "$train_cmd" \
           data/fame_${task}_${subtask}_${sets}_enroll exp/make_vad $vaddir
       sid/compute_vad_decision.sh --nj 100 --cmd "$train_cmd" \
-          data/fame_${task}_${subtask}_${sets}_test exp/make_vad $vaddir 
+          data/fame_${task}_${subtask}_${sets}_test exp/make_vad $vaddir
 
     done
   done
@@ -192,7 +192,7 @@ for task in ageing; do
             data/fame_${task}_${subtask}_${sets}${year}_enroll exp/make_vad $vaddir
         sid/compute_vad_decision.sh --nj 100 --cmd "$train_cmd" \
             data/fame_${task}_${subtask}_${sets}${year}_test exp/make_vad $vaddir
-      
+
       done
     done
   done
@@ -201,7 +201,7 @@ done
 echo "Copying VAD for data/train.."
 cp data/train/vad.scp data/train_dnn/vad.scp
 cp data/train/utt2spk data/train_dnn/utt2spk
-cp data/train/spk2utt data/train_dnn/spk2utt 
+cp data/train/spk2utt data/train_dnn/spk2utt
 
 for task in complete ageing; do
   for subtask in 3sec 10sec 30sec; do
@@ -300,7 +300,7 @@ for task in ageing; do
            data/fame_${task}_${subtask}_${sets}${year}_test_dnn \
            exp/ivectors_fame_${task}_${subtask}_${sets}${year}_test_dnn
 
-      done  
+      done
     done
   done
 done
@@ -328,7 +328,7 @@ for task in complete ageing; do
 
       local/plda_scoring.sh --use-existing-models true data/train data/fame_${task}_${subtask}_${sets}_enroll_male data/fame_${task}_${subtask}_${sets}_test_male \
         exp/ivectors_train_dnn exp/ivectors_fame_${task}_${subtask}_${sets}_enroll_dnn_male exp/ivectors_fame_${task}_${subtask}_${sets}_test_dnn_male $trials_male local/scores_dnn_ind_male_${task}_${subtask}_${sets}
-             
+
     done
   done
 done
@@ -353,13 +353,13 @@ for task in ageing; do
 
         local/plda_scoring.sh --use-existing-models true data/train data/fame_${task}_${subtask}_${sets}${year}_enroll_male data/fame_${task}_${subtask}_${sets}${year}_test_male \
           exp/ivectors_train_dnn exp/ivectors_fame_${task}_${subtask}_${sets}${year}_enroll_dnn_male exp/ivectors_fame_${task}_${subtask}_${sets}${year}_test_dnn_male $trials_male local/scores_dnn_ind_male_${task}_${subtask}_${sets}${year}
-              
+
       done
     done
   done
 done
 
-# Calculating EER 
+# Calculating EER
 
 echo "Calculating EER.."
 
@@ -371,8 +371,8 @@ for task in complete ageing; do
       echo "DNN EER for fame_${task}_${subtask}_${sets}"
       for x in ind; do
         for y in female male pooled; do
-          echo "python local/prepare_for_eer.py $trials local/scores_dnn_${x}_${y}_${task}_${subtask}_${sets}/plda_scores"
-          eer=`compute-eer <(python local/prepare_for_eer.py $trials local/scores_dnn_${x}_${y}_${task}_${subtask}_${sets}/plda_scores) 2> /dev/null`
+          echo "python3 local/prepare_for_eer.py $trials local/scores_dnn_${x}_${y}_${task}_${subtask}_${sets}/plda_scores"
+          eer=`compute-eer <(python3 local/prepare_for_eer.py $trials local/scores_dnn_${x}_${y}_${task}_${subtask}_${sets}/plda_scores) 2> /dev/null`
           echo "${x} ${y}: $eer"
         done
       done
@@ -390,12 +390,12 @@ for task in ageing; do
         echo "DNN EER for fame_${task}_${subtask}_${sets}${year}"
         for x in ind; do
           for y in female male pooled; do
-            echo "python local/prepare_for_eer.py $trials local/scores_dnn_${x}_${y}_${task}_${subtask}_${sets}${year}/plda_scores"
-            eer=`compute-eer <(python local/prepare_for_eer.py $trials local/scores_dnn_${x}_${y}_${task}_${subtask}_${sets}${year}/plda_scores) 2> /dev/null`
+            echo "python3 local/prepare_for_eer.py $trials local/scores_dnn_${x}_${y}_${task}_${subtask}_${sets}${year}/plda_scores"
+            eer=`compute-eer <(python3 local/prepare_for_eer.py $trials local/scores_dnn_${x}_${y}_${task}_${subtask}_${sets}${year}/plda_scores) 2> /dev/null`
             echo "${x} ${y}: $eer"
           done
         done
- 
+
       done
     done
   done

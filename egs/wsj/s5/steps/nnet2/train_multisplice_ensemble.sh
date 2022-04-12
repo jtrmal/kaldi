@@ -187,7 +187,7 @@ cp $alidir/tree $dir
 # process the splice_inds string, to get a layer-wise context string
 # to be processed by the nnet-components
 # this would be mainly used by SpliceComponent|SpliceMaxComponent
-python steps/nnet2/make_multisplice_configs.py contexts --splice-indexes "$splice_indexes" $dir || exit -1;
+python3 steps/nnet2/make_multisplice_configs.py contexts --splice-indexes "$splice_indexes" $dir || exit -1;
 context_string=$(cat $dir/vars) || exit -1
 echo $context_string
 eval $context_string || exit -1; #
@@ -256,7 +256,7 @@ if [ $stage -le -2 ]; then
   initial_lrate=$(perl -e "print ($initial_effective_lrate*$num_jobs_initial);")
 
   # create the config files for nnet initialization
-  python steps/nnet2/make_multisplice_configs.py  \
+  python3 steps/nnet2/make_multisplice_configs.py  \
     --splice-indexes "$splice_indexes"  \
     --total-input-dim $tot_input_dim  \
     --ivector-dim $ivector_dim  \

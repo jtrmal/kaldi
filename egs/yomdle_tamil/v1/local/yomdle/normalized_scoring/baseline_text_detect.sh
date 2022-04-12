@@ -2,14 +2,14 @@
 
 #  INPUT:
 #		LANGUAGE - SLAM language to evaluate
-#		TRUTH_CSV - Transcription annotation csv file 
+#		TRUTH_CSV - Transcription annotation csv file
 #			formt: ID,name,col1,row1,col2,row2,col3,row3,col4,row4,confidence,truth,rotation,quality,script
 #
 #		PREDICT_CSV - The predicted transcription csv file
 #			formt: ID,name,col1,row1,col2,row2,col3,row3,col4,row4,confidence,truth
 #
 #  OUTPUT:
-#		OUTPUT_DIR - 
+#		OUTPUT_DIR -
 #
 #
 
@@ -36,7 +36,7 @@ echo "Output ${OUTPUT}"
 echo "Overlay ${OVERLAY}"
 
 echo "...evalulate text detection"
-python /exp/detter/scale18/ocr/cv_scale/detect_lines/get_bbox_tesserocr.py \
+python3 /exp/detter/scale18/ocr/cv_scale/detect_lines/get_bbox_tesserocr.py \
 --tess_data=${MODELS_DIR} \
 --lang=${MODELS_LANG} \
 --oem=1 \

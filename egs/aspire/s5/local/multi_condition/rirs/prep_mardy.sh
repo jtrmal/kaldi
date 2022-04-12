@@ -51,7 +51,7 @@ for data_file in ${data_files[@]}; do
   #output_file_name=${DBname}_type${type_num}_${file_count}_`basename $data_file| tr '[:upper:]' '[:lower:]'`
   output_file_name=${DBname}_type${type_num}_`basename $data_file| tr '[:upper:]' '[:lower:]'`
   echo "sox -t wav $data_file -t wav -r $sampling_rate -e signed-integer -b $output_bit ${output_dir}/${output_file_name}" >> $command_file
-  #echo "python local/multi_condition/read_rir.py --output-sampling-rate $sampling_rate wav ${data_file} ${output_dir}/${output_file_name} || exit -1;" >> $command_file
+  #echo "python3 local/multi_condition/read_rir.py --output-sampling-rate $sampling_rate wav ${data_file} ${output_dir}/${output_file_name} || exit -1;" >> $command_file
   echo ${output_dir}/${output_file_name} >>  $log_dir/${DBname}_type${type_num}.rir.list
   file_count=$((file_count + 1))
 done

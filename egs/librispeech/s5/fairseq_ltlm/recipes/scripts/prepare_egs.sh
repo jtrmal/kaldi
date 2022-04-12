@@ -83,7 +83,7 @@ fi
 prunned_lats=$lats_dir
 if $prune ; then
 	if [ $stage -le 0 ] ; then
-		prune_acwt=$(echo "print(1/$prune_lmscale)" | python)
+		prune_acwt=$(echo "print(1/$prune_lmscale)" | python3)
 		echo "$0: Prune lattices with lmwt=$prune_lmscale beam=$prune_beam"
 		$cmd JOB=1:$nj $out_dir/log/lat_convert.JOB.log \
 			lattice-copy ark:"gunzip -c $lats_dir/lat.JOB.gz |" ark:- \| \
@@ -112,7 +112,7 @@ $all_oracle_targets && ds_opts="--all_oracle_targets $ds_opts"
 if [ $stage -le 1 ] ; then
 	$cmd JOB=1:$nj $out_dir/log/dump.JOB.log \
     	$lattice_reader \| \
-	    python fairseq_ltlm/ltlm/pyscripts/lats_t_to_dump.py $tokenizer_opts \
+	    python3 fairseq_ltlm/ltlm/pyscripts/lats_t_to_dump.py $tokenizer_opts \
     	        $ds_opts $out_dir/lat.JOB.dump
 fi
 

@@ -22,8 +22,8 @@
 # Final valid prob (xent)       -0.9393
 
 # ./steps/info/chain_dir_info.pl exp/chain/tdnn_lstm_1a_sp
-#exp/chain/tdnn_lstm_1a_sp: num-iters=2384 nj=3..16 num-params=39.7M dim=40+100->6149 combine=-0.097->-0.086 
-#xent:train/valid[1587,2383,final]=(-0.949,-0.898,-0.882/-0.998,-0.949,-0.939) 
+#exp/chain/tdnn_lstm_1a_sp: num-iters=2384 nj=3..16 num-params=39.7M dim=40+100->6149 combine=-0.097->-0.086
+#xent:train/valid[1587,2383,final]=(-0.949,-0.898,-0.882/-0.998,-0.949,-0.939)
 #logprob:train/valid[1587,2383,final]=(-0.079,-0.075,-0.074/-0.087,-0.082,-0.084)
 
 # ./show_chain_wer.sh tdnn_lstm_1a_sp
@@ -142,7 +142,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   lstm_opts="decay-time=20"
 
   mkdir -p $dir/configs
@@ -161,7 +161,7 @@ if [ $stage -le 12 ]; then
   relu-renorm-layer name=tdnn3 input=Append(-1,0,1) dim=1024
 
   # check steps/libs/nnet3/xconfig/lstm.py for the other options and defaults
-  lstmp-layer name=lstm1 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 $lstm_opts 
+  lstmp-layer name=lstm1 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 $lstm_opts
   relu-renorm-layer name=tdnn4 input=Append(-3,0,3) dim=1024
   relu-renorm-layer name=tdnn5 input=Append(-3,0,3) dim=1024
   lstmp-layer name=lstm2 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 $lstm_opts

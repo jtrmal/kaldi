@@ -163,7 +163,7 @@ mkdir -p $dir/configs/
 # $dir/init will contain the initial models
 mkdir -p $dir/init/
 
-learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
 if [ $stage -le 14 ]; then
 
@@ -213,7 +213,7 @@ if [ $stage -le 15 ]; then
       exit
   fi
 
-  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info 
+  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info
   model_left_context=`fgrep 'left-context' $dir/configs/temp.info | awk '{print $2}'`
   model_right_context=`fgrep 'right-context' $dir/configs/temp.info | awk '{print $2}'`
   cat >$init_info <<EOF

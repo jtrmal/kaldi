@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# This is copied from tedlium/s5_r2/local/chain/tuning/run_tdnn_1g.sh setup, and it replaces the current run_tdnn_1b.sh script. 
+# This is copied from tedlium/s5_r2/local/chain/tuning/run_tdnn_1g.sh setup, and it replaces the current run_tdnn_1b.sh script.
 
 # local/chain/compare_wer_general.sh exp/chain_cleaned/tdnnf_1b exp/chain_cleaned/tdnnf_1c
 # System                 tdnnf_1b  tdnnf_1c
@@ -140,7 +140,7 @@ if [ $stage -le 17 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
   affine_opts="l2-regularize=0.008 dropout-proportion=0.0 dropout-per-dim-continuous=true"
   tdnnf_opts="l2-regularize=0.008 dropout-proportion=0.0 bypass-scale=0.66"
   linear_opts="l2-regularize=0.008 orthonormal-constraint=-1.0"

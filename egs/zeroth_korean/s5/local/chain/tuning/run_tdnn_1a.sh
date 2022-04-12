@@ -92,7 +92,7 @@ tree_dir=exp/chain/tree_a
 # you should probably name it differently.
 lang=data/lang_chain
 
-if [ -d exp/${gmm}_ali_${train_set} ]; then 
+if [ -d exp/${gmm}_ali_${train_set} ]; then
     ali_dir=exp/${gmm}_ali_${train_set}
 else
     echo "$0: Using Alignment from GMM dir at ${gmm}..."
@@ -139,7 +139,7 @@ if [ $stage -le 9 ]; then
 fi
 
 if [ $stage -le 10 ]; then
-  # Build a tree using our new topology.  
+  # Build a tree using our new topology.
    if [ -f $tree_dir/final.mdl ]; then
      echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
      exit 1;
@@ -156,7 +156,7 @@ if [ $stage -le 11 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   tdnn_opts="l2-regularize=0.01 dropout-proportion=0.0 dropout-per-dim-continuous=true"
   tdnnf_opts="l2-regularize=0.01 dropout-proportion=0.0 bypass-scale=0.66"
   linear_opts="l2-regularize=0.01 orthonormal-constraint=-1.0"

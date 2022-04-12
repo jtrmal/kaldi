@@ -6,7 +6,7 @@
 # This script prepares 1999 HUB4 Broadcast News Evaluation English Test Material
 # https://catalog.ldc.upenn.edu/LDC2000S88
 
-set -e 
+set -e
 set -o pipefail
 
 if [ $# -ne 2 ]; then
@@ -28,14 +28,14 @@ fi
 export PATH=$PATH:$KALDI_ROOT/tools/sph2pipe_v2.5
 sph2pipe=`which sph2pipe` || { echo "sph2pipe not found in PATH."; exit 1; }
 
-for f in bn99en_1 bn99en_2; do 
+for f in bn99en_1 bn99en_2; do
   if [ "$f" == "bn99en_1" ]; then
     affix=eval99_1
   else
     affix=eval99_2
   fi
 
-  python -c '
+  python3 -c '
 import sys, os
 sys.path.insert(0, "local/data_prep")
 import hub4_utils
@@ -49,7 +49,7 @@ for line in open(uem).readlines():
   awk '{print  $1" "$2}' $dir/${affix}_uem_segments > $dir/${affix}_uem_utt2spk
 
   cat $SOURCE_DIR/bnews_99/$f.seg | \
-    python -c '
+    python3 -c '
 import sys
 sys.path.insert(0, "local/data_prep")
 import hub4_utils
@@ -61,9 +61,9 @@ with open(sys.argv[1], "w") as s_f, open(sys.argv[2], "w") as u_f:
       s_f.write("{0}\n".format(segments_line))
       u_f.write("{0}\n".format(utt2spk_line))' \
         $dir/${affix}_pem_segments $dir/${affix}_pem_utt2spk
-  
+
   echo "$f $sph2pipe -f wav $SOURCE_DIR/bnews_99/$f.sph |" > ${dir}/${affix}_wav_scp
-done 
+done
 
 cp $SOURCE_DIR/bnews_99/en981118.glm $dir/eval99_1_glm
 cp $SOURCE_DIR/bnews_99/bn99en_1.stm $dir/eval99_1_stm

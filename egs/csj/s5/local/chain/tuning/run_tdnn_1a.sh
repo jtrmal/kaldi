@@ -5,7 +5,7 @@
 
 # The experiments use default <number_mode> in run.sh "local/csj_data_prep.sh data/csj-data"
 
-# steps/info/chain_dir_info.pl exp/chain/tdnn1a 
+# steps/info/chain_dir_info.pl exp/chain/tdnn1a
 # exp/chain/tdnn1a: num-iters=321 nj=3..10 num-params=13.6M dim=40+100->3907 combine=-0.064->-0.063 xent:train/valid[213,320,final]=(-0.892,-0.831,-0.829/-0.981,-0.954,-0.954) logprob:train/valid[213,320,final]=(-0.064,-0.053,-0.053/-0.078,-0.078,-0.078)
 
 # local/chain/compare_wer.sh --online exp/chain/tdnn1a
@@ -133,7 +133,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig

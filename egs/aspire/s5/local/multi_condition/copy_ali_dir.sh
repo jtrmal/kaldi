@@ -63,7 +63,7 @@ id=\$1
 echo "$src_dir/ali.\$id.gz"
 gunzip -c $src_dir/ali.\$id.gz | \
   copy-int-vector ark:- ark,t:- | \
-python -c "
+python3 -c "
 import sys
 for line in sys.stdin:
   parts = line.split()

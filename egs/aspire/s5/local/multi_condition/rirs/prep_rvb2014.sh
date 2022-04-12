@@ -57,7 +57,7 @@ total_files=$(echo ${data_files[@]}|wc -w)
 echo "" > $log_dir/${DBname}_type${type_num}.rir.list
 echo "Found $total_files impulse responses in ${Reverb2014_home1}/RIR."
 for data_file in ${data_files[@]}; do
-  output_file_name=${DBname}_type${type_num}_`basename $data_file | tr '[:upper:]' '[:lower:]'` 
+  output_file_name=${DBname}_type${type_num}_`basename $data_file | tr '[:upper:]' '[:lower:]'`
   echo "sox -t wav $data_file -t wav -r $sampling_rate -e signed-integer -b $output_bit ${output_dir}/${output_file_name}" >> $command_file
   echo ${output_dir}/${output_file_name} >>  $log_dir/${DBname}_type${type_num}.rir.list
   files_done=$((files_done + 1))
@@ -117,9 +117,9 @@ fi
 time $decode_cmd --max-jobs-run 40 JOB=1:$num_jobs $job_log \
   sh $job_file || exit 1;
 
-# get the Reverb2014 room names to pair the noises and impulse responses 
+# get the Reverb2014 room names to pair the noises and impulse responses
 for type_num in `seq 1 2`; do
-  noise_patterns=( $(ls ${output_dir}/${DBname}_type${type_num}_noise*.wav | xargs -n1 basename | python -c"
+  noise_patterns=( $(ls ${output_dir}/${DBname}_type${type_num}_noise*.wav | xargs -n1 basename | python3 -c"
 import sys
 for line in sys.stdin:
   name = line.split('${DBname}_type${type_num}_noise_')[1]

@@ -19,8 +19,8 @@
 # Num-parameters            34976320    39704128
 
 # ./steps/info/chain_dir_info.pl exp/multi_a/chain/tdnn_lstm_1a_sp
-# exp/multi_a/chain/tdnn_lstm_1a_sp: num-iters=2096 nj=3..16 num-params=39.7M dim=40+100->6176 combine=-0.088->-0.087 (over 3) 
-# xent:train/valid[1395,2095,final]=(-1.38,-0.960,-0.970/-1.39,-0.964,-0.964) 
+# exp/multi_a/chain/tdnn_lstm_1a_sp: num-iters=2096 nj=3..16 num-params=39.7M dim=40+100->6176 combine=-0.088->-0.087 (over 3)
+# xent:train/valid[1395,2095,final]=(-1.38,-0.960,-0.970/-1.39,-0.964,-0.964)
 # logprob:train/valid[1395,2095,final]=(-0.117,-0.091,-0.095/-0.109,-0.087,-0.089)
 
 # online results
@@ -125,7 +125,7 @@ if [ $stage -le 10 ]; then
   # Create a version of the lang/ directory that has one state per phone in the
   # topo file. [note, it really has two states.. the first one is only repeated
   # once, the second one has zero or more repeats.]
-  if [ -d $lang ]; then 
+  if [ -d $lang ]; then
     echo "$lang exists. Remove it or skip this stage."
     exit 1
   fi
@@ -141,7 +141,7 @@ fi
 if [ $stage -le 11 ]; then
   # Build a tree using our new topology.
 
-  if [ -f $treedir/final.mdl ]; then 
+  if [ -f $treedir/final.mdl ]; then
     echo "$treedir exists. Remove it or skip this stage."
     exit 1
   fi
@@ -155,7 +155,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   lstm_opts="dropout-proportion=0.0 decay-time=40"
 
   relu_dim=1024
@@ -275,8 +275,8 @@ if [ $stage -le 15 ]; then
         --frames-per-chunk "$frames_per_chunk_primary" \
         --online-ivector-dir exp/$multi/nnet3${nnet3_affix}/ivectors_${decode_set} \
         $graph_dir data/${decode_set}_hires \
-         $dir/decode${lang_suffix}_${decode_set}${decode_dir_affix:+_$decode_dir_affix}${decode_iter:+_iter$decode_iter} 
-      
+         $dir/decode${lang_suffix}_${decode_set}${decode_dir_affix:+_$decode_dir_affix}${decode_iter:+_iter$decode_iter}
+
       steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           $lang_dir $rescore_lang_dir data/${decode_set}_hires \
           $dir/decode${lang_suffix}_${decode_set}${decode_dir_affix:+_$decode_dir_affix}{,_fg}${decode_iter:+_iter$decode_iter} || exit 1;

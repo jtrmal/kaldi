@@ -35,7 +35,7 @@ num_threads_ubm=1
 nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
 tdnn_affix=  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
-feat_suffix=_hires      
+feat_suffix=_hires
 
 label_delay=5
 frame_subsampling_factor=3
@@ -226,7 +226,7 @@ if [ $stage -le 9 ]; then
         $langdir $gmm_dir $lat_dir
       rm $lat_dir/fsts.*.gz # save space
   done
-fi 
+fi
 
 if [ $stage -le 10 ]; then
   for lang_index in `seq 0 $[$num_langs-1]`;do
@@ -260,7 +260,7 @@ if [ $stage -le 11 ]; then
     ivector_node_xconfig="input dim=$ivector_dim name=ivector"
     ivector_to_append=", ReplaceIndex(ivector, t, 0)"
   fi
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   dummy_tree_dir=${multi_ali_treedirs[0]}
   num_targets=`tree-info $dummy_tree_dir/tree 2>/dev/null | grep num-pdfs | awk '{print $2}'` || exit 1;
   cat <<EOF > $dir/configs/network.xconfig
@@ -296,7 +296,7 @@ EOF
 
   lang_name=${lang_list[0]}
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig \
-    --config-dir $dir/configs/ 
+    --config-dir $dir/configs/
 fi
 
 init_info=$dir/init/info.txt
@@ -306,7 +306,7 @@ if [ $stage -le 12 ]; then
       exit
   fi
   mkdir  -p $dir/init
-  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info 
+  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info
   model_left_context=`fgrep 'left-context' $dir/configs/temp.info | awk '{print $2}'`
   model_right_context=`fgrep 'right-context' $dir/configs/temp.info | awk '{print $2}'`
   cat >$init_info <<EOF
@@ -343,7 +343,7 @@ if [ $stage -le 13 ]; then
            "ark:gunzip -c $ali_dir/ali.*.gz | ali-to-phones $gmm_dir/final.mdl ark:- ark:- |" \
            $dir/den_fsts/${lang_name}.phone_lm.fst || exit 1
       echo "$0: creating denominator FST for $lang_name"
-      copy-transition-model $tree_dir/final.mdl $dir/init/${lang_name}_trans.mdl  || exit 1 
+      copy-transition-model $tree_dir/final.mdl $dir/init/${lang_name}_trans.mdl  || exit 1
       $train_cmd $dir/den_fsts/log/make_den_fst.log \
          chain-make-den-fst $dir/${lang_name}.tree \
             $dir/init/${lang_name}_trans.mdl $dir/den_fsts/${lang_name}.phone_lm.fst \
@@ -384,7 +384,7 @@ if [ $stage -le 15 ]; then
         egs_opts="--lang2weight '$lang2weight'"
     fi
     egs_dir_list=$(for lang_index in `seq 0 $[$num_langs-1]`;do lang_name=${lang_list[$lang_index]}; echo ${dir}/${lang_name}_processed_egs; done)
-    
+
     steps/chain2/combine_egs.sh $egs_opts \
         --cmd "$train_cmd" \
         $num_langs $egs_dir_list ${dir}/egs

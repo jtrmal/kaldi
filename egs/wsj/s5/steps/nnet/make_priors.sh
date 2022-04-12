@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 # Copyright 2012-2015 Brno University of Technology (author: Karel Vesely)
 # Apache 2.0
@@ -67,12 +67,12 @@ feats="ark:cat $sdata/JOB/feats.scp | utils/shuffle_list.pl --srand 777 | head -
 # add-deltas (optional),
 [ ! -z "$delta_opts" ] && feats="$feats add-deltas $delta_opts ark:- ark:- |"
 # add-pytel transform (optional),
-[ -e $D/pytel_transform.py ] && feats="$feats /bin/env python $D/pytel_transform.py |"
+[ -e $D/pytel_transform.py ] && feats="$feats /bin/env python3 $D/pytel_transform.py |"
 
 # add-ivector (optional),
 if [ -e $D/ivector_dim ]; then
   [ -z $ivector ] && echo "Missing --ivector, they were used in training!" && exit 1
-  # Get the tool, 
+  # Get the tool,
   ivector_append_tool=append-vector-to-feats # default,
   [ -e $D/ivector_append_tool ] && ivector_append_tool=$(cat $D/ivector_append_tool)
   # Check dims,
@@ -96,6 +96,6 @@ sum-matrices --binary=false $nndir/prior_cmvn_stats $nndir/*.prior_cmvn_stats 2>
 rm $nndir/*.prior_cmvn_stats
 
 awk 'NR==2{ $NF=""; print "[",$0,"]"; }' $nndir/prior_cmvn_stats >$nndir/prior_counts || exit 1
-    
-echo "Succeeded creating prior counts '$nndir/prior_counts' from '$data'" 
+
+echo "Succeeded creating prior counts '$nndir/prior_counts' from '$data'"
 

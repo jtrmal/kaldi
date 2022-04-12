@@ -51,7 +51,7 @@ if [[ $(hostname -f) == *.clsp.jhu.edu ]]; then giga_dir="GIGA"; fi
 LM="gale_giga.o4g.kn.gz"
 [ -z $giga_dir ] && LM="gale.o4g.kn.gz"
 
-# preference on how to process xml file (use xml binary or python)
+# preference on how to process xml file (use xml binary or python3)
 process_xml=""
 
 run_rnnlm=false
@@ -72,10 +72,10 @@ if [ $stage -le 0 ]; then
   echo "$0: Preparing data..."
 
   options=""
-  [ ! -z $mgb2_dir ] && options="--process-xml python --mgb2-dir $mgb2_dir"
+  [ ! -z $mgb2_dir ] && options="--process-xml python3 --mgb2-dir $mgb2_dir"
   local/prepare_data.sh $options
 
-  echo "$0: Preparing lexicon and LM..." 
+  echo "$0: Preparing lexicon and LM..."
   local/prepare_dict.sh
 
   utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang

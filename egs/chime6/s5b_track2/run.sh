@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # JHU-CLSP submission for Chime-6 Track 2.
-# This recipe uses the ASR from the s5b_track1 recipe. We also replace the 
-# baseline SAD with one that uses posterior fusion from the array outputs, 
+# This recipe uses the ASR from the s5b_track1 recipe. We also replace the
+# baseline SAD with one that uses posterior fusion from the array outputs,
 # and the baseline AHC diarization with VB-based overlap assignment.
 #
 # This is essentially a decoding script using pretrained models. For training
@@ -31,7 +31,7 @@ ref_array_gss=U01
 # RNNLM rescore options
 ngram_order=4 # approximate the lattice-rescoring by limiting the max-ngram-order
               # if it's set, it merges histories in the lattice if they share
-              # the same ngram history and this prevents the lattice from 
+              # the same ngram history and this prevents the lattice from
               # exploding exponentially
 pruned_rescore=true
 rnnlm_dir=exp/rnnlm_lstm_1b
@@ -80,7 +80,7 @@ if [ $stage -le -2 ]; then
   fi
 
   echo "$0: Training UBM and i-vector extractor for VB resegmentation"
-  
+
   # First prepare training data
   for mictype in worn u01 u02 u05 u06; do
     local/prepare_data.sh --mictype ${mictype} --train true \
@@ -111,11 +111,11 @@ if [ $stage -le -2 ]; then
              data/${train_set} exp/make_mfcc/${train_set} $mfccdir
   steps/compute_cmvn_stats.sh data/${train_set} exp/make_mfcc/${train_set} $mfccdir
   utils/fix_data_dir.sh data/${train_set}
-  
+
   sid/compute_vad_decision.sh --nj 32 --cmd "$train_cmd" \
     data/${train_set} exp/make_vad
   utils/fix_data_dir.sh data/${train_set}
-  
+
   sid/train_diag_ubm.sh --cmd "$train_cmd --mem 10G" --nj 32 \
     --num-threads 8 --subsample 1 --delta-order 0 --apply-cmn false \
     data/${train_set} 1024 exp/vb_reseg/diag_ubm_1024
@@ -154,7 +154,7 @@ if [ $stage -le -1 ]; then
     tar -xvzf 0012_asr_v2.tar.gz
     cp -r 0012_asr_v2/exp/* exp/
   fi
-  
+
 fi
 
 ###########################################################################
@@ -259,7 +259,7 @@ if [ $stage -le 3 ]; then
 
       # To score, we select just U06 segments from the hypothesis RTTM.
       hyp_rttm=${test_dir}/rttm
-      
+
       if $use_new_rttm_reference == "true"; then
         echo "Use the new RTTM reference."
         mode="$(cut -d'_' -f1 <<<"$datadir")"
@@ -354,7 +354,7 @@ if [ $stage -le 6 ]; then
     test_dir=${datadir}_max_seg.bak # contains all arrays
     data_name=$(echo ${datadir} | cut -d'_' -f1)
     sessions=$(cut -d' ' -f2 data/${test_dir}/segments | cut -d'_' -f1 | sort -u)
-    > ${out_dir}/rttm 
+    > ${out_dir}/rttm
     for session in $sessions; do
       echo ${session}
       grep "$session" ${out_dir}/VB_rttm_ol |\
@@ -370,7 +370,7 @@ if [ $stage -le 6 ]; then
   pushd pb_chime5
   export LC_ALL=C.UTF-8
   export LANG=C.UTF-8
-  $HOME/miniconda3/bin/python -m pb_chime5.database.chime5.create_json -j cache/chime6.json -db cache/CHiME6 --transcription-path cache/CHiME6/transcriptions --chime6
+  $HOME/miniconda3/bin/python3 -m pb_chime5.database.chime5.create_json -j cache/chime6.json -db cache/CHiME6 --transcription-path cache/CHiME6/transcriptions --chime6
   popd
 fi
 

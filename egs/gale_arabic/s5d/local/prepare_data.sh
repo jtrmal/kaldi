@@ -1,34 +1,34 @@
-#!/bin/bash 
+#!/bin/bash
 
 # Copyright 2014 QCRI (author: Ahmed Ali)
 # Apache 2.0
 
 # GALE Arabic phase 2 Conversation Speech
-dir1=/export/corpora5/LDC/LDC2013S02/         
-dir2=/export/corpora5/LDC/LDC2013S07/         
+dir1=/export/corpora5/LDC/LDC2013S02/
+dir2=/export/corpora5/LDC/LDC2013S07/
 text1=/export/corpora5/LDC/LDC2013T04/
 text2=/export/corpora5/LDC/LDC2013T17/
 # GALE Arabic phase 2 News Speech
-dir3=/export/corpora5/LDC/LDC2014S07/         
-dir4=/export/corpora5/LDC/LDC2015S01/         
-text3=/export/corpora5/LDC/LDC2014T17/        
-text4=/export/corpora5/LDC/LDC2015T01/        
+dir3=/export/corpora5/LDC/LDC2014S07/
+dir4=/export/corpora5/LDC/LDC2015S01/
+text3=/export/corpora5/LDC/LDC2014T17/
+text4=/export/corpora5/LDC/LDC2015T01/
 # GALE Arabic phase 3 Conversation Speech
-dir5=/export/corpora5/LDC/LDC2015S11/         
-dir6=/export/corpora5/LDC/LDC2016S01/         
-text5=/export/corpora5/LDC/LDC2015T16/        
-text6=/export/corpora5/LDC/LDC2016T06/        
+dir5=/export/corpora5/LDC/LDC2015S11/
+dir6=/export/corpora5/LDC/LDC2016S01/
+text5=/export/corpora5/LDC/LDC2015T16/
+text6=/export/corpora5/LDC/LDC2016T06/
 # GALE Arabic phase 3 News Speech
-dir7=/export/corpora5/LDC/LDC2016S07/          
-dir8=/export/corpora3/LDC/LDC2017S02/          
-text7=/export/corpora5/LDC/LDC2016T17/         
-text8=/export/corpora3/LDC/LDC2017T04/         
+dir7=/export/corpora5/LDC/LDC2016S07/
+dir8=/export/corpora3/LDC/LDC2017S02/
+text7=/export/corpora5/LDC/LDC2016T17/
+text8=/export/corpora3/LDC/LDC2017T04/
 # GALE Arabic phase 4 Conversation Speech
-dir9=/export/corpora3/LDC/LDC2017S15/          
-text9=/export/corpora3/LDC/LDC2017T12/         
+dir9=/export/corpora3/LDC/LDC2017S15/
+text9=/export/corpora3/LDC/LDC2017T12/
 # GALE Arabic phase 4 News Speech
-dir10=/export/corpora3/LDC/LDC2018S05/         
-text10=/export/corpora3/LDC/LDC2018T14/        
+dir10=/export/corpora3/LDC/LDC2018S05/
+text10=/export/corpora3/LDC/LDC2018T14/
 
 mgb2_dir=""
 process_xml=""
@@ -38,22 +38,22 @@ mer=80
 
 gale_data=GALE
 
-mkdir -p $gale_data 
-# check that sox is installed 
+mkdir -p $gale_data
+# check that sox is installed
 which sox  &>/dev/null
-if [[ $? != 0 ]]; then 
+if [[ $? != 0 ]]; then
  echo "$0: sox is not installed"; exit 1
 fi
 
 for dvd in $dir1 $dir2 $dir3 $dir4 $dir5 $dir6 $dir7 $dir8 $dir9 $dir10; do
   dvd_full_path=$(utils/make_absolute.sh $dvd)
-  if [[ ! -e $dvd_full_path ]]; then 
+  if [[ ! -e $dvd_full_path ]]; then
     echo "$0: missing $dvd_full_path"; exit 1;
   fi
   find $dvd_full_path \( -name "*.wav" -o -name "*.flac" \)  | while read file; do
     id=$(basename $file | awk '{gsub(".wav","");gsub(".flac","");print}')
     echo "$id sox $file -r 16000 -t wav - |"
-  done 
+  done
 done | sort -u > $gale_data/wav.scp
 echo "$0:data prep audio succeded"
 
@@ -120,9 +120,9 @@ if [ ! -z $mgb2_dir ]; then
     mv $output_dir/mgb2 ${output_dir}/.backup
   fi
 
-  if [ $process_xml == 'python' ]; then
-    echo "using python to process xml file"
-    # check if bs4 and lxml are installed in python
+  if [ $process_xml == 'python3' ]; then
+    echo "using python3 to process xml file"
+    # check if bs4 and lxml are installed in python3
     local/check_tools.sh
     ls $mgb2_dir/train/wav/ | while read name; do
       basename=`basename -s .wav $name`
@@ -141,25 +141,25 @@ if [ ! -z $mgb2_dir ]; then
         echo $basename $db_dir/train/wav/$basename.wav >> $output_dir/wav.scp
       done
     else
-      echo "xml not found, you may use python by '--process-xml python'"
+      echo "xml not found, you may use python3 by '--process-xml python3'"
       exit 1;
     fi
   else
     # invalid option
-    echo "$0: invalid option for --process-xml, choose from 'xml' or 'python'"
+    echo "$0: invalid option for --process-xml, choose from 'xml' or 'python3'"
     exit 1;
   fi
 
   # add mgb2 data to training data (GALE/all and wav.scp)
-  mv $gale_data/all $gale_data/all.gale 
+  mv $gale_data/all $gale_data/all.gale
   cat $gale_data/all.gale $output_dir/mgb2 > $gale_data/all
   cat $output_dir/wav.scp >> $gale_data/wav.scp
 
-  # for dict preparation 
+  # for dict preparation
   grep -v -f local/test/dev_all $gale_data/all.gale | \
          grep -v -f local/test/test_p2 | \
          grep -v -f local/test/mt_eval_all | \
-         grep -v -f local/bad_segments > $gale_data/all.gale.train 
+         grep -v -f local/bad_segments > $gale_data/all.gale.train
   awk '{printf $2 " "; for (i=5; i<=NF; i++) {printf $i " "} printf "\n"}' $gale_data/all.gale.train | sort -u > $gale_data/gale_text
 echo "$0:MGB2 data added to training data"
 fi
@@ -175,17 +175,17 @@ grep -f local/test/mt_eval_all $gale_data/all | grep -v -f local/bad_segments > 
 grep -v -f local/test/dev_all $gale_data/all | \
        grep -v -f local/test/test_p2 | \
        grep -v -f local/test/mt_eval_all | \
-       grep -v -f local/bad_segments > $gale_data/all.train 
+       grep -v -f local/bad_segments > $gale_data/all.train
 
 for x in dev test_p2 mt_all train; do
  outdir=data/$x
- file=$gale_data/all.$x 
+ file=$gale_data/all.$x
  mkdir -p $outdir
- awk '{print $2 " " $2}' $file | sort -u > $outdir/utt2spk 
+ awk '{print $2 " " $2}' $file | sort -u > $outdir/utt2spk
  cp -pr $outdir/utt2spk $outdir/spk2utt
  awk '{print $2 " " $1 " " $3 " " $4}' $file  | sort -u > $outdir/segments
  awk '{printf $2 " "; for (i=5; i<=NF; i++) {printf $i " "} printf "\n"}' $file | sort -u > $outdir/text
-done 
+done
 
 grep -f local/test/dev_all $gale_data/wav.scp > $dir/dev/wav.scp
 grep -f local/test/test_p2 $gale_data/wav.scp > $dir/test_p2/wav.scp
@@ -193,6 +193,6 @@ grep -f local/test/mt_eval_all $gale_data/wav.scp > $dir/mt_all/wav.scp
 
 cat $gale_data/wav.scp | awk -v seg=$dir/train/segments 'BEGIN{while((getline<seg) >0) {seen[$2]=1;}}
  {if (seen[$1]) { print $0}}' > $dir/train/wav.scp
- 
+
 echo "$0:data prep split succeeded"
 exit 0

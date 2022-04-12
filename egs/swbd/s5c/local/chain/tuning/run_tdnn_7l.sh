@@ -10,7 +10,7 @@
 #Final valid prob         -0.113     -0.116
 #Final train prob (xent)  -1.25      -1.38
 #Final valid prob (xent)  -1.36      -1.48
-#Time consuming one iter  53.56s     48.18s  
+#Time consuming one iter  53.56s     48.18s
 #Time reduction percent   10.1%
 set -e
 
@@ -112,7 +112,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig

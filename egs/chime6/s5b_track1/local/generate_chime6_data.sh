@@ -76,40 +76,40 @@ pushd ${SYNC_PATH}
 echo "Correct for frame dropping"
 for session in ${sessions1}; do
   $cmd ${expdir}/correct_signals_for_frame_drops.${session}.log \
-    ${CONDA_PATH}/python correct_signals_for_frame_drops.py --session=${session} chime6_audio_edits.json $IN_PATH $TMP_PATH &
+    ${CONDA_PATH}/python3 correct_signals_for_frame_drops.py --session=${session} chime6_audio_edits.json $IN_PATH $TMP_PATH &
 done
 wait
 for session in ${sessions2}; do
   $cmd ${expdir}/correct_signals_for_frame_drops.${session}.log \
-    ${CONDA_PATH}/python correct_signals_for_frame_drops.py --session=${session} chime6_audio_edits.json $IN_PATH $TMP_PATH &
+    ${CONDA_PATH}/python3 correct_signals_for_frame_drops.py --session=${session} chime6_audio_edits.json $IN_PATH $TMP_PATH &
 done
 wait
 for session in ${sessions3}; do
   $cmd ${expdir}/correct_signals_for_frame_drops.${session}.log \
-    ${CONDA_PATH}/python correct_signals_for_frame_drops.py --session=${session} chime6_audio_edits.json $IN_PATH $TMP_PATH &
+    ${CONDA_PATH}/python3 correct_signals_for_frame_drops.py --session=${session} chime6_audio_edits.json $IN_PATH $TMP_PATH &
 done
 wait
 
 echo "Sox processing for correcting clock drift"
 for session in ${sessions1}; do
   $cmd ${expdir}/correct_signals_for_clock_drift.${session}.log \
-    ${CONDA_PATH}/python correct_signals_for_clock_drift.py --session=${session} --sox_path $CONDA_PATH chime6_audio_edits.json $TMP_PATH $OUT_PATH &
+    ${CONDA_PATH}/python3 correct_signals_for_clock_drift.py --session=${session} --sox_path $CONDA_PATH chime6_audio_edits.json $TMP_PATH $OUT_PATH &
 done
 wait
 for session in ${sessions2}; do
   $cmd ${expdir}/correct_signals_for_clock_drift.${session}.log \
-    ${CONDA_PATH}/python correct_signals_for_clock_drift.py --session=${session} --sox_path $CONDA_PATH chime6_audio_edits.json $TMP_PATH $OUT_PATH &
+    ${CONDA_PATH}/python3 correct_signals_for_clock_drift.py --session=${session} --sox_path $CONDA_PATH chime6_audio_edits.json $TMP_PATH $OUT_PATH &
 done
 wait
 for session in ${sessions3}; do
   $cmd ${expdir}/correct_signals_for_clock_drift.${session}.log \
-    ${CONDA_PATH}/python correct_signals_for_clock_drift.py --session=${session} --sox_path $CONDA_PATH chime6_audio_edits.json $TMP_PATH $OUT_PATH &
+    ${CONDA_PATH}/python3 correct_signals_for_clock_drift.py --session=${session} --sox_path $CONDA_PATH chime6_audio_edits.json $TMP_PATH $OUT_PATH &
 done
 wait
 
 echo "adjust the JSON files"
 mkdir -p ${odir}/transcriptions/eval ${odir}/transcriptions/dev ${odir}/transcriptions/train
-${CONDA_PATH}/python correct_transcript_for_clock_drift.py --clock_drift_data chime6_audio_edits.json ${sdir}/transcriptions ${odir}/transcriptions
+${CONDA_PATH}/python3 correct_transcript_for_clock_drift.py --clock_drift_data chime6_audio_edits.json ${sdir}/transcriptions ${odir}/transcriptions
 popd
 
 # finally check md5sum

@@ -18,7 +18,7 @@ function check_for_bad_sox {
 
 check_for_bad_sox;
 
-python -c "
+python3 -c "
 from distutils.version import LooseVersion
 import warnings, sys
 

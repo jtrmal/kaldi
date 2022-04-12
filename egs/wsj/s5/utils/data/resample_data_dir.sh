@@ -33,7 +33,7 @@ if [ ! -s $dir/utt2dur ]; then
 fi
 
 mv $dir/wav.scp $dir/wav.scp.tmp
-cat $dir/wav.scp.tmp | python -c "import sys
+cat $dir/wav.scp.tmp | python3 -c "import sys
 for line in sys.stdin.readlines():
   splits = line.strip().split()
   if splits[-1] == '|':

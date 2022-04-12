@@ -41,7 +41,7 @@ for task in complete ageing; do
       trials_male=data/fame_${task}_${subtask}_${sets}_male/trials
       trials=data/fame_${task}_${subtask}_${sets}/trials
       local/make_fame_test.pl $famecorpus/SV data $task $subtask $sets
-      local/make_fame_train.pl $famecorpus/SV data $task $subtask $sets 
+      local/make_fame_train.pl $famecorpus/SV data $task $subtask $sets
 
     done
   done
@@ -57,7 +57,7 @@ for task in ageing; do
         trials_male=data/fame_${task}_${subtask}_${sets}${year}_male/trials
         trials=data/fame_${task}_${subtask}_${sets}${year}/trials
         local/make_fame_test_year.pl $famecorpus/SV data $task $subtask $sets $year
-        local/make_fame_train_year.pl $famecorpus/SV data $task $subtask $sets $year 
+        local/make_fame_train_year.pl $famecorpus/SV data $task $subtask $sets $year
 
       done
     done
@@ -83,7 +83,7 @@ for task in complete ageing; do
       steps/make_mfcc.sh --mfcc-config conf/mfcc_16k.conf --nj 100 --cmd "$train_cmd" \
           data/fame_${task}_${subtask}_${sets}_test exp/make_mfcc $mfccdir
       utils/fix_data_dir.sh data/fame_${task}_${subtask}_${sets}_test
-      
+
     done
   done
 done
@@ -121,7 +121,7 @@ for task in complete ageing; do
       sid/compute_vad_decision.sh --nj 100 --cmd "$train_cmd" \
           data/fame_${task}_${subtask}_${sets}_enroll exp/make_vad $vaddir
       sid/compute_vad_decision.sh --nj 100 --cmd "$train_cmd" \
-          data/fame_${task}_${subtask}_${sets}_test exp/make_vad $vaddir 
+          data/fame_${task}_${subtask}_${sets}_test exp/make_vad $vaddir
 
     done
   done
@@ -137,7 +137,7 @@ for task in ageing; do
             data/fame_${task}_${subtask}_${sets}${year}_enroll exp/make_vad $vaddir
         sid/compute_vad_decision.sh --nj 100 --cmd "$train_cmd" \
             data/fame_${task}_${subtask}_${sets}${year}_test exp/make_vad $vaddir
-      
+
       done
     done
   done
@@ -167,7 +167,7 @@ echo "Extracting i-vectors for data/train.."
 
 sid/extract_ivectors.sh --cmd "$train_cmd" --nj 100 \
    exp/extractor data/train \
-   exp/ivectors_train 
+   exp/ivectors_train
 
 for task in complete ageing; do
   for subtask in 3sec 10sec 30sec; do
@@ -196,13 +196,13 @@ for task in ageing; do
            exp/ivectors_fame_${task}_${subtask}_${sets}${year}_enroll
         sid/extract_ivectors.sh --cmd "$train_cmd" --nj 100 \
            exp/extractor data/fame_${task}_${subtask}_${sets}${year}_test \
-           exp/ivectors_fame_${task}_${subtask}_${sets}${year}_test 
+           exp/ivectors_fame_${task}_${subtask}_${sets}${year}_test
 
-      done  
+      done
     done
   done
 done
- 
+
 # Calculate i-vector means used by the scoring scripts
 
 echo "Calculating i-vectors means.."
@@ -226,7 +226,7 @@ for task in complete ageing; do
 
       local/plda_scoring.sh --use-existing-models true data/train data/fame_${task}_${subtask}_${sets}_enroll_male data/fame_${task}_${subtask}_${sets}_test_male \
         exp/ivectors_train exp/ivectors_fame_${task}_${subtask}_${sets}_enroll_male exp/ivectors_fame_${task}_${subtask}_${sets}_test_male $trials_male local/scores_gmm_2048_ind_male_${task}_${subtask}_${sets}
-              
+
     done
   done
 done
@@ -257,7 +257,7 @@ for task in ageing; do
   done
 done
 
-# Calculating EER 
+# Calculating EER
 
 echo "Calculating EER.."
 
@@ -269,8 +269,8 @@ for task in complete ageing; do
       echo "GMM-$num_components EER for fame_${task}_${subtask}_${sets}"
       for x in ind; do
         for y in female male pooled; do
-          echo "python local/prepare_for_eer.py $trials local/scores_gmm_${num_components}_${x}_${y}_${task}_${subtask}_${sets}/plda_scores"
-          eer=`compute-eer <(python local/prepare_for_eer.py $trials local/scores_gmm_${num_components}_${x}_${y}_${task}_${subtask}_${sets}/plda_scores) 2> /dev/null`
+          echo "python3 local/prepare_for_eer.py $trials local/scores_gmm_${num_components}_${x}_${y}_${task}_${subtask}_${sets}/plda_scores"
+          eer=`compute-eer <(python3 local/prepare_for_eer.py $trials local/scores_gmm_${num_components}_${x}_${y}_${task}_${subtask}_${sets}/plda_scores) 2> /dev/null`
           echo "${x} ${y}: $eer"
         done
       done
@@ -288,8 +288,8 @@ for task in ageing; do
         echo "GMM-$num_components EER for fame_${task}_${subtask}_${sets}${year}"
         for x in ind; do
           for y in female male pooled; do
-            echo "python local/prepare_for_eer.py $trials local/scores_gmm_${num_components}_${x}_${y}_${task}_${subtask}_${sets}${year}/plda_scores"
-            eer=`compute-eer <(python local/prepare_for_eer.py $trials local/scores_gmm_${num_components}_${x}_${y}_${task}_${subtask}_${sets}${year}/plda_scores) 2> /dev/null`
+            echo "python3 local/prepare_for_eer.py $trials local/scores_gmm_${num_components}_${x}_${y}_${task}_${subtask}_${sets}${year}/plda_scores"
+            eer=`compute-eer <(python3 local/prepare_for_eer.py $trials local/scores_gmm_${num_components}_${x}_${y}_${task}_${subtask}_${sets}${year}/plda_scores) 2> /dev/null`
             echo "${x} ${y}: $eer"
           done
         done

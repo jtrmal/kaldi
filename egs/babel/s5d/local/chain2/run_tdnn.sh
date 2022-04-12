@@ -122,7 +122,7 @@ if [ $stage -le 10 ]; then
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
   [ -z $num_targets ] && { echo "$0: error getting num-targets"; exit 1; }
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
@@ -181,7 +181,7 @@ if [ $stage -le 11 ]; then
   fi
 
   mkdir  -p $dir/init
-  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info 
+  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info
   model_left_context=`fgrep 'left-context' $dir/configs/temp.info | awk '{print $2}'`
   model_right_context=`fgrep 'right-context' $dir/configs/temp.info | awk '{print $2}'`
   cat >$init_info <<EOF

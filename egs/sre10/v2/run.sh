@@ -244,7 +244,7 @@ cat exp/scores_dnn_dep_male/plda_scores exp/scores_dnn_dep_female/plda_scores \
 echo "Sup-GMM EER"
 for x in ind dep; do
   for y in female male pooled; do
-    eer=`compute-eer <(python local/prepare_for_eer.py $trials exp/scores_sup_gmm_${x}_${y}/plda_scores) 2> /dev/null`
+    eer=`compute-eer <(python3 local/prepare_for_eer.py $trials exp/scores_sup_gmm_${x}_${y}/plda_scores) 2> /dev/null`
     echo "${x} ${y}: $eer"
   done
 done
@@ -259,7 +259,7 @@ done
 echo "DNN-UBM EER"
 for x in ind dep; do
   for y in female male pooled; do
-    eer=`compute-eer <(python local/prepare_for_eer.py $trials exp/scores_dnn_${x}_${y}/plda_scores) 2> /dev/null`
+    eer=`compute-eer <(python3 local/prepare_for_eer.py $trials exp/scores_dnn_${x}_${y}/plda_scores) 2> /dev/null`
     echo "${x} ${y}: $eer"
   done
 done

@@ -34,7 +34,7 @@ function check_sorted_and_uniq {
     echo "$0: file $1 is not in sorted order or has duplicates" && exit 1;
 }
 
-for f in $targets_dir/targets.scp $data/utt2spk; do 
+for f in $targets_dir/targets.scp $data/utt2spk; do
   if [ ! -f $f ]; then
     echo "$0: Could not find $f"
     exit 1
@@ -67,7 +67,7 @@ if [ -f $targets_dir/frame_subsampling_factor ]; then
 fi
 
 utils/filter_scp.pl $tmpdir/len.feats $tmpdir/len.targets | \
-  paste -d ' ' - $tmpdir/len.feats | python -c "
+  paste -d ' ' - $tmpdir/len.feats | python3 -c "
 import sys
 num_lines = 0
 for line in sys.stdin:

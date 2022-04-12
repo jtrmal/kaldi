@@ -15,7 +15,7 @@
 #
 # This is for when you use the "online-decoding" setup in an offline task, and
 # you want the best possible results.
-# Compared to the steps/online/nnet2/extract_ivectors.sh, this script uses 
+# Compared to the steps/online/nnet2/extract_ivectors.sh, this script uses
 # modified apply_map.pl with permissive mode.
 
 # Begin configuration section.
@@ -187,8 +187,8 @@ if [ $sub_speaker_frames -gt 0 ]; then
       echo "$0: error getting per-utterance counts."
 #      exit 0;
     fi
-#   cat $data/spk2utt | python -c "
-    utils/filter_scp.pl $dir/utt_counts $data/utt2spk | utils/utt2spk_to_spk2utt.pl | python -c "
+#   cat $data/spk2utt | python3 -c "
+    utils/filter_scp.pl $dir/utt_counts $data/utt2spk | utils/utt2spk_to_spk2utt.pl | python3 -c "
 import sys
 utt_counts = {}
 trash = list(map(lambda x: utt_counts.update({x.split()[0]:float(x.split()[1])}), open('$dir/utt_counts').readlines()))

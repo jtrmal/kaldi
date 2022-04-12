@@ -136,10 +136,10 @@ fi
 if [ $stage -le 17 ]; then
   mkdir -p $dir
   echo "$0: creating neural net configs using the xconfig parser";
-  
+
   lstm_opts="decay-time=20"
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
@@ -158,10 +158,10 @@ if [ $stage -le 17 ]; then
   fast-lstmp-layer name=blstm2-backward input=Append(blstm1-forward, blstm1-backward) cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=3 $lstm_opts
   fast-lstmp-layer name=blstm3-forward input=Append(blstm2-forward, blstm2-backward) cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 $lstm_opts
   fast-lstmp-layer name=blstm3-backward input=Append(blstm2-forward, blstm2-backward) cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=3 $lstm_opts
-  
+
   ## adding the layers for chain branch
   output-layer name=output input=Append(blstm3-forward, blstm3-backward) output-delay=$label_delay include-log-softmax=false dim=$num_targets max-change=1.5
-  
+
   # adding the layers for xent branch
   # This block prints the configs for a separate output that will be
   # trained with a cross-entropy objective in the 'chain' models... this
@@ -172,7 +172,7 @@ if [ $stage -le 17 ]; then
   # constant; and the 0.5 was tuned so as to make the relative progress
   # similar in the xent and regular final layers.
   output-layer name=output-xent input=Append(blstm3-forward, blstm3-backward) output-delay=$label_delay dim=$num_targets learning-rate-factor=$learning_rate_factor max-change=1.5
-  
+
 EOF
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
 fi

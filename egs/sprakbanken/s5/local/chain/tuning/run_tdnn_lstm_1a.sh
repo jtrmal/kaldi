@@ -14,7 +14,7 @@
 
 # run_tdnn_lstm_1a.sh was modified from run_lstm_1e.sh, which is a fairly
 # standard, LSTM, except that some TDNN layers were added in between the
-# LSTM layers.  
+# LSTM layers.
 
 ## how you run this (note: this assumes that the run_tdnn_lstm.sh soft link points here;
 ## otherwise call it directly in its location).
@@ -145,7 +145,7 @@ if [ $stage -le 17 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig

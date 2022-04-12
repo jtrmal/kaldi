@@ -54,7 +54,7 @@ if [ ! -d $miniconda_dir ]; then
 fi
 
 # check if WPE is installed
-result=`$miniconda_dir/bin/python -c "\
+result=`$miniconda_dir/bin/python3 -c "\
 try:
     import nara_wpe
     print('1')

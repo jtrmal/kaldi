@@ -28,7 +28,7 @@ if [ $stage -le 1 ]; then
     utils/copy_data_dir.sh data/$datadir data/${datadir}_hires
     if [ "$datadir" == "train" ]; then
       dir=data/train_hires
-      cat $dir/wav.scp | python -c "
+      cat $dir/wav.scp | python3 -c "
 import sys, os, subprocess, re, random
 scale_low = 1.0/8
 scale_high = 2.0

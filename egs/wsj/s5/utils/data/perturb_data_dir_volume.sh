@@ -7,13 +7,13 @@
 # the wav.scp to perturb the volume (typically useful for training data when
 # using systems that don't have cepstral mean normalization).
 
-reco2vol=   # A file with the format <reco-id> <volume> that specifies the 
+reco2vol=   # A file with the format <reco-id> <volume> that specifies the
             # factor by which the volume of the recording must be scaled.
-            # If not provided, then the volume will be chosen randomly to 
+            # If not provided, then the volume will be chosen randomly to
             # be between --scale-low and --scale-high.
 write_reco2vol=     # File to write volume-scales applied to the recordings.
-                    # Can be passed to --reco2vol to use the same volumes for 
-                    # another data directory. 
+                    # Can be passed to --reco2vol to use the same volumes for
+                    # another data directory.
                     # e.g. the unperturbed data directory.
 scale_low=0.125
 scale_high=2
@@ -37,13 +37,13 @@ if [ ! -f $data/wav.scp ]; then
 fi
 
 # Check if volume perturbation is already this. We assume that the volume
-# perturbation is done if it has a line 'sox --vol' applied on the whole 
+# perturbation is done if it has a line 'sox --vol' applied on the whole
 # recording.
-# e.g. 
+# e.g.
 # foo-1 cat foo.wav | sox --vol 1.6 -t wav - -t wav - |    # volume perturbation done
 # bar-1 sox --vol 1.2 bar.wav -t wav - |                   # volume perturbation done
 # foo-2 wav-reverberate --additive-signals="sox --vol=0.1 noise1.wav -t wav -|" foo.wav |   # volume perturbation not done
-volume_perturb_done=`head -n100 $data/wav.scp | python -c "
+volume_perturb_done=`head -n100 $data/wav.scp | python3 -c "
 import sys, re
 for line in sys.stdin.readlines():
   if len(line.strip()) == 0:

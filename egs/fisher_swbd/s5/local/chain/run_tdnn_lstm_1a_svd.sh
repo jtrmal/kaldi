@@ -54,7 +54,7 @@
 # WER stats for rt03 using tdnn_lstm_1a_svd_sp
 # %WER 9.7 | 3970 36721 | 91.3 5.9 2.8 1.0 9.7 40.0 | exp/chain/tdnn_lstm_1a_svd_sp/decode_rt03_fsh_sw1_tg/score_8_0.0/rt03_hires.ctm.fsh.filt.sys
 # %WER 12  | 8420 76157 | 89.3 7.3 3.4 1.3 12.0 42.0 | exp/chain/tdnn_lstm_1a_svd_sp/decode_rt03_fsh_sw1_tg/score_8_0.0/rt03_hires.ctm.filt.sys
-# %WER 14.1 | 4450 39436 | 87.4 8.2 4.3 1.5 14.1 44.6 | exp/chain/tdnn_lstm_1a_svd_sp/decode_rt03_fsh_sw1_tg/score_9_0.0/rt03_hires.ctm.swbd.filt.sys      
+# %WER 14.1 | 4450 39436 | 87.4 8.2 4.3 1.5 14.1 44.6 | exp/chain/tdnn_lstm_1a_svd_sp/decode_rt03_fsh_sw1_tg/score_9_0.0/rt03_hires.ctm.swbd.filt.sys
 
 
 set -e
@@ -165,7 +165,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
   lstm_opts="decay-time=20"
 
   mkdir -p $dir/configs
@@ -184,7 +184,7 @@ if [ $stage -le 12 ]; then
   relu-renorm-layer name=tdnn3 input=Append(-1,0,1) dim=1024
 
   # check steps/libs/nnet3/xconfig/lstm.py for the other options and defaults
-  lstmp-layer name=lstm1 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 $lstm_opts 
+  lstmp-layer name=lstm1 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 $lstm_opts
   relu-renorm-layer name=tdnn4 input=Append(-3,0,3) dim=1024
   relu-renorm-layer name=tdnn5 input=Append(-3,0,3) dim=1024
   lstmp-layer name=lstm2 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 $lstm_opts

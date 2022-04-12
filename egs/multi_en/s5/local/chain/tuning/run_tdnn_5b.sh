@@ -23,7 +23,7 @@
 # %WER 14.4 | 2628 21594 | 87.8 9.0 3.2 2.2 14.4 49.7 | exp/multi_a/chain/tdnn_5b_sp/decode_eval2000_fsh_sw1_fg/score_8_0.5/eval2000_hires.ctm.callhm.filt.sys
 # %WER 11.5 | 4459 42989 | 90.2 7.2 2.6 1.7 11.5 46.6 | exp/multi_a/chain/tdnn_5b_sp/decode_eval2000_fsh_sw1_fg/score_9_0.0/eval2000_hires.ctm.filt.sys
 # %WER 8.6 | 1831 21395 | 92.6 5.5 1.9 1.2 8.6 42.6 | exp/multi_a/chain/tdnn_5b_sp/decode_eval2000_fsh_sw1_fg/score_10_0.0/eval2000_hires.ctm.swbd.filt.sys
-# 
+#
 # %WER 10.1 | 3970 36721 | 91.3 6.0 2.8 1.4 10.1 44.0 | exp/multi_a/chain/tdnn_5b_sp/decode_rt03_fsh_sw1_tg/score_7_1.0/rt03_hires.ctm.fsh.filt.sys
 # %WER 11.9 | 8420 76157 | 89.6 7.1 3.3 1.5 11.9 44.6 | exp/multi_a/chain/tdnn_5b_sp/decode_rt03_fsh_sw1_tg/score_8_0.0/rt03_hires.ctm.filt.sys
 # %WER 13.5 | 4450 39436 | 88.0 8.0 4.0 1.5 13.5 44.8 | exp/multi_a/chain/tdnn_5b_sp/decode_rt03_fsh_sw1_tg/score_9_0.0/rt03_hires.ctm.swbd.filt.sys
@@ -132,7 +132,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   opts="l2-regularize=0.0015 dropout-proportion=0.0 dropout-per-dim=true dropout-per-dim-continuous=true"
   linear_opts="l2-regularize=0.0015 orthonormal-constraint=-1.0"
   output_opts="l2-regularize=0.001"

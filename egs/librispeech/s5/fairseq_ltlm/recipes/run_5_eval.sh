@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov) 
+# Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov)
 
 set -e
 
@@ -59,7 +59,7 @@ cat $test_decoded | while read -a data_X_lats ; do
 	test=$(basename $lats)
 
 	echo "Evaluating model. Logging in $lt_model_dir/eval_${cpt}/$rescoring_strategy/eval_${test}.log"
-	$cmd $lt_model_dir/eval_${cpt}/$rescoring_strategy/eval_${test}.log python fairseq_ltlm/ltlm/eval.py \
+	$cmd $lt_model_dir/eval_${cpt}/$rescoring_strategy/eval_${test}.log python3 fairseq_ltlm/ltlm/eval.py \
 			--device $device \
 			--max_len 600 \
 			--lmwt $lmwt \

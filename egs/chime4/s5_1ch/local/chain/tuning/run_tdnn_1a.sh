@@ -217,7 +217,7 @@ if [ $stage -le 15 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   opts="l2-regularize=0.01"
   output_opts="l2-regularize=0.005"
 
@@ -266,12 +266,12 @@ if [ $stage -le 16 ]; then
     utils/create_split_dir.pl \
      /export/b0{3,4,5,6}/$USER/kaldi-data/egs/chime4-$(date +'%m_%d_%H_%M')/s5/$dir/egs/storage $dir/egs/storage
   fi
-  
+
   cat $train_data_dir/utt2uniq | awk -F' ' '{print $1}' > $train_data_dir/utt2uniq.tmp1
   cat $train_data_dir/utt2uniq | awk -F' ' '{print $2}' | sed -e 's/\....//g' | sed -e 's/\_CH.//g' | sed -e 's/\_enhan//g' > $train_data_dir/utt2uniq.tmp2
   paste -d" " $train_data_dir/utt2uniq.tmp1 $train_data_dir/utt2uniq.tmp2 > $train_data_dir/utt2uniq
   rm -rf $train_data_dir/utt2uniq.tmp{1,2}
-  
+
   steps/nnet3/chain/train.py --stage=$train_stage \
     --cmd="$decode_cmd" \
     --feat.online-ivector-dir=$train_ivector_dir \
@@ -333,7 +333,7 @@ if [ $stage -le 18 ]; then
     (
       utils/data/modify_speaker_info.sh --seconds-per-spk-max 200 \
         data/${data}_hires data/${data}_chunked
-      
+
       data_affix=$(echo $data | sed s/test_//)
       nspk=$(wc -l <data/${data}_chunked/spk2utt)
       for lmtype in tgpr_5k; do

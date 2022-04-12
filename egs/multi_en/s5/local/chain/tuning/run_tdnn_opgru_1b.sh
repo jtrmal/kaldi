@@ -22,7 +22,7 @@
 
 # ./steps/info/chain_dir_info.pl exp/${multi}/chain/tdnn_opgru_1b_sp
 # exp/${multi}/chain/tdnn_opgru_1b_sp: num-iters=2621 nj=3..16 num-params=35.0M dim=40+100->6176 combine=-0.098->-0.096 (over 4)
-# xent:train/valid[1744,2620,final]=(-1.49,-0.991,-0.990/-1.51,-1.01,-1.01) 
+# xent:train/valid[1744,2620,final]=(-1.49,-0.991,-0.990/-1.51,-1.01,-1.01)
 # logprob:train/valid[1744,2620,final]=(-0.118,-0.091,-0.091/-0.117,-0.093,-0.091)
 
 # online results
@@ -146,7 +146,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   gru_opts="dropout-per-frame=true dropout-proportion=0.0 "
 
   mkdir -p $dir/configs

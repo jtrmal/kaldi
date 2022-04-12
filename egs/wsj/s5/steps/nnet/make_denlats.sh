@@ -116,7 +116,7 @@ feats="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- |"
 # add-deltas (optional),
 [ ! -z "$delta_opts" ] && feats="$feats add-deltas $delta_opts ark:- ark:- |"
 # add-pytel transform (optional),
-[ -e $D/pytel_transform.py ] && feats="$feats /bin/env python $D/pytel_transform.py |"
+[ -e $D/pytel_transform.py ] && feats="$feats /bin/env python3 $D/pytel_transform.py |"
 
 # add-ivector (optional),
 if [ -e $D/ivector_dim ]; then

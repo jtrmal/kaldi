@@ -30,10 +30,10 @@ if [ $stage -le 1 ]; then
     --download-rirs $download_rirs \
     --RIR-home $RIR_home \
     data/impulses_noises || exit 1;
-    
+
   # Generate the rir_list and noise_list for the reverberate_data_dir.py to corrupt the data
   # this script just assumes air rwcp rvb2014 databases
-  python local/multi_condition/aspire_prep_rir_noise_list.py data/impulses_noises data/impulses_noises/info
+  python3 local/multi_condition/aspire_prep_rir_noise_list.py data/impulses_noises data/impulses_noises/info
 
   # corrupt the fisher data to generate multi-condition data
   for data_dir in train dev test; do
@@ -42,7 +42,7 @@ if [ $stage -le 1 ]; then
     else
       num_reps=1
     fi
-    python steps/data/reverberate_data_dir.py \
+    python3 steps/data/reverberate_data_dir.py \
       --prefix "rev" \
       --rir-list-file data/impulses_noises/info/rir_list \
       --noise-list-file data/impulses_noises/info/noise_list \

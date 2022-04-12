@@ -158,7 +158,7 @@ if [ $stage -le 13 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   tdnn_opts="l2-regularize=0.03"
   tdnnf_opts="l2-regularize=0.03 bypass-scale=0.66"

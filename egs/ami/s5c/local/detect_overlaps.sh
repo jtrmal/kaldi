@@ -3,10 +3,10 @@
 # Copyright 2020  Desh Raj (Johns Hopkins University)
 # Apache 2.0.
 
-# This script does nnet3-based overlap detection given an input 
+# This script does nnet3-based overlap detection given an input
 # kaldi data directory and outputs an overlap RTTM file.
 
-set -e 
+set -e
 set -o pipefail
 set -u
 
@@ -27,7 +27,7 @@ iter=final  # Model iteration to use
 # Contexts must ideally match training for LSTM models, but
 # may not necessarily for stats components
 extra_left_context=0  # Set to some large value, typically 40 for LSTM (must match training)
-extra_right_context=0  
+extra_right_context=0
 extra_left_context_initial=-1
 extra_right_context_final=-1
 frames_per_chunk=300
@@ -46,7 +46,7 @@ merge_consecutive_max_dur=inf   # Merge consecutive segments as long as the merg
                               # This is after padding by --segment-padding seconds.
                               # 0 means do not merge. Use 'inf' to not limit the duration.
 
-echo $* 
+echo $*
 
 . utils/parse_options.sh
 
@@ -120,7 +120,7 @@ if [ $stage -le 1 ]; then
       nnet3-copy --edits="rename-node old-name=$output_name new-name=output" \
       $nnet_dir/$iter.raw $overlap_dir/${iter}_${output_name}.raw || exit 1
     iter=${iter}_${output_name}
-  else 
+  else
     if ! diff $nnet_dir/$iter.raw $out_dir/$iter.raw; then
       cp $nnet_dir/$iter.raw $overlap_dir/
     fi
@@ -171,7 +171,7 @@ transform_opt=
 if ! [ -z "$output_scale" ]; then
   # Transformation matrix for output scaling computed from provided
   # `output_scale` values
-  echo $output_scale | python -c "import sys
+  echo $output_scale | python3 -c "import sys
 sys.path.insert(0, 'steps')
 import libs.common as common_lib
 

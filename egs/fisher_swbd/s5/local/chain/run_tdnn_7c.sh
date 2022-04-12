@@ -7,11 +7,11 @@
 # But tdnn_7c enjoys two more TDNN layers to make [-21,21] input temporal context,
 # this is intended as an extra baseline for 7d.
 
-# System               tdnn_7b_sp tdnn_7c_sp 
-# WER on eval2000(tg)    13.6     13.5    
-# WER on eval2000(fg)    13.3     13.3    
-# WER on rt03(tg)        12.7     12.7    
-# WER on rt03(fg)        12.4     12.5    
+# System               tdnn_7b_sp tdnn_7c_sp
+# WER on eval2000(tg)    13.6     13.5
+# WER on eval2000(fg)    13.3     13.3
+# WER on rt03(tg)        12.7     12.7
+# WER on rt03(fg)        12.4     12.5
 # Final train prob                -0.103
 # Final valid prob                -0.114
 # Final train prob (xent)         -1.159
@@ -129,7 +129,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig

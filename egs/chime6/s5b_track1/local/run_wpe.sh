@@ -39,7 +39,7 @@ if [ ! -d $miniconda_dir ]; then
 fi
 
 # check if WPE is installed
-result=`$miniconda_dir/bin/python -c "\
+result=`$miniconda_dir/bin/python3 -c "\
 try:
     import nara_wpe
     print('1')
@@ -82,7 +82,7 @@ echo -e "Dereverberation - $task - $array\n"
 for n in `seq $nj_new`; do
 cat <<-EOF > $expdir/log/wpe.$n.sh
 while read line; do
-  $miniconda_dir/bin/python local/run_wpe.py \
+  $miniconda_dir/bin/python3 local/run_wpe.py \
      --file \$line
 done < $output_wavfiles.$n
 EOF

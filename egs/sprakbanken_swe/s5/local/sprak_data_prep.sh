@@ -19,7 +19,7 @@ utils=`pwd`/utils
 . ./path.sh
 
 # Checks if python3 is available on the system and install python3 in userspace if not
-# This recipe currently relies on version 3 because python3 uses utf8 as internal 
+# This recipe currently relies on version 3 because python3 uses utf8 as internal
 # string representation
 
 #if ! which python3 >&/dev/null; then
@@ -29,25 +29,25 @@ utils=`pwd`/utils
 
 if [ ! -d $dir/download ]; then
     mkdir -p $dir/download/0467-1 $dir/download/0467-2 $dir/download/0467-3
-fi 
+fi
 
 echo "Downloading and unpacking sprakbanken to $dir/corpus_processed. This will take a while."
 
-if [ ! -f $dir/download/sve.16khz.0467-1.tar.gz ]; then 
+if [ ! -f $dir/download/sve.16khz.0467-1.tar.gz ]; then
     ( wget --tries 100 http://www.nb.no/sbfil/talegjenkjenning/16kHz/sve.16khz.0467-1.tar.gz --directory-prefix=$dir/download )
 fi
 
-if [ ! -f $dir/download/sve.16khz.0467-2.tar.gz ]; then 
+if [ ! -f $dir/download/sve.16khz.0467-2.tar.gz ]; then
     ( wget --tries 100 http://www.nb.no/sbfil/talegjenkjenning/16kHz/sve.16khz.0467-2.tar.gz --directory-prefix=$dir/download )
 fi
 
-if [ ! -f $dir/download/sve.16khz.0467-3.tar.gz ]; then 
+if [ ! -f $dir/download/sve.16khz.0467-3.tar.gz ]; then
     ( wget --tries 100 http://www.nb.no/sbfil/talegjenkjenning/16kHz/sve.16khz.0467-3.tar.gz --directory-prefix=$dir/download )
 fi
 
-if [ ! -f $dir/download/sve.16khz.0468.tar.gz ]; then 
+if [ ! -f $dir/download/sve.16khz.0468.tar.gz ]; then
     ( wget --tries 100 http://www.nb.no/sbfil/talegjenkjenning/16kHz/sve.16khz.0468.tar.gz --directory-prefix=$dir/download )
-fi    
+fi
 
 echo "Corpus files downloaded."
 
@@ -60,11 +60,11 @@ if [ ! -d $dir/download/0468 ]; then
     tar -xzf $dir/download/sve.16khz.0468.tar.gz -C $dir/download/0468
 
     echo "Correcting file names."
-    mv $dir/download/0467-1/'0467 sv train 1' $dir/download/0467-1/0467_sv_train_1 
-    mv $dir/download/0467-2/'0467 sv train 2' $dir/download/0467-2/0467_sv_train_2 
-    mv $dir/download/0467-3/'0467 sv train 3' $dir/download/0467-3/0467_sv_train_3 
-    mv $dir/download/0468/'0468 sv test' $dir/download/0468/0468_sv_test 
-     
+    mv $dir/download/0467-1/'0467 sv train 1' $dir/download/0467-1/0467_sv_train_1
+    mv $dir/download/0467-2/'0467 sv train 2' $dir/download/0467-2/0467_sv_train_2
+    mv $dir/download/0467-3/'0467 sv train 3' $dir/download/0467-3/0467_sv_train_3
+    mv $dir/download/0468/'0468 sv test' $dir/download/0468/0468_sv_test
+
     echo "Corpus unpacked succesfully."
 fi
 
@@ -78,15 +78,15 @@ echo "done"
 
 echo "Converting downloaded files to a format consumable by Kaldi scripts."
 
-rm -rf $dir/corpus_processed 
-mkdir -p $dir/corpus_processed/training/0467-1 $dir/corpus_processed/training/0467-2 $dir/corpus_processed/training/0467-3 
+rm -rf $dir/corpus_processed
+mkdir -p $dir/corpus_processed/training/0467-1 $dir/corpus_processed/training/0467-2 $dir/corpus_processed/training/0467-3
 
 # Create parallel file lists and text files, but keep sound files in the same location to save disk space
 # Writes the lists to data/local/data (~ 310h)
 echo "Creating parallel data for training data."
-python $local/sprak2kaldi.py $dir/download/0467-1 $dir/corpus_processed/training/0467-1  # ~140h
-python $local/sprak2kaldi.py $dir/download/0467-2 $dir/corpus_processed/training/0467-2  # ~125h
-python $local/sprak2kaldi.py $dir/download/0467-3 $dir/corpus_processed/training/0467-3  # ~128h
+python3 $local/sprak2kaldi.py $dir/download/0467-1 $dir/corpus_processed/training/0467-1  # ~140h
+python3 $local/sprak2kaldi.py $dir/download/0467-2 $dir/corpus_processed/training/0467-2  # ~125h
+python3 $local/sprak2kaldi.py $dir/download/0467-3 $dir/corpus_processed/training/0467-3  # ~128h
 
 mv $dir/corpus_processed/training/0467-1/'r4670118.791213 8232' $dir/corpus_processed/training/0467-1/'r4670118.791213_8232'
 for f in $dir/corpus_processed/training/0467-1/r4670118.791213_8232/*.txt; do
@@ -96,17 +96,17 @@ done
 (
 # Ditto test set (~ 93h)
     echo "Creating parallel data for test data."
-    rm -rf $dir/corpus_processed/test/0468 
-    mkdir -p $dir/corpus_processed/test/0468 
-    python $local/sprak2kaldi.py $dir/download/0468 $dir/corpus_processed/test/0468
-) 
+    rm -rf $dir/corpus_processed/test/0468
+    mkdir -p $dir/corpus_processed/test/0468
+    python3 $local/sprak2kaldi.py $dir/download/0468 $dir/corpus_processed/test/0468
+)
 
 
-# Create the LM training data 
+# Create the LM training data
 (
     echo "Writing the LM text to file and normalising."
     cat $dir/corpus_processed/training/0467-1/txtlist $dir/corpus_processed/training/0467-2/txtlist $dir/corpus_processed/training/0467-3/txtlist | while read l; do cat $l; done > $lmdir/lmsents
-    python local/normalize_transcript.py $lmdir/lmsents $lmdir/lmsents.norm
+    python3 local/normalize_transcript.py $lmdir/lmsents $lmdir/lmsents.norm
     sort -u $lmdir/lmsents.norm > $lmdir/transcripts.uniq
 )
 
@@ -122,15 +122,15 @@ cp $dir/corpus_processed/test/0468/sndlist $dir/testsndfiles
 
 # Write wav.scp, utt2spk and text.unnormalised for train, test and dev sets with
 # Use sph2pipe because the wav files are actually sph files
-echo "Creating wav.scp, utt2spk and text.unnormalised for train, test and dev" 
+echo "Creating wav.scp, utt2spk and text.unnormalised for train, test and dev"
 python3 $local/data_prep.py $dir/traintxtfiles $traindir $dir/trainsndfiles $sph2pipe
 python3 $local/data_prep.py $dir/testtxtfiles $testdir $dir/testsndfiles $sph2pipe
 
 
 
 # Create the main data sets
-local/create_datasets.sh $testdir data/test 
-local/create_datasets.sh $traindir data/train 
+local/create_datasets.sh $testdir data/test
+local/create_datasets.sh $traindir data/train
 
 
 

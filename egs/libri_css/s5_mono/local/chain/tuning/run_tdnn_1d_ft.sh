@@ -91,7 +91,7 @@ if [ $stage -le 1 ]; then
     data/$train_set data/${train_set}_reverb
 fi
 
-if [ $stage -le 2 ]; then 
+if [ $stage -le 2 ]; then
   # Feature extraction for reverberated data.
   mfccdir=mfcc_hires
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $mfccdir/storage ]; then
@@ -171,7 +171,7 @@ if [ $stage -le 7 ]; then
   echo " generating new layers, that are specific to LibriCSS. These layers ";
   echo " are added to the transferred part of the Librispeech network.";
   num_targets=$(tree-info --print-args=false $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   tdnnf_opts="l2-regularize=0.008 dropout-proportion=0.0 bypass-scale=0.75"
   linear_opts="l2-regularize=0.008 orthonormal-constraint=-1.0"
   prefinal_opts="l2-regularize=0.008"

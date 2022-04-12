@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# this script checks if TF is installed to be used with python
+# this script checks if TF is installed to be used with python3
 #                    and if TF related binaries in kaldi is ready to use
 . ./path.sh
 
@@ -15,10 +15,10 @@ fi
 
 echo
 
-if python steps/tfrnnlm/check_py.py 2>/dev/null; then
-  echo TensorFlow ready to use on the python side. This is good.
+if python3 steps/tfrnnlm/check_py.py 2>/dev/null; then
+  echo TensorFlow ready to use on the python3 side. This is good.
 else
-  echo TensorFlow not found on the python side.
+  echo TensorFlow not found on the python3 side.
   echo Please go to tools/ and run extras/install_tensorflow_py.sh to install it
   echo If you already have TensorFlow installed somewhere else, you would need
   echo to add it to your PATH

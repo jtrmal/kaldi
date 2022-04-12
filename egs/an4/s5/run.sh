@@ -39,7 +39,7 @@ if [ $stage -le 1 ]; then
         exit 1
     fi
 
-    python local/data_prep.py $an4_root $KALDI_ROOT/tools/sph2pipe_v2.5/sph2pipe   
+    python3 local/data_prep.py $an4_root $KALDI_ROOT/tools/sph2pipe_v2.5/sph2pipe
 
     for x in test train; do
         for f in text wav.scp utt2spk; do
@@ -65,7 +65,7 @@ if [ $stage -le 3 ]; then
     rm -rf data/local/{dict,lang}
     mkdir -p data/local/{dict,lang}
 
-    python local/lexicon_prep.py $an4_root 
+    python3 local/lexicon_prep.py $an4_root
     echo '<UNK> SIL' >> data/local/dict/lexicon.txt
     cat $an4_root/etc/an4.phone | grep -v 'SIL' > data/local/dict/nonsilence_phones.txt
     echo 'SIL' > data/local/dict/silence_phones.txt
@@ -80,7 +80,7 @@ if [ $stage -le 3 ]; then
         fstarcsort > data/lang/G.fst
 fi
 
-# train monophone system 
+# train monophone system
 if [ $stage -le 4 ]; then
     steps/train_mono.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/mono
     utils/mkgraph.sh data/lang exp/mono exp/mono/graph
@@ -103,7 +103,7 @@ if [ $stage -le 6 ]; then
         exp/tri1/graph data/test exp/tri1/decode
 fi
 
-# align tri1 
+# align tri1
 if [ $stage -le 7 ]; then
     steps/align_si.sh --nj $nj --cmd "$train_cmd" \
         data/train data/lang exp/tri1 exp/tri1_ali

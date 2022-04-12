@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 #set -e
 # This script is based on local/nnet3/run_ivector_common.sh.
 # It reverberates the original data with simulated room impulse responses
@@ -57,11 +57,11 @@ if [ $stage -le 3 ]; then
     unzip sim_rir_8k.zip
   fi
 
-  # corrupt the data to generate reverberated data 
+  # corrupt the data to generate reverberated data
   # this script modifies wav.scp to include the reverberation commands, the real computation will be done at the feature extraction
   # The script will automatically normalize the probability mass of the rir sets, so user just need to input the ratio of the sets
   # if --include-original-data is true, the original data will be mixed with its reverberated copies
-  python steps/data/reverberate_data_dir.py \
+  python3 steps/data/reverberate_data_dir.py \
     --prefix "rev" \
     --rir-set-parameters "0.3, simulated_rirs_8k/smallroom/rir_list" \
     --rir-set-parameters "0.3, simulated_rirs_8k/mediumroom/rir_list" \
@@ -133,7 +133,7 @@ if [ $stage -le 8 ]; then
 
   steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 30 \
     data/${train_set}_max2_hires $ivector_dir/extractor $ivector_dir/ivectors_${train_set} || exit 1;
-  
+
   for data_set in train_dev eval2000; do
     steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 30 \
       data/${data_set}_hires $ivector_dir/extractor $ivector_dir/ivectors_$data_set || exit 1;

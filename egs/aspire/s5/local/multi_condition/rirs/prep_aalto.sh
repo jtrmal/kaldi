@@ -44,7 +44,7 @@ if [ "$download" = true ]; then
   (cd $dir/
   for i in *.zip; do
     outdir=`basename $i|sed -e "s/.zip$//g"`
-    unzip $i -d $outdir 
+    unzip $i -d $outdir
   done
   )
   )
@@ -62,11 +62,11 @@ tmpdir=`mktemp -d $log_dir/aalto_XXXXXX`
 tmpdir=`utils/make_absolute.sh $tmpdir`
 file_count=1
 for data_file in ${data_files[@]}; do
-  # aalto has incompatible format of wav audio, which are not compatible with python's wav.read() function
+  # aalto has incompatible format of wav audio, which are not compatible with python3's wav.read() function
 #  output_file_name=${DBname}_type${type_num}_${file_count}_`basename $data_file| tr '[:upper:]' '[:lower:]'`
   output_file_name=${DBname}_type${type_num}_`basename $data_file| tr '[:upper:]' '[:lower:]'`
   echo "sox -t wav $data_file -t wav -r $sampling_rate -e signed-integer -b $output_bit ${output_dir}/${output_file_name}" >>  $command_file
- # echo "python local/multi_condition/read_rir.py --output-sampling-rate $sampling_rate wav ${tmpdir}/$file_count.wav ${output_dir}/${output_file_name} || exit -1;" >> $command_file
+ # echo "python3 local/multi_condition/read_rir.py --output-sampling-rate $sampling_rate wav ${tmpdir}/$file_count.wav ${output_dir}/${output_file_name} || exit -1;" >> $command_file
   echo ${output_dir}/${output_file_name} >>  $log_dir/${DBname}_type${type_num}.rir.list
   file_count=$((file_count + 1))
 done

@@ -32,7 +32,7 @@ channels="CH1 CH2 CH3 CH4"
 
 #parameters for modification of initial weights
 t=0
-mt=0.7 
+mt=0.7
 
 it=2
 ivector_affix=it1-init
@@ -74,7 +74,7 @@ test="$(cut -d'_' -f1 <<<"$initname")"
 weights=$initdir/weights.ark
 weights_mod=$initdir/weights_t${t}_mt${mt}.ark
 if [ ! -f ${weights_mod}.gz ]; then
-  python local/ts-vad/vad_prob_mod.py --threshold $t --multispk_threshold $mt ark:$weights ark,t:${weights_mod}
+  python3 local/ts-vad/vad_prob_mod.py --threshold $t --multispk_threshold $mt ark:$weights ark,t:${weights_mod}
   cat ${weights_mod} | sed s/_U06.ENH// | sort | gzip -c > ${weights_mod}.gz
   rm $weights_mod
 fi
@@ -85,7 +85,7 @@ done
 kinects="U01 U02 U03 U04 U05 U06"
 [ "$test" == "dev" ] && kinects="U01 U02 U03 U04 U06"
 [ "$test" == "eval" ] && kinects="U01 U02 U04 U05 U06"
- 
+
 sum_scps=""
 n=0
 for u in $kinects; do
@@ -193,8 +193,8 @@ fi
 scoring=$out/scoring
 hyp_rttm=$scoring/rttm
 if [ ! -f $scoring/.done ]; then
-  if [ ! -f $hyp_rttm ]; then 
-    python local/ts-vad/convert_prob_to_rttm.py --threshold $thr --window $window --min_silence $min_silence --min_speech $min_speech ark:"sort $out/weights.ark |" $hyp_rttm || exit 1;
+  if [ ! -f $hyp_rttm ]; then
+    python3 local/ts-vad/convert_prob_to_rttm.py --threshold $thr --window $window --min_silence $min_silence --min_speech $min_speech ark:"sort $out/weights.ark |" $hyp_rttm || exit 1;
   fi
   echo "Diarization results for $test"
   [ ! -f $ref_rttm.scoring ] && sed 's/_U0[1-6]\.ENH//g' $ref_rttm > $ref_rttm.scoring
@@ -202,7 +202,7 @@ if [ ! -f $scoring/.done ]; then
   ref_rttm_path=$(readlink -f ${ref_rttm}.scoring)
   hyp_rttm_path=$(readlink -f ${hyp_rttm}.scoring)
   [ ! -f ./local/uem_file.scoring ] && cat ./local/uem_file | grep 'U06' | sed 's/_U0[1-6]//g' > ./local/uem_file.scoring
-  cd dscore && python score.py -u ../local/uem_file.scoring -r $ref_rttm_path \
+  cd dscore && python3 score.py -u ../local/uem_file.scoring -r $ref_rttm_path \
     -s $hyp_rttm_path 2>&1 | tee -a ../$scoring/DER && cd .. || exit 1;
   touch $scoring/.done
 fi

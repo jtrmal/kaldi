@@ -24,7 +24,7 @@ fi
 
 # here we map <UNK> to the phone spn(spoken noise)
 mkdir -p $dir
-python $download_dir/DaCiDian.py $download_dir/word_to_pinyin.txt $download_dir/pinyin_to_phone.txt > $dir/lexicon.txt
+python3 $download_dir/DaCiDian.py $download_dir/word_to_pinyin.txt $download_dir/pinyin_to_phone.txt > $dir/lexicon.txt
 echo -e "<UNK>\tspn" >> $dir/lexicon.txt
 
 # prepare silence_phones.txt, nonsilence_phones.txt, optional_silence.txt, extra_questions.txt

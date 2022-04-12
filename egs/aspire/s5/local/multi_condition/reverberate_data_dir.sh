@@ -60,7 +60,7 @@ for file in cmvn.scp feats.scp reco2file_and_channel; do
   rm -f $dest_dir/$file
 done
 
-python local/multi_condition/reverberate_wavs.py \
+python3 local/multi_condition/reverberate_wavs.py \
   --snrs $snrs --random-seed $random_seed \
 $src_dir/wav.scp $log_dir/corrupted_${random_seed}.list $impnoise_dir \
 $dest_dir/wav.scp || exit 1;

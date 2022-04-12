@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# %WER 46.07 [ 27124 / 58881, 2905 ins, 9682 del, 14537 sub ] exp/chain_train_worn_simu_u400k_cleaned_rvb/tdnn1b_cnn_sp/decode_dev_gss_multiarray_2stage/wer_10_0.0 
+# %WER 46.07 [ 27124 / 58881, 2905 ins, 9682 del, 14537 sub ] exp/chain_train_worn_simu_u400k_cleaned_rvb/tdnn1b_cnn_sp/decode_dev_gss_multiarray_2stage/wer_10_0.0
 # %WER 45.97 [ 25344 / 55132, 2144 ins, 11128 del, 12072 sub ] exp/chain_train_worn_simu_u400k_cleaned_rvb/tdnn1b_cnn_sp/decode_eval_gss_multiarray_2stage/wer_9_0.5
 
 set -e
@@ -129,7 +129,7 @@ if [ $stage -le 13 ]; then
 
   echo "$0: creating neural net configs using the xconfig parser";
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
 
   cnn_opts="l2-regularize=0.01"
   ivector_affine_opts="l2-regularize=0.01"

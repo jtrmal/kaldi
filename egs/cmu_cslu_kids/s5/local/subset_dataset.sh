@@ -27,7 +27,7 @@ librispeech_dir=$(dirname $src_dir)
 # balance.
 # TODO: Use actual time values instead of assuming that to make sure we get $dest_num_hours of data
 src_num_hours=$(grep "$src" $librispeech_dir/CHAPTERS.TXT | awk -F'|' '{ print $3 }' | \
-python -c '
+python3 -c '
 from __future__ import print_function
 from sys import stdin
 minutes_str = stdin.read().split()

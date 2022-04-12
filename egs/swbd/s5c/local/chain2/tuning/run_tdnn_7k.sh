@@ -120,7 +120,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
@@ -177,7 +177,7 @@ if [ $stage -le 13 ]; then
   fi
 
   mkdir  -p $dir/init
-  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info 
+  nnet3-info $dir/configs/ref.raw  > $dir/configs/temp.info
   model_left_context=`fgrep 'left-context' $dir/configs/temp.info | awk '{print $2}'`
   model_right_context=`fgrep 'right-context' $dir/configs/temp.info | awk '{print $2}'`
   cat >$init_info <<EOF

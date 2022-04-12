@@ -52,19 +52,19 @@ cd $top_pwd
 cut -d " " -f1 $txtdir/text.tmp > $txtdir/uttid
 cut -d " " -f2- $txtdir/text.tmp > $txtdir/trans
 
-pyver=`python --version 2>&1 | sed -e 's:.*\([2-3]\.[0-9]\+\).*:\1:g'`
-export PYTHONPATH=$PYTHONPATH:`pwd`/tools/mmseg-1.3.0/lib/python${pyver}/site-packages
-if [ ! -d tools/mmseg-1.3.0/lib/python${pyver}/site-packages ]; then
+pyver=`python3 --version 2>&1 | sed -e 's:.*\([2-3]\.[0-9]\+\).*:\1:g'`
+export PYTHONPATH=$PYTHONPATH:`pwd`/tools/mmseg-1.3.0/lib/python3${pyver}/site-packages
+if [ ! -d tools/mmseg-1.3.0/lib/python3${pyver}/site-packages ]; then
   echo "--- Downloading mmseg-1.3.0 ..."
   echo "NOTE: it assumes that you have Python, Setuptools installed on your system!"
-  wget -P tools http://pypi.python.org/packages/source/m/mmseg/mmseg-1.3.0.tar.gz
+  wget -P tools http://pypi.python3.org/packages/source/m/mmseg/mmseg-1.3.0.tar.gz
   tar xf tools/mmseg-1.3.0.tar.gz -C tools
   cd tools/mmseg-1.3.0
-  mkdir -p lib/python${pyver}/site-packages
-  CC=gcc CXX=g++ python setup.py build
-  python setup.py install --prefix=.
+  mkdir -p lib/python3${pyver}/site-packages
+  CC=gcc CXX=g++ python3 setup.py build
+  python3 setup.py install --prefix=.
   cd ../..
-  if [ ! -d tools/mmseg-1.3.0/lib/python${pyver}/site-packages ]; then
+  if [ ! -d tools/mmseg-1.3.0/lib/python3${pyver}/site-packages ]; then
     echo "mmseg is not found - installation failed?"
     exit 1
   fi
@@ -74,7 +74,7 @@ cat $txtdir/trans |\
    sed -e 's/,//g' | \
    sed -e 's/((\([^)]\{0,\}\)))/\1/g' |\
    perl local/mandarin_text_normalize.pl |\
-   python local/mandarin_segment.py |\
+   python3 local/mandarin_segment.py |\
    sed -e 's/THISISSPKTURN/<TURN>/g' |\
    paste $txtdir/uttid - |\
    awk '{if (NF>2 || (NF==2 && $2 != "<TURN>")) print $0}' > $txtdir/text_with_spk_turn

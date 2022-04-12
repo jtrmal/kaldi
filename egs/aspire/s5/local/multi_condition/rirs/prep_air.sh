@@ -41,7 +41,7 @@ AIR_home=$RIR_home/AIR_1_4
 #----------------------
 # data is stored in mat files with info about the impulse stored in a structure
 type_num=1
-python local/multi_condition/get_air_file_patterns.py $AIR_home > $log_dir/air_file_pattern
+python3 local/multi_condition/get_air_file_patterns.py $AIR_home > $log_dir/air_file_pattern
 files_done=0
 total_files=$(cat $log_dir/air_file_pattern|wc -l)
 echo "" > $log_dir/${DBname}_type$type_num.rir.list

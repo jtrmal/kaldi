@@ -30,15 +30,15 @@ log_dir=$3
 if [ "$download" = true ]; then
   mkdir -p $RIR_home
   RIR_home_abs=`utils/make_absolute.sh $RIR_home`
-  #HamiltonMuseum 
-  #http://www.openairlib.net/auralizationdb/content/hamilton-mausoleum 
+  #HamiltonMuseum
+  #http://www.openairlib.net/auralizationdb/content/hamilton-mausoleum
   echo "">$log_dir/${DBname}_download_commands.sh
   dir=$RIR_home_abs/open_air/hamilton_mausoleum/
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/hamilton-mausoleum/stereo/hm2_000_ortf_48k.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/hamilton-mausoleum/b-format/hm2_000_bformat_48k.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/hamilton-mausoleum/surround-5-1/hm_williams.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
 
-  #Terry's Factory Warehouse 
+  #Terry's Factory Warehouse
   dir=$RIR_home_abs/open_air/terry_factory_warehouse/
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/terrys-factory-warehouse/mono/terrys_warehouse_omni.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/terrys-factory-warehouse/stereo/terrys_warehouse_stereo.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
@@ -304,7 +304,7 @@ if [ "$download" = true ]; then
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/fstevens/alcuin-college-university-york/b-format/alcuin_s4r2_bformat.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/fstevens/alcuin-college-university-york/b-format/s4r2_spist_bform.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
 
-  #Spokane Woman's Club 
+  #Spokane Woman's Club
   dir=$RIR_home_abs/open_air/spokane_womans_club/
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/top-jimmy/spokane-womans-club/stereo/spokane_womans_club_ir.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
 
@@ -338,7 +338,7 @@ if [ "$download" = true ]; then
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/sports-centre-university-york/b-format/sportscentre_wxyz.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/sports-centre-university-york/surround-5-1/sportscentre_williams.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
 
-  #Basement 
+  #Basement
   dir=$RIR_home_abs/open_air/basement/
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/mganger/basement/stereo/s1.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/mganger/basement/stereo/s2.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
@@ -380,7 +380,7 @@ if [ "$download" = true ]; then
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/st-marys-abbey-reconstruction/b-format/phase3_bformat.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/audiolab/st-marys-abbey-reconstruction/b-format/phase1_bformat_catt.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
 
-  #Cafeteria Universidad San Buenaventura Bogotá 
+  #Cafeteria Universidad San Buenaventura Bogotá
   dir=$RIR_home_abs/open_air/cafeteria_universidad_san_buenaventura_bogota/
   echo "wget http://www.openairlib.net/sites/default/files/auralization/data/leorodino/cafeteria-universidad-san-buenaventura-bogota/mono/m0003_s01_r01_1.wav --directory-prefix=$dir " >> $log_dir/${DBname}_download_commands.sh
 
@@ -432,7 +432,7 @@ echo "" > $log_dir/${DBname}_type${type_num}.rir.list
 echo "Found $total_files impulse responses in ${RIR_home}/open_air/"
 file_count=1 # affix to ensure that files with same name are not overwritten
 for data_file in ${data_files[@]}; do
-  # open-air has multiple formats of wav audio, some of which are not compatible with python's wav.read() function
+  # open-air has multiple formats of wav audio, some of which are not compatible with python3's wav.read() function
 #  output_file_name=${DBname}_type${type_num}_${file_count}_`basename $data_file| tr '[:upper:]' '[:lower:]'`
   output_file_name=${DBname}_type${type_num}_`basename $data_file| tr '[:upper:]' '[:lower:]'`
   echo "sox -t wav $data_file -t wav -r $sampling_rate -e signed-integer -b $output_bit ${output_dir}/${output_file_name}" >> $command_file

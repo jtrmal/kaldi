@@ -10,7 +10,7 @@ get_egs_stage=-10
 tree_affix=_all
 tdnn_affix=_all
 nnet3_affix=_all
-common_egs_dir= 
+common_egs_dir=
 dropout_schedule='0,0@0.20,0.5@0.50,0'
 remove_egs=true
 chunk_width=140,100,160
@@ -106,7 +106,7 @@ if [ $stage -le 15 ]; then
 
   echo "$0: creating neural net configs using the xconfig parser";
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+  learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python3)
 
   cnn_opts="l2-regularize=0.01"
   ivector_affine_opts="l2-regularize=0.01"

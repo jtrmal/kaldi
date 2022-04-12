@@ -81,7 +81,7 @@ fi
 # combining the segments in training data to have a minimum length of frames_per_eg + tolerance
 # this is critical stage in AMI (gives 1% absolute improvement)
 if [ -z $min_seg_len ]; then
-  min_seg_len=$(python -c "print ($frames_per_eg+5)/100.0")
+  min_seg_len=$(python3 -c "print ($frames_per_eg+5)/100.0")
 fi
 
 if [ $stage -le 12 ]; then
@@ -130,7 +130,7 @@ if [ ! -z $max_wer ]; then
       # This stage takes a lot of time ~7hrs, so run only if file is not available already
       steps/cleanup/find_bad_utts.sh --cmd "$decode_cmd" --nj 405 data/$mic/$latgen_train_set data/lang $ali_dir $bad_utts_dir
     fi
-    python local/sort_bad_utts.py --bad-utt-info-file $bad_utts_dir/all_info.sorted.txt --max-wer $max_wer --output-file $dir/wer_sorted_utts_${max_wer}wer
+    python3 local/sort_bad_utts.py --bad-utt-info-file $bad_utts_dir/all_info.sorted.txt --max-wer $max_wer --output-file $dir/wer_sorted_utts_${max_wer}wer
     utils/copy_data_dir.sh --validate-opts "--no-wav"  data/$mic/${train_set}_hires data/$mic/${train_set}_${max_wer}wer_hires
     utils/filter_scp.pl $dir/wer_sorted_utts_${max_wer}wer data/$mic/${train_set}_hires/feats.scp  > data/$mic/${train_set}_${max_wer}wer_hires/feats.scp
     utils/fix_data_dir.sh data/$mic/${train_set}_${max_wer}wer_hires

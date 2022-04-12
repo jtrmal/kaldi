@@ -26,7 +26,7 @@ if [ ! -d $SOURCE_DIR/h4e_evl/ ]; then
 fi
 
 for uem in $SOURCE_DIR/h4e_evl/h4e_98_{1,2}.uem; do
-  python -c '
+  python3 -c '
 import sys, os
 sys.path.insert(0, "local/data_prep")
 import hub4_utils
@@ -40,7 +40,7 @@ done > $dir/segments
 awk '{print $1" "$2}' $dir/segments > $dir/utt2spk
 
 cat $SOURCE_DIR/h4e_evl/h4e_98_{1,2}.seg | \
-  python -c '
+  python3 -c '
 import sys
 sys.path.insert(0, "local/data_prep")
 import hub4_utils
@@ -52,7 +52,7 @@ with open(sys.argv[1], "w") as s_f, open(sys.argv[2], "w") as u_f:
       s_f.write("{0}\n".format(segments_line))
       u_f.write("{0}\n".format(utt2spk_line))' \
         $dir/segments.pem $dir/utt2spk.pem
- 
+
 export PATH=$PATH:$KALDI_ROOT/tools/sph2pipe_v2.5
 sph2pipe=`which sph2pipe` || { echo "sph2pipe not found in PATH."; exit 1; }
 for x in `ls $SOURCE_DIR/h4e_evl/*.sph`; do

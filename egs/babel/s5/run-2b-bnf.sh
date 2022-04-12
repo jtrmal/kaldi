@@ -38,7 +38,7 @@ if ! nvidia-smi; then
   exit 1;
 fi
 
-if ! python -c 'import theano;'; then
+if ! python3 -c 'import theano;'; then
   echo "Theano does not seem to be installed on your machine.  Not continuing."
   echo "(Note: this script might still work, it would just be slower.)"
   exit 1;
@@ -61,7 +61,7 @@ config_in=conf/bnf/config_${babel_type}.py
 [ ! -f $config_in ] && echo "No such config file $config_in" && exit 1;
 ! cat $config_in | sed "s|CWD|$PWD|" | sed "s|WORK|$WORK|" | sed "s/N_OUTS/${num_pdfs}/" > ptdnn/exp_bnf/config.py && \
   echo "Error setting ptdnn/exp_bnf/config.py" && exit 1;
-  
+
 
 echo ---------------------------------------------------------------------
 echo "Starting exp_BNF/bnf_dnn on" `date`
@@ -80,7 +80,7 @@ fi
 $cmd $working_dir/theano.log \
   export PYTHONPATH=$PYTHONPATH:`pwd`/ptdnn/ \; \
   export THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 \; \
-  python ptdnn/main.py 
+  python3 ptdnn/main.py
 
 mkdir -p exp_BNF/bnf_dnn
 cp -r $working_dir/{final.mat,final.nnet,log,LOG,theano.log} exp_BNF/bnf_dnn/

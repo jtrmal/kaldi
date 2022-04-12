@@ -186,7 +186,7 @@ if [ $sub_speaker_frames -gt 0 ]; then
       echo "$0: error getting per-utterance counts."
       exit 0;
     fi
-    cat $data/spk2utt | python -c "
+    cat $data/spk2utt | python3 -c "
 import sys
 utt_counts = {}
 trash = list(map(lambda x: utt_counts.update({x.split()[0]:float(x.split()[1])}), open('$dir/utt_counts').readlines()))

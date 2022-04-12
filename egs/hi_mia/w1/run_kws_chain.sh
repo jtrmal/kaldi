@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Copyright 2020 Audio, Speech and Language Processing Group (ASLP@NPU), Northwestern Polytechnical University (Authors: Zhuoyuan Yao, Xiong Wang, Jingyong Hou, Lei Xie)
-#           2020 AIShell-Foundation (Author: Bengu WU) 
-#           2020 Beijing Shell Shell Tech. Co. Ltd. (Author: Hui BU) 
+#           2020 AIShell-Foundation (Author: Bengu WU)
+#           2020 Beijing Shell Shell Tech. Co. Ltd. (Author: Hui BU)
 # Apache 2.0
 
 data_aishell=data
@@ -67,7 +67,7 @@ if [ $stage -le 3 ];then
 	echo "stage 3"
 	for i in train dev test;do
 		awk '{print $1,"'$kws_word'"}' $data_kws/$i/wav.scp > $data_kws/$i/text
-		# paste -d " " < awk '{print $1}' $data_kws/$i/wav.scp < echo $kws_word > $data_kws/$i/text 
+		# paste -d " " < awk '{print $1}' $data_kws/$i/wav.scp < echo $kws_word > $data_kws/$i/text
 	done
 	for i in utt2spk spk2utt feats.scp cmvn.scp text wav.scp;do
 		cat $data_kws/train/$i $data_kws/test/$i $data_kws/dev/$i > $data_kws/$i
@@ -172,7 +172,7 @@ if [ $stage -le 9 ];then
 fi
 # train chain model
 if [ $stage -le 10 ];then
-	local/chain/run_tdnn.sh 
+	local/chain/run_tdnn.sh
 fi
 
 if [ $stage -le 11 ];then
@@ -180,7 +180,7 @@ if [ $stage -le 11 ];then
 	best_lmwt=$(echo ${best_result##*/} | tr '_' ' ' | awk '{print $2}')
 	best_penalty=$(echo ${best_result##*/} | tr '_' ' ' | awk '{print $3}')
 	local/get_roc.sh $best_lmwt $best_penalty
-	python local/kws_draw_roc.py --roc result data/merge/label data/fbank/test/utt2dur
+	python3 local/kws_draw_roc.py --roc result data/merge/label data/fbank/test/utt2dur
 fi
 exit 1;
 

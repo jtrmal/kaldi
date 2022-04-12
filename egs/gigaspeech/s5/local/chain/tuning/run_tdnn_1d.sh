@@ -86,7 +86,7 @@ if [ $stage -le 14 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree | grep num-pdfs | awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   affine_opts="l2-regularize=0.008 dropout-proportion=0.0 dropout-per-dim=true dropout-per-dim-continuous=true"
   tdnnf_opts="l2-regularize=0.008 dropout-proportion=0.0 bypass-scale=0.75"
   linear_opts="l2-regularize=0.008 orthonormal-constraint=-1.0"
@@ -134,7 +134,7 @@ EOF
 fi
 
 if [ $stage -le 15 ]; then
-  if [[ $(hostname -f) == tj1-asr-train* ]] && [ ! -d $dir/egs/storage ]; then  
+  if [[ $(hostname -f) == tj1-asr-train* ]] && [ ! -d $dir/egs/storage ]; then
     utils/create_split_dir.pl \
       /home/storage{{30..36},{40..49}}/data-tmp-TTL20/$(date +%Y%m%d)/$USER/kaldi-data/$(basename $(pwd))/$(hostname -f)_$(date +%Y%m%d_%H%M%S)_$$/storage \
       $dir/egs/storage

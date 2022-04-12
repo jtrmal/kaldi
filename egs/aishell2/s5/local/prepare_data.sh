@@ -42,12 +42,12 @@ awk -F'\t' -v path_prefix=$corpus '{printf("%s\t%s/%s\n",$1,path_prefix,$2)}' $c
 utils/filter_scp.pl -f 1 $tmp/utt.list $tmp/tmp_wav.scp | sort -k 1 | uniq > $tmp/wav.scp
 
 # text
-python -c "import jieba" 2>/dev/null || \
+python3 -c "import jieba" 2>/dev/null || \
   (echo "jieba is not found. Use tools/extra/install_jieba.sh to install it." && exit 1;)
 utils/filter_scp.pl -f 1 $tmp/utt.list $corpus/trans.txt | sort -k 1 | uniq > $tmp/trans.txt
 # jieba's vocab format requires word count(frequency), set to 99
 awk '{print $1}' $dict_dir/lexicon.txt | sort | uniq | awk '{print $1,99}'> $tmp/word_seg_vocab.txt
-python local/word_segmentation.py $tmp/word_seg_vocab.txt $tmp/trans.txt > $tmp/text
+python3 local/word_segmentation.py $tmp/word_seg_vocab.txt $tmp/trans.txt > $tmp/text
 
 # utt2spk & spk2utt
 awk -F'\t' '{print $2}' $tmp/wav.scp > $tmp/wav.list

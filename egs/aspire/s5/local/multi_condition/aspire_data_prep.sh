@@ -52,10 +52,10 @@ if [ $stage -le 1 ]; then
 
 # transcription file format
 # single_074f59de 1 single_074f59de 497.775 506.595 um everybody can't get their needs met in in in in a in a negotiations or to to their satisfaction but at least you're attemptin
-  
+
   echo -n > $tmpdir/text.1 || exit 1;
-  
-  python -c "
+
+  python3 -c "
 import sys
 trans_file = open('$tmpdir/text.1', 'w')
 utt2spk_file = open('$dev/utt2spk', 'w')
@@ -70,7 +70,7 @@ for file_name in open('$tmpdir/transcripts.flist', 'r').readlines():
     file_id = parts[0]
     utt_id = '{0}-{1}-{2:06}-{3:06}'.format(parts[0], parts[1], int(float(parts[3]) * 1000), int(float(parts[4]) * 1000))
     spk_id = '{0}-{1}'.format(parts[0], parts[1])
-    stm_file.write('{0} A {0} {1}\n'.format(spk_id, ' '.join(parts[3:]))) 
+    stm_file.write('{0} A {0} {1}\n'.format(spk_id, ' '.join(parts[3:])))
     trans_file.write('{0} {1}\n'.format(utt_id, ' '.join(parts[5:])))
     utt2spk.append(('{0} {1}\n'.format(utt_id, spk_id)))
     segments_file.write('{0} {1}-1 {2} {3}\n'.format(utt_id, file_id, parts[3], parts[4]))
@@ -80,7 +80,7 @@ utt2spk.sort()
 utt2spk_file.write(''.join(utt2spk))
 utt2spk_file.close()
 segments_file.close()
-" || exit 1; 
+" || exit 1;
 fi
 
 if [ $stage -le 2 ]; then
@@ -103,8 +103,8 @@ if [ $stage -le 3 ]; then
     # convert to absolute path
     utils/make_absolute.sh $f
   done > $tmpdir/wav_abs.flist
-  
-  cat $tmpdir/wav_abs.flist | python -c "
+
+  cat $tmpdir/wav_abs.flist | python3 -c "
 import sys, os, subprocess, re
 
 for line in sys.stdin.readlines():
@@ -131,7 +131,7 @@ if [ $stage -le 4 ]; then
       utils/make_absolute.sh $f
     done > $tmpdir/wav_${dataset}_abs.flist
     cat $tmpdir/wav_${dataset}_abs.flist | \
-    python -c "
+    python3 -c "
 import sys, os, subprocess, re
 
 lines = sys.stdin.readlines()

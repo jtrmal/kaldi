@@ -16,7 +16,7 @@
 # WER on test(fglarge)              3.80          3.69
 # WER on test(tglarge)              3.89          3.80
 # WER on test(tgmed)                4.72          4.64
-# WER on test(tgsmall)              5.19          5.16      
+# WER on test(tgsmall)              5.19          5.16
 # WER on test_other(fglarge)        8.76          8.71
 # WER on test_other(tglarge)        9.19          9.11
 # WER on test_other(tgmed)         11.22         11.00
@@ -112,7 +112,7 @@ if [ $stage -le 14 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree | grep num-pdfs | awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   cnn_opts="l2-regularize=0.01"
   ivector_affine_opts="l2-regularize=0.0"
   affine_opts="l2-regularize=0.008 dropout-proportion=0.0 dropout-per-dim=true dropout-per-dim-continuous=true"
@@ -271,4 +271,4 @@ if $test_online_decoding && [ $stage -le 18 ]; then
 fi
 
 exit 0;
-                
+

@@ -6,8 +6,8 @@
 
 stage=-1
 
-# preference on how to process xml file [python, xml]
-process_xml="python"
+# preference on how to process xml file [python3, xml]
+process_xml="python3"
 
 . ./cmd.sh
 if [ -f ./path.sh ]; then . ./path.sh; fi
@@ -15,7 +15,7 @@ if [ -f ./path.sh ]; then . ./path.sh; fi
 
 # See README for instructions.
 # This script assumes that you are already familiar with Kaldi recipes.
-# This script assumes that you have downloaded the corpus and lexicon as 
+# This script assumes that you have downloaded the corpus and lexicon as
 # mentioned in the README.
 
 # TO DO: you will need to choose the size of training set you want.
@@ -28,7 +28,7 @@ if [ -f ./path.sh ]; then . ./path.sh; fi
 set -e -o pipefail -u
 #FILTER OUT SEGMENTS BASED ON MER (Match Error Rate)
 
-mer=80  
+mer=80
 
 # Location of lexicon
 # Download from https://github.com/qcri/ArabicASRChallenge2016/blob/master/lexicon/ar-ar_grapheme_lexicon
@@ -71,7 +71,7 @@ if [ $stage -le 3 ]; then
   local/mgb_train_lms.sh $mer
   local/mgb_train_lms_extra.sh $LM_TEXT $mer
 
-  # Uncomment if you want to use pocolm for language modeling 
+  # Uncomment if you want to use pocolm for language modeling
   #local/mgb_train_lms_extra_pocolm.sh $LM_TEXT $mer
 fi
 
@@ -89,7 +89,7 @@ if [ $stage -le 5 ]; then
     data/lang_test data/lang_test_fg
 fi
 
-# Uncomment if you want to use pocolm for language modeling 
+# Uncomment if you want to use pocolm for language modeling
 #if [ $stage -le 6 ]; then
 #  local/mgb_format_data.sh --lang-test data/lang_poco_test \
 #    --arpa-lm data/local/pocolm/data/arpa/4gram_small.arpa.gz
@@ -117,23 +117,23 @@ fi
 
 if [ $stage -le 8 ]; then
   #Taking 10k segments for faster training
-  utils/subset_data_dir.sh data/train_mer${mer}_subset500 10000 data/train_mer${mer}_subset500_10k 
+  utils/subset_data_dir.sh data/train_mer${mer}_subset500 10000 data/train_mer${mer}_subset500_10k
 fi
 
 if [ $stage -le 9 ]; then
   #Monophone training
   steps/train_mono.sh --nj 80 --cmd "$train_cmd" \
-    data/train_mer${mer}_subset500_10k data/lang exp/mer$mer/mono 
+    data/train_mer${mer}_subset500_10k data/lang exp/mer$mer/mono
 fi
 
 if [ $stage -le 10 ]; then
   #Monophone alignment
   steps/align_si.sh --nj $nj --cmd "$train_cmd" \
-    data/train_mer${mer}_subset500 data/lang exp/mer$mer/mono exp/mer$mer/mono_ali 
+    data/train_mer${mer}_subset500 data/lang exp/mer$mer/mono exp/mer$mer/mono_ali
 
   #tri1 [First triphone pass]
   steps/train_deltas.sh --cmd "$train_cmd" \
-    2500 30000 data/train_mer${mer}_subset500 data/lang exp/mer$mer/mono_ali exp/mer$mer/tri1 
+    2500 30000 data/train_mer${mer}_subset500 data/lang exp/mer$mer/mono_ali exp/mer$mer/tri1
 
   #tri1 decoding
   utils/mkgraph.sh data/lang_test exp/mer$mer/tri1 exp/mer$mer/tri1/graph
@@ -147,7 +147,7 @@ fi
 if [ $stage -le 11 ]; then
   #tri1 alignment
   steps/align_si.sh --nj $nj --cmd "$train_cmd" \
-    data/train_mer${mer}_subset500 data/lang exp/mer$mer/tri1 exp/mer$mer/tri1_ali 
+    data/train_mer${mer}_subset500 data/lang exp/mer$mer/tri1 exp/mer$mer/tri1_ali
 
   #tri2 [a larger model than tri1]
   steps/train_deltas.sh --cmd "$train_cmd" \
@@ -176,7 +176,7 @@ if [ $stage -le 12 ]; then
 
   for dev in dev_overlap dev_non_overlap; do
    steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
-   exp/mer$mer/tri3/graph data/$dev exp/mer$mer/tri3/decode_$dev & 
+   exp/mer$mer/tri3/graph data/$dev exp/mer$mer/tri3/decode_$dev &
   done
 fi
 
@@ -217,9 +217,9 @@ if [ $stage -le 14 ]; then
   done
 fi
 
-exit 0 
+exit 0
 
-# nnet1 dnn                                                                                                                                
+# nnet1 dnn
 local/nnet/run_dnn.sh $mer
 
 

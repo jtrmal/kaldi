@@ -108,5 +108,5 @@ local/nnet/run_dnn.sh --stage 0 --nj $n  exp/tri4b exp/tri4b_ali exp/tri4b_ali_c
 
 #train dae model
 #python2.6 or above is required for noisy data generation.
-#To speed up the process, pyximport for python is recommeded.
+#To speed up the process, pyximport for python3 is recommeded.
 local/dae/run_dae.sh $thchs || exit 1;

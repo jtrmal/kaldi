@@ -80,7 +80,7 @@ if [ $stage -le 8 ]; then
 
   # do volume perturbation of the data
   data_dir=data/train_hires_nodup_sp
-  cat $data_dir/wav.scp | python -c "
+  cat $data_dir/wav.scp | python3 -c "
 import sys, os, subprocess, re, random
 scale_low = 1.0/8
 scale_high = 2.0

@@ -1,4 +1,4 @@
-#! /bin/bash 
+#! /bin/bash
 
 # Copyright Johns Hopkins University
 #   2019 Fei Wu
@@ -13,7 +13,7 @@ mkdir -p duration
 ./utils/data/get_utt2dur.sh $data_dir
 
 echo "$data_dir"
-python local/sum_duration.py $data_dir/utt2dur 
+python3 local/sum_duration.py $data_dir/utt2dur
 echo ""
 
 

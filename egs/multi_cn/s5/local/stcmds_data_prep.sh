@@ -49,7 +49,7 @@ for f in $data/tmp/text.list.*; do
   xname=$(basename ${f##*.})
   paste -d' ' $data/tmp/utt.list.$xname $f |\
     sed 's/，//g' |\
-    python local/word_segment.py |\
+    python3 local/word_segment.py |\
     tr '[a-z]' '[A-Z]' |\
     awk '{if (NF > 1) print $0;}' > $data/tmp/text.split.$xname &
 done

@@ -148,7 +148,7 @@ if [ $stage -le 13 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
 
   tdnn_opts="l2-regularize=0.03"
   tdnnf_opts="l2-regularize=0.03 bypass-scale=0.66"
@@ -167,7 +167,7 @@ if [ $stage -le 13 ]; then
   idct-layer name=idct input=input dim=40 cepstral-lifter=22 affine-transform-file=$dir/configs/idct.mat
   batchnorm-component name=batchnorm0 input=idct
   spec-augment-layer name=spec-augment freq-max-proportion=0.5 time-zeroed-proportion=0.2 time-mask-max-frames=20
-  
+
   delta-layer name=delta input=spec-augment
   no-op-component name=input2 input=Append(delta, Scale(0.4, ReplaceIndex(ivector, t, 0)))
 

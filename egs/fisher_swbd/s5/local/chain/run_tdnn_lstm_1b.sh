@@ -28,8 +28,8 @@
 # Final valid prob (xent)       -0.9393   -0.9837
 
 #./steps/info/chain_dir_info.pl exp/chain/tdnn_lstm_1b_sp
-#exp/chain/tdnn_lstm_1b_sp: num-iters=1909 nj=3..16 num-params=39.7M dim=40+100->6149 combine=-0.087->-0.086 (over 5) 
-#xent:train/valid[1270,1908,final]=(-1.37,-1.02,-1.01/-1.31,-1.00,-0.984) 
+#exp/chain/tdnn_lstm_1b_sp: num-iters=1909 nj=3..16 num-params=39.7M dim=40+100->6149 combine=-0.087->-0.086 (over 5)
+#xent:train/valid[1270,1908,final]=(-1.37,-1.02,-1.01/-1.31,-1.00,-0.984)
 #logprob:train/valid[1270,1908,final]=(-0.108,-0.088,-0.087/-0.103,-0.091,-0.088)
 
 
@@ -151,7 +151,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   lstm_opts="decay-time=20 dropout-proportion=0.0"
 
   mkdir -p $dir/configs

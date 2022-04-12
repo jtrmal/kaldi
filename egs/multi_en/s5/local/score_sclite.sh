@@ -80,10 +80,10 @@ if [ $stage -le 1 ]; then
       grep -i -v -E '<UNK>' > $x;
 #      grep -i -v -E '<UNK>|%HESITATION' > $x;  # hesitation is scored
     case "$name" in eval2000* )
-      python local/format_acronyms_ctm_eval2000.py -i $x -o $x.mapped
+      python3 local/format_acronyms_ctm_eval2000.py -i $x -o $x.mapped
      ;;
     rt03* )
-      python local/format_acronyms_ctm_rt03.py -i $x -o $x.mapped
+      python3 local/format_acronyms_ctm_rt03.py -i $x -o $x.mapped
      ;;
     esac
     cp $x $x.bk

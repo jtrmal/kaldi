@@ -3,7 +3,7 @@
 # Copyright 2017 University of Chinese Academy of Sciences (UCAS) Gaofeng Cheng
 # Apache 2.0
 
-# This is based on the run_tdnn_opgru_1a.sh, but using backstisch (http://www.danielpovey.com/files/2017_interspeech_backstitch.pdf) 
+# This is based on the run_tdnn_opgru_1a.sh, but using backstisch (http://www.danielpovey.com/files/2017_interspeech_backstitch.pdf)
 # together with per-frame dropout.
 
 # System            tdnn_opgru_1a_sp_ihmali tdnn_opgru_1b_sp_ihmali
@@ -177,7 +177,7 @@ if [ $stage -le 15 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   gru_opts="dropout-per-frame=true dropout-proportion=0.0"
 
   mkdir -p $dir/configs

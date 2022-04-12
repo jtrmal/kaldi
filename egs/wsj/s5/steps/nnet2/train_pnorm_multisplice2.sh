@@ -180,7 +180,7 @@ cp $lang/phones.txt $dir || exit 1;
 # process the splice_inds string, to get a layer-wise context string
 # to be processed by the nnet-components
 # this would be mainly used by SpliceComponent|SpliceMaxComponent
-python steps/nnet2/make_multisplice_configs.py contexts --splice-indexes "$splice_indexes" $dir || exit -1;
+python3 steps/nnet2/make_multisplice_configs.py contexts --splice-indexes "$splice_indexes" $dir || exit -1;
 context_string=$(cat $dir/vars) || exit -1
 echo $context_string
 eval $context_string || exit -1; #
@@ -246,7 +246,7 @@ if [ $stage -le -2 ]; then
   online_preconditioning_opts="alpha=$alpha num-samples-history=$num_samples_history update-period=$update_period rank-in=$precondition_rank_in rank-out=$precondition_rank_out max-change-per-sample=$max_change_per_sample"
 
   # create the config files for nnet initialization
-  python steps/nnet2/make_multisplice_configs.py  \
+  python3 steps/nnet2/make_multisplice_configs.py  \
     --splice-indexes "$splice_indexes"  \
     --total-input-dim $tot_input_dim  \
     --ivector-dim $ivector_dim  \

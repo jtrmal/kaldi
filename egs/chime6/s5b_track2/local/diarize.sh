@@ -106,7 +106,7 @@ if [ $stage -le 5 ]; then
   if ! [ -d dscore ]; then
     git clone https://github.com/nryant/dscore.git || exit 1;
     cd dscore
-    python -m pip install --user -r requirements.txt
+    python3 -m pip install --user -r requirements.txt
     cd ..
   fi
   sed 's/_U0[1-6]\.ENH//g' $ref_rttm > $ref_rttm.scoring
@@ -114,6 +114,6 @@ if [ $stage -le 5 ]; then
   ref_rttm_path=$(readlink -f ${ref_rttm}.scoring)
   hyp_rttm_path=$(readlink -f ${hyp_rttm}.scoring)
   cat ./local/uem_file | grep 'U06' | sed 's/_U0[1-6]//g' > ./local/uem_file.scoring
-  cd dscore && python score.py -u ../local/uem_file.scoring -r $ref_rttm_path \
+  cd dscore && python3 score.py -u ../local/uem_file.scoring -r $ref_rttm_path \
     -s $hyp_rttm_path && cd .. || exit 1;
 fi

@@ -3,7 +3,7 @@
 
 # Copyright 2014  Johns Hopkins University (Author: Vijayaditya Peddinti)
 # Apache 2.0.
-# This script processes RIRs available from available databases into 
+# This script processes RIRs available from available databases into
 # 8Khz wav files so that these can be used to corrupt the Fisher data.
 # The databases used are:
 # RWCP :  http://research.nii.ac.jp/src/en/RWCP-SSD.html (this data is mirrored @ openslr.org. Thanks to Mitsubishi Electric Research Laboratories)
@@ -14,8 +14,8 @@
 # QMUL impulse response dataset : http://c4dm.eecs.qmul.ac.uk/rdr/handle/123456789/6
 # Impulse responses from Varechoic chamber at Bell Labs : http://www1.icsi.berkeley.edu/Speech/papers/gelbart-ms/pointers/
 # Concert Hall impulse responses, Aalto University : http://legacy.spa.aalto.fi/projects/poririrs/
- 
-stage=0 
+
+stage=0
 download_rirs=true # download the RIRs
 sampling_rate=8000 # sampling rate to be used for the RIRs
 log_dir=log # directory to store the log files
@@ -45,7 +45,7 @@ fi
 # write the file_splitter to create job files for queue.pl
 # we use this to parallelize the audio corruption and download jobs
 cat << EOF > $log_dir/file_splitter.py
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os.path, sys, math
 
 num_lines_per_file = int(sys.argv[1])
@@ -59,7 +59,7 @@ num_jobs = int(math.ceil(num_lines/ float(num_lines_per_file)))
 for i in xrange(1, num_jobs+1) :
   cur_lines = map(lambda index: lines[index], range(i - 1, num_lines , num_jobs))
   file = open("{0}.{1}{2}".format(file_base_name, i, ext), 'w')
-  file.write("which python\n")
+  file.write("which python3\n")
   file.write("".join(cur_lines))
   file.close()
 print num_jobs
@@ -78,10 +78,10 @@ if [ $stage -le 2 ]; then
   echo "Normalizing the extracted room impulse responses and noises, per type"
   echo "Note: Due to wav-format mismatch between sox and scipy, there might be warnings generated during file normalization."
   echo "      'WavFileWarning: Unknown wave file format' warnings are benign."
-  # normalizing the RIR files 
+  # normalizing the RIR files
   for i in `ls $log_dir/*type*.rir.list`; do
     echo "Processing files in $i"
-    python local/multi_condition/normalize_wavs.py --is-room-impulse-response true $i $i.normval || exit 1;
+    python3 local/multi_condition/normalize_wavs.py --is-room-impulse-response true $i $i.normval || exit 1;
     norm_coefficient=`cat $i.normval`
     echo "" > $i.normalized
     while read file_name; do
@@ -93,10 +93,10 @@ if [ $stage -le 2 ]; then
     done < $i
   done
 
-  # normalizing the noise files  
+  # normalizing the noise files
   for i in `ls $log_dir/*type*.noise.list`; do
     echo "Processing files in $i"
-    python local/multi_condition/normalize_wavs.py --is-room-impulse-response false $i $i.normval || exit 1;
+    python3 local/multi_condition/normalize_wavs.py --is-room-impulse-response false $i $i.normval || exit 1;
     norm_coefficient=`cat $i.normval`
     echo "" > $i.normalized
     while read file_name; do
@@ -112,14 +112,14 @@ fi
 # copying the noise-rir pairing files
 cp ${output_dir}_non_normalized/info/* $output_dir/info
 
-# rename file location in the noise-rir pairing files 
+# rename file location in the noise-rir pairing files
 for file in `ls $output_dir/info/noise_impulse*`; do
   perl -i -pe "s/_non_normalized//g" $file
 done
 
 # generating the rir-list with probabilities alloted for each rir
 db_string_python=$(echo $db_string|sed -e "s/'\s\+'/','/g")
-python -c "
+python3 -c "
 import glob, string, re
 dbs=[$db_string_python]
 rirs = []

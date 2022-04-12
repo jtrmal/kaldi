@@ -24,7 +24,7 @@ dir=$2
 mkdir -p $dir
 
 # check if PyTorch is installed (used for pyannote audio hub)
-result=`$HOME/miniconda3/bin/python -c "\
+result=`$HOME/miniconda3/bin/python3 -c "\
 try:
     import torch
     import pyannote.audio
@@ -53,7 +53,7 @@ fi
 if [ $stage -le 1 ]; then
   echo "$0: Detecting overlaps..."
   $cmd JOB=1:$nj ${dir}/log/overlap.JOB.log \
-    $HOME/miniconda3/bin/python steps/overlap/detect_overlaps_pyannote.py  \
+    $HOME/miniconda3/bin/python3 steps/overlap/detect_overlaps_pyannote.py  \
       --model-name ${model} \
       ${dir}/wav.scp.JOB ${dir}
 fi

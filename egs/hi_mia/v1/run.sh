@@ -54,16 +54,16 @@ if [ $stage -le 0 ]; then
     for set in test_v2 dev train; do
         local/download_and_untar.sh $himia_root http://www.openslr.org/resources/85/$set.tar.gz $set || exit 1;
         [[ "$set" == "test_v2" ]] && set=test
-            python local/himia_data_prep.py $himia_root/$set data/himia/$set || exit 1;
+            python3 local/himia_data_prep.py $himia_root/$set data/himia/$set || exit 1;
             utils/utt2spk_to_spk2utt.pl data/himia/$set/utt2spk > data/himia/$set/spk2utt
             utils/fix_data_dir.sh data/himia/$set
     done
 
     # This is a simple filtering operation for both trial script, in order
     # to provide workable trial list
-    python local/himia_trials_prep.py $himia_root/test/trials_1m \
+    python3 local/himia_trials_prep.py $himia_root/test/trials_1m \
         $himia_root/test/wav.scp data/himia/test/trials_1m_full 'sc' || exit 1;
-    python local/himia_trials_prep.py $himia_root/test/trials_mic \
+    python3 local/himia_trials_prep.py $himia_root/test/trials_mic \
         $himia_root/test/wav.scp data/himia/test/trials_mic_full 'mc' || exit 1;
 fi
 

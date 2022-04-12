@@ -2,7 +2,7 @@
 # Copyright 2017 University of Chinese Academy of Sciences (UCAS) Gaofeng Cheng
 # Apache 2.0
 
-# Similar to tdnn_lstm_1e (from egs/swbd/s5c). 
+# Similar to tdnn_lstm_1e (from egs/swbd/s5c).
 # Difference between tdnn_opgru_1a and tdnn_opgru_1b:
 # chunk width        150  140,100,160
 # xent_regularize    0.025 0.01
@@ -27,8 +27,8 @@
 
 
 #./steps/info/chain_dir_info.pl exp/chain/tdnn_opgru_1b_sp
-# exp/chain/tdnn_opgru_1b_sp: num-iters=1807 nj=3..16 num-params=34.9M dim=40+100->6149 combine=-0.102->-0.101 (over 5) 
-# xent:train/valid[1202,1806,final]=(-1.70,-1.11,-1.12/-1.63,-1.06,-1.07) 
+# exp/chain/tdnn_opgru_1b_sp: num-iters=1807 nj=3..16 num-params=34.9M dim=40+100->6149 combine=-0.102->-0.101 (over 5)
+# xent:train/valid[1202,1806,final]=(-1.70,-1.11,-1.12/-1.63,-1.06,-1.07)
 # logprob:train/valid[1202,1806,final]=(-0.131,-0.098,-0.097/-0.123,-0.094,-0.093)
 
 # online results
@@ -149,7 +149,7 @@ if [ $stage -le 12 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
-  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+  learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python3)
   gru_opts="dropout-per-frame=true dropout-proportion=0.0 "
 
   mkdir -p $dir/configs

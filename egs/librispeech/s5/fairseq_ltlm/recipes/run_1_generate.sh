@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov) 
+# Copyright 2021 STC-Innovation LTD (Author: Anton Mitrofanov)
 
 set -e
 
@@ -101,7 +101,7 @@ num_pdf=$(tree-info $model_dir/tree |grep num-pdfs|awk '{print $2}')
 if [ $stage -le 1 ] ; then
 	echo "$0: Stage 1: Train FAM model--------------"
 	if [ ! -f $fam_dir/.done ] ; then
-			python $(dirname $0)/genlats/generate_fake_am_model.py \
+			python3 $(dirname $0)/genlats/generate_fake_am_model.py \
 				--label_smoothing $fam_smoothing \
 				--stretch_model_path $stretch_model \
 				--id2ll_model_path $fam_model --max_pdf $num_pdf $ali_dir
@@ -127,13 +127,13 @@ if [ $stage -le 2 ] ; then
 						--tree_dir $model_dir \
 						--fam_dir $fam_dir \
 						--graph $graph \
-						--dir $decode_dir 
+						--dir $decode_dir
 				touch $decode_dir/.done
 		fi
 fi
 
 
-unk=$(cat $lang/oov.txt)  
+unk=$(cat $lang/oov.txt)
 
 get_egs() {
 		#dir=${data_X_lats[0]}
@@ -174,7 +174,7 @@ if [ $stage -le 3 ] ; then
 					--tree_dir $model_dir \
 					--fam_dir $fam_dir \
 					--graph $graph \
-					--dir $decode_dir 
+					--dir $decode_dir
 			echo "$dir $decode_dir" >> $exp_dir/train.generated
 			touch $decode_dir/.done
 		fi
