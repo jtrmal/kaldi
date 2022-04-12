@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 # Copyright   2019   Vimal Manohar
 # Apache 2.0.
 
