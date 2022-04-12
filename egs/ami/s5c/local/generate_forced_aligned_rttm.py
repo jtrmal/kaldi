@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 # Copyright   2020  Desh Raj (Johns Hopkins University)
 # Apache 2.0.
 
