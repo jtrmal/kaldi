@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 lexicon = open("data/local/tmp/lexicon.1")
 lexicon_ext = open("data/local/tmp/lexicon.2", "w")
@@ -15,5 +15,3 @@ for line in lexicon:
 
 lexicon.close()
 lexicon_ext.close()
-    
-
