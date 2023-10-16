@@ -1,4 +1,3 @@
-
 FROM nvidia/cuda:12.2.0-devel-ubuntu22.04
 LABEL maintainer="jtrmal@gmail.com"
 
@@ -18,8 +17,8 @@ RUN apt-get update && \
         python2.7 \
         python3 \
         zlib1g-dev \
-        gfortran \
         ca-certificates \
+        gfortran \
         patch \
         ffmpeg \
 	vim && \
@@ -27,19 +26,17 @@ RUN apt-get update && \
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-#echo "#!/usr/bin/true" > extras/check_dependencies.sh && \
 RUN git clone --depth 1 https://github.com/kaldi-asr/kaldi.git /opt/kaldi && \
     cd /opt/kaldi/tools && \
     ./extras/install_mkl.sh && \
+    find /opt/intel -type f -name "*.a" -exec rm {} \; && \
+    find /opt/intel -type f -regex '.*\(_mc.?\|_mic\|_thread\|_ilp64\)\.so' -exec rm {} \; && \
     make -j $(nproc) && \
     cd /opt/kaldi/src && \
     ./configure --shared --use-cuda && \
     make depend -j $(nproc) && \
     make -j $(nproc) && \
-    find /opt/kaldi  -type f \( -name "*.o" -o -name "*.la" -o -name "*.a" \) -exec rm {} \; && \
-    find /opt/intel -type f -name "*.a" -exec rm {} \; && \
-    find /opt/intel -type f -regex '.*\(_mc.?\|_mic\|_thread\|_ilp64\)\.so' -exec rm {} \; && \
+    find /opt/kaldi -type f \( -name "*.o" -o -name "*.la" -o -name "*.a" \) -exec rm {} \; && \
     rm -rf /opt/kaldi/.git
 
 WORKDIR /opt/kaldi/
-
