@@ -19,12 +19,11 @@ on:
 
 jobs:
   enable_build:
-    if: github.repository == 'kaldi-asr/kaldi'
     runs-on: ubuntu-latest
     outputs:
       enabled: ${{ steps.set-enabled.outputs.enabled }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set enabled
@@ -46,7 +45,7 @@ jobs:
     if: needs.enable_build.outputs.enabled == 'true' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
@@ -66,15 +65,16 @@ jobs:
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
       - name: Build and push
         run: |
-          cd docker/ubuntu18.04-cuda10.0/
-          docker build --push --tag kaldiasr/kaldi:gpu-latest --tag kaldiasr/kaldi:gpu-ubuntu18.04-cuda10.0 --tag kaldiasr/kaldi:gpu-ubuntu18.04-cuda10.0-$(date +%F) .
+          cd docker/ubuntu22.04-cuda12.2/
+          docker build --tag kaldiasr/kaldi:gpu-latest --tag kaldiasr/kaldi:gpu-ubuntu22.04-cuda12.2 --tag kaldiasr/kaldi:gpu-ubuntu22.04-cuda12.2-$(date +%F) .
+          #docker build --push --tag kaldiasr/kaldi:gpu-latest --tag kaldiasr/kaldi:gpu-ubuntu22.04-cuda12.2 --tag kaldiasr/kaldi:gpu-ubuntu22.04-cuda12.2-$(date +%F) .
 
   docker-buildx-cpu:
     needs: enable_build
     if: needs.enable_build.outputs.enabled == 'true' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
@@ -95,7 +95,8 @@ jobs:
       - name: Build and push
         run: |
           cd docker/debian10-cpu/
-          docker build --push \
+          #docker build --push \
+          docker build \
                        --tag kaldiasr/kaldi:latest \
                        --tag kaldiasr/kaldi:cpu-latest  \
                        --tag kaldiasr/kaldi:cpu-debian10 \
