@@ -1,6 +1,7 @@
 name: Docker Image CI
 
 on:
+  push:
   schedule:
   - cron: '37 2 * * 1'
   workflow_dispatch:
@@ -14,6 +15,7 @@ on:
           - info
           - warning
           - debug
+  
 #  pull_request: #for debugging purposes
 #    branches: [ "master" ]
 
