@@ -39,7 +39,7 @@ jobs:
             enabled=true
           fi
           echo "enabled: $enabled"
-          echo "::set-output name=enabled::${enabled}"
+          echo "enabled=${enabled}" >> $GITHUB_OUTPUT
 
 
   docker-buildx-gpu:
