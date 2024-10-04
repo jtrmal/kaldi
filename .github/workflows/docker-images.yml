@@ -82,8 +82,11 @@ jobs:
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
       - name: Build and push
         run: |
-          cd docker/ubuntu22.04-cuda12
-          docker build --push  --tag kaldiasr/kaldi:gpu-latest --tag kaldiasr/kaldi:gpu-ubuntu22.04-cuda12 --tag kaldiasr/kaldi:gpu-ubuntu22.04-cuda12-$(date +%F) .
+          cd docker/ubuntu22.04-cuda12-mkl
+          docker build --push  \
+                       --tag kaldiasr/kaldi:gpu-latest \
+                       --tag kaldiasr/kaldi:gpu-ubuntu22.04-cuda12 \
+                       --tag kaldiasr/kaldi:gpu-ubuntu22.04-cuda12-$(date +%F) .
 
   docker-buildx-gpu-cuda11:
     needs: enable_build
@@ -123,7 +126,9 @@ jobs:
       - name: Build and push
         run: |
           cd docker/ubuntu20.04-cuda11
-          docker build --push  --tag kaldiasr/kaldi:gpu-ubuntu20.04-cuda11 --tag kaldiasr/kaldi:gpu-ubuntu20.04-cuda11-$(date +%F) .
+          docker build --push  \
+                       --tag kaldiasr/kaldi:gpu-ubuntu20.04-cuda11 \
+                       --tag kaldiasr/kaldi:gpu-ubuntu20.04-cuda11-$(date +%F) .
 
   docker-buildx-cpu-openblas:
     needs: enable_build
