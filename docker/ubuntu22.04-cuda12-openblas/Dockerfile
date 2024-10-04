@@ -1,0 +1,35 @@
+FROM nvidia/cuda:12.6.1-cudnn-devel-ubuntu22.04
+LABEL maintainer="jtrmal@apptek.com"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        g++ \
+        make \
+        automake \
+        bzip2 \
+        unzip \
+        wget \
+        libtool \
+        git \
+        python3 \
+        zlib1g-dev \
+        ca-certificates \
+        gfortran \
+        patch \
+        sox && \
+    rm -rf /var/lib/apt/lists/*
+
+
+RUN git clone --depth 1 https://github.com/kaldi-asr/kaldi.git /opt/kaldi && \
+    cd /opt/kaldi/tools && \
+    make -j 5 && \
+    ./extras/install_openblas.sh && \
+    cd /opt/kaldi/src && \
+    ./configure --shared --use-cuda=yes --mathlib=OPENBLAS && \
+    make depend -j $(nproc) && \
+    make -j 5 && \
+    find /opt/kaldi  -type f \( -name "*.o" -o -name "*.la" -o -name "*.a" \) -exec rm {} \; && \
+    rm -rf /opt/kaldi/.git
+
+WORKDIR /opt/kaldi/
